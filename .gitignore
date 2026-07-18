@@ -1,0 +1,14 @@
+# Node
+node_modules/
+npm-debug.log*
+.pnpm-debug.log*
+
+# Rust / Cairo / Scarb
+target/
+**/*.rs.bk
+# Scarb.lock SE VERSIONA a propósito — no ignorar
+
+# Env / OS
+.env
+.DS_Store
+*.swp
