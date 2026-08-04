@@ -131,6 +131,13 @@ VRF? Todo D1 se sostiene o se cae con ese número.
    paymaster en testnet.
 **Milestone F0**: número real de mediana/p95 anotado + verde/rojo.
 
+**CERRADO — 2026-08-04. Resultado: ROJO.**
+- p50 = 3312 ms (criterio ≤ 2000 ms: **FAIL**)
+- p95 = 4095 ms (criterio ≤ 5000 ms: PASS)
+- 457/500 ciclos exitosos en Sepolia; 43 fallos por nonce mismatch del script, no del protocolo VRF.
+- Detalle completo de la medición: `docs/INSTALACIONES-001.md`.
+- Consecuencia según D1: Plan B1 en juego. Ver nota de estrategia en F4 sobre priorización con financiamiento.
+
 ### F1 — El corazón del juego, sin cara (3–5 semanas)
 La lógica completa on-chain, jugada por terminal (feo pero
 verificable):
@@ -192,6 +199,18 @@ bots, sin exploit de faucet encontrado.
    "sujeta a estructuración legal".
 **Milestone F4**: aplicación enviada.
 
+**Nota de estrategia — demo F4 (2026-08-04):** NO se invierte tiempo en resolver la
+latencia VRF (agrupar clicks por VRF, integrar drand u otro mecanismo) sin
+financiamiento real confirmado — es investigación y rediseño, no un ajuste rápido.
+Para la demo de F4 se presentan dos piezas separadas:
+- **(a) minasweeper.html** con RNG local determinista: jugable, cero latencia, muestra
+  mecánica y UX completa sin depender de la red.
+- **(b) Trabajo on-chain de F0**: VrfProvider + Benchmark funcionando en Sepolia,
+  medición honesta con resultado rojo documentado, plan concreto de próximas direcciones
+  (`docs/INSTALACIONES-001.md` §"Próximas direcciones a evaluar"). Demuestra que el
+  problema central (precómputo/foreknowledge) está identificado y resuelto en su núcleo;
+  solo pendiente de optimizar latencia cuando haya sustento económico.
+
 ### F5 — El dinero real (lejos; es una COMPUERTA, no una fase de
 ### trabajo)
 Cinco candados, todos obligatorios antes de mainnet:
@@ -226,9 +245,14 @@ abre la puerta legal de B2. Si no, el juego vive igual.
 | Grant rechazado | — | Propulsion (programa gaming), créditos de fees, re-aplicar con F3 |
 | Se desea entrada pagada | Dictamen legal favorable | B2: rama determinista (docs/archivo/) |
 
-## Próximos 7 días
-1. ~~Crear repo público~~ ✅ zkminestark.
-2. Instalar entorno F0.1 y documentar en Instalaciones 001.
-3. Alta en Discord Dojo/Cartridge.
-4. Contrato de prueba VRF + empezar la medición go/no-go.
-5. Abrir el issue en GNOME Mines (pitch listo en ECOSISTEMAS §4).
+## Estado actual y próximos pasos (actualizado 2026-08-04)
+
+- [x] Repo público ✅ (github.com/dsilberschmidt/zkminestark)
+- [x] Entorno F0 instalado y documentado (`docs/INSTALACIONES-001.md`)
+- [x] Medición F0 completa — resultado ROJO (p50=3312 ms, p95=4095 ms)
+- [ ] Alta en Discord Dojo/Cartridge — pendiente
+- [ ] Abrir issue en GNOME Mines (pitch ya escrito en ECOSISTEMAS.md §4) — pendiente
+- [ ] F1: portar lógica del juego a World de Dojo — puede arrancar ya, usando el VRF
+  tal como está (lento pero funcional); no bloqueado por la decisión de latencia
+- [ ] Revisar novedades de hackathon.starknet.org / Basecamp desde la última
+  verificación (13-jul-2026, nada anunciado en ese momento)
