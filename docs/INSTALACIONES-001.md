@@ -325,6 +325,8 @@ La Adenda 3 a #3 de INCOGNITAS.md ya contempla "una semilla VRF por click alimen
 
 **Si se confirma que el VRF domina el costo:** agrupar clicks reduciría la latencia proporcionalmente, pero cambia la UX — el jugador tendría que comprometerse a un lote de clicks antes de ver resultados, o el juego decidiría el tamaño del lote sin interacción explícita. Esto es un cambio de mecánica de juego, no solo técnico — requiere discusión en Diseño 001 antes de comprometerse.
 
+**Actualización 2026-08-17 — Discord Cartridge (rol LORD):** El diseño de VRF de Cartridge opera bajo "one action = one vrf request" (dicho con salvedad "iirc" — no categórico). Esta dirección queda de **baja prioridad** frente a la preconfirmación vía RPC (ítem 3). El desglose temporal VRF vs. resto de tx sigue siendo útil para entender el sistema, pero el batching como optimización ya no es la primera palanca a evaluar.
+
 ### 2. drand como alternativa a evaluar
 
 drand es un beacon de aleatoriedad distribuido (red "quicknet": ronda cada 3 s, criptografía de umbral entre múltiples nodos independientes — ningún nodo conoce el valor antes de que se publique). Como alternativa al VRF por click actual y al oráculo centralizado (Plan B1 del roadmap).
@@ -332,6 +334,24 @@ drand es un beacon de aleatoriedad distribuido (red "quicknet": ronda cada 3 s, 
 **Ventaja potencial:** no requiere una transacción propia por click — el juego solo lee un valor ya publicado y verificado on-chain. Podría reducir la latencia sin el problema de confianza centralizada del oráculo.
 
 **Abierto a investigar antes de comprometerse:** si existe una integración madura y lista para usar de drand en Starknet (verificador on-chain de sus firmas BLS). Sin confirmar.
+
+### 3. Preconfirmación vía RPC para el gameplay loop *(hallazgo Discord Cartridge, 2026-08-17, rol LORD)*
+
+Para reducir la latencia percibida en el gameplay loop, la recomendación del equipo de Cartridge es consultar el **preconfirmed status** directamente vía RPC, en vez de esperar confirmación completa de bloque.
+
+**Distinción clave que cambia el diagnóstico de F0:** Torii (el indexador de Dojo) es para datos **agregados** — leaderboard, historial, estado global — no para el loop de juego en tiempo real. Si `measure_vrf.py` esperaba confirmación completa de bloque antes de registrar cada ciclo como completado, una parte significativa de los 3312 ms medidos podría ser ese overhead de confirmación, no el costo intrínseco del VRF ni de la transacción en sí.
+
+**Por qué tiene prioridad sobre las otras direcciones:** No implica cambiar la mecánica del juego ni la arquitectura de contratos — es solo cambiar en qué punto del ciclo de vida de la tx el cliente considera la acción "ejecutada". Si el preconfirmed status llega antes que la confirmación completa de bloque, el criterio go/no-go de F0 podría cumplirse sin ningún otro cambio. (**La magnitud del ahorro es una hipótesis sin medir — cifra estimada, no dato duro. Habría que confirmarlo con una prueba real antes de asumir que alcanza para cumplir el criterio.**)
+
+**Primer paso antes de comprometerse:** Verificar qué status RPC corresponde a "preconfirmed" en Starknet v0.14.x y confirmar si el RPC de Cartridge expone ese estado.
+
+**Condición:** No invertir tiempo de implementación sin financiamiento confirmado (ver roadmap).
+
+### Repo de referencia: z-korp/zordle
+
+Wordle fully on-chain en Dojo + Cartridge, con práctica diaria sin login. Señalado por el mismo miembro del equipo (rol LORD, Discord Cartridge, 2026-08-17) como ejemplo de arquitectura similar funcionando en producción.
+
+Revisar como referencia de patrones de integración Dojo/Cartridge — en particular cómo manejan el loop de confirmación — antes de diseñar la arquitectura de interacción on-chain de ZK Minesweeper.
 
 ---
 
