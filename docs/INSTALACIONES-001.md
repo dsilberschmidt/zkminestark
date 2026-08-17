@@ -355,6 +355,32 @@ Revisar como referencia de patrones de integración Dojo/Cartridge — en partic
 
 ---
 
+## Actividad comunitaria — 2026-08-17
+
+Registro de involucramiento comunitario de la sesión. Relevante como evidencia del criterio "community engagement" del Seed Grant de Starknet (criterio "y/o", no bloqueante).
+
+### Discord Dojo
+
+- Unido al servidor; perfil configurado con pseudónimo del proyecto: **Cactus Sediento**.
+- Mensaje publicado en #general: resultado de latencia F0 (p50=3312 ms, criterio ROJO) + pregunta sobre sequencer centralization y su impacto en la latencia medida.
+- Respuesta útil recibida de miembro con rol LORD: preconfirmación RPC, batching VRF probablemente no viable, referencia a z-korp/zordle. Contenido ya documentado en la sección "Próximas direcciones a evaluar" más arriba.
+- Etiqueta **DOJO** asignada al perfil por la comunidad.
+
+### Discord Cartridge
+
+- Unido al servidor; mensaje adaptado publicado en #general, mencionando el vRNG de Cartridge específicamente.
+- Perfil bajo el mismo pseudónimo: **Cactus Sediento**.
+
+### Issue GNOME Mines
+
+- Issue abierto: https://gitlab.gnome.org/GNOME/gnome-mines/-/work_items/103
+- Título: "Add click count as alternative/additional scoring metric to time"
+- Propuesta: contador de clicks como métrica alternativa/adicional al tiempo. Alcance mínimo propuesto: mostrar el contador sin tocar los récords existentes todavía.
+- Basado en el pitch de ECOSISTEMAS.md §4.
+- Publicado bajo identidad real (Daniel / dsilberschmidt en GitLab de GNOME), a diferencia de los Discords que usan el pseudónimo del proyecto.
+
+---
+
 ## Estado al cierre de sesión 2026-08-04
 
 ### COMPLETADO Y VERIFICADO
