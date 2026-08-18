@@ -341,11 +341,28 @@ Para reducir la latencia percibida en el gameplay loop, la recomendación del eq
 
 **Distinción clave que cambia el diagnóstico de F0:** Torii (el indexador de Dojo) es para datos **agregados** — leaderboard, historial, estado global — no para el loop de juego en tiempo real. Si `measure_vrf.py` esperaba confirmación completa de bloque antes de registrar cada ciclo como completado, una parte significativa de los 3312 ms medidos podría ser ese overhead de confirmación, no el costo intrínseco del VRF ni de la transacción en sí.
 
-**Por qué tiene prioridad sobre las otras direcciones:** No implica cambiar la mecánica del juego ni la arquitectura de contratos — es solo cambiar en qué punto del ciclo de vida de la tx el cliente considera la acción "ejecutada". Si el preconfirmed status llega antes que la confirmación completa de bloque, el criterio go/no-go de F0 podría cumplirse sin ningún otro cambio. (**La magnitud del ahorro es una hipótesis sin medir — cifra estimada, no dato duro. Habría que confirmarlo con una prueba real antes de asumir que alcanza para cumplir el criterio.**)
+**Experimento corrido — 2026-08-18 (`scripts/measure_preconfirm.py`, 40 ciclos Sepolia):**
 
-**Primer paso antes de comprometerse:** Verificar qué status RPC corresponde a "preconfirmed" en Starknet v0.14.x y confirmar si el RPC de Cartridge expone ese estado.
+| Métrica                              | Resultado  |
+|--------------------------------------|------------|
+| Ciclos exitosos                      | 37 / 40    |
+| Preconfirm medible antes de accepted | 0 / 37     |
+| p50 confirmación completa            | 3677 ms    |
+| p95 confirmación completa            | 4748 ms    |
 
-**Condición:** No invertir tiempo de implementación sin financiamiento confirmado (ver roadmap).
+- p50=3677 ms es consistente con F0 (3312 ms) — la diferencia entra en varianza de red normal. El criterio go/no-go sigue en ROJO (p50 > 2000 ms).
+- Preconfirmación no fue medible con sncast como intermediario: el tx_hash no está disponible en stdout de sncast antes de que el proceso termine (sncast bufferiza internamente con su runtime Rust; `stdbuf -oL` solo afecta el buffering de C stdio, no alcanza). Esto es una **limitación del mecanismo de medición, no del concepto**: `starknet_getTransactionStatus` puede devolver `execution_status=SUCCEEDED` antes de ACCEPTED_ON_L2, pero para aprovecharlo hay que tener el tx_hash disponible antes de la confirmación.
+
+**Arquitectura correcta para preconfirmación (identificada, pendiente de implementar):**
+
+Para que el cliente de juego pueda usar preconfirmación, necesita someter transacciones directamente vía RPC en vez de a través de sncast:
+1. Construir y firmar la tx en el cliente (starknet.py o SDK JS/Dart).
+2. Broadcast vía `starknet_addInvokeTransaction` → responde con tx_hash inmediatamente.
+3. Polling de `starknet_getTransactionStatus` hasta `execution_status=SUCCEEDED` (en cualquier `finality_status`).
+
+Esto es un cambio en el cliente del juego (capa F2), NO en los contratos (F1). No bloquea el desarrollo de contratos de F1.
+
+**Condición:** No invertir en implementación de cliente sin financiamiento confirmado (ver roadmap).
 
 ### Repo de referencia: z-korp/zordle
 
