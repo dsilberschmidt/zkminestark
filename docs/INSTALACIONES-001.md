@@ -70,6 +70,7 @@ built on: 2026-07-20T12:14:09Z
 - **Por qué rc.9 y no una versión estable:** La última versión estable (1.7.1) trae el UDC viejo (`0x041a78e...`). El UDC nuevo (`0x02ceed65...`) que requieren sncast ≥ 0.49.0 y starknet.py recientes sólo apareció en el genesis a partir de v1.8.0-rc.1 (PR #536). No hay versión estable de Katana con el UDC nuevo al momento de este setup (2026-08-03).
 - **Spec JSON-RPC:** 0.10.0 (subió de 0.9.0 en la misma release que el UDC nuevo).
 - **Nota de distribución:** Katana no está incluido en el release `sozo/v1.8.7` ni en ningún tarball del monorepo dojo post-1.5.0. Se distribuye independientemente desde `github.com/dojoengine/katana`.
+- **Actualización F1 (2026-08-19):** La sintaxis `--seed 0` ya no existe. Usar: `katana --dev --dev.seed 0`. El flag `--dev` habilita modo desarrollo; `--dev.seed <N>` fija el seed para las cuentas predefinidas. Las cuentas resultantes con seed=0 son idénticas a las de F0.
 
 ---
 
@@ -363,6 +364,20 @@ Para que el cliente de juego pueda usar preconfirmación, necesita someter trans
 Esto es un cambio en el cliente del juego (capa F2), NO en los contratos (F1). No bloquea el desarrollo de contratos de F1.
 
 **Condición:** No invertir en implementación de cliente sin financiamiento confirmado (ver roadmap).
+
+### 4. `--vrf` nativo en katana — posible simplificación del entorno dev
+
+*Hallazgo 2026-08-19*
+
+Katana 1.8.0-rc.9 incluye soporte nativo para VRF:
+
+- `--vrf`: lanza vrf-server como sidecar automáticamente y despliega VrfProvider en el genesis.
+- `--vrf.url`: conectar a un VRF externo en vez de sidecar.
+- `--vrf.contract`: especificar address del VrfProvider a usar.
+- `--vrf.bin`: path al binario vrf-server (default: busca `vrf-server` en PATH).
+- Requisito: `--cartridge.paymaster`.
+
+Si funciona, colapsaría los pasos 2 y 3 del setup local (lanzar vrf-server + declarar/desplegar VrfProvider) en un solo flag al arrancar katana. No se evaluó en F1 — incertidumbre sobre el secret-key interno y el address resultante del VrfProvider. Evaluar en sesión dedicada.
 
 ### Repo de referencia: z-korp/zordle
 

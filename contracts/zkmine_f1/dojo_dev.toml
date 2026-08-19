@@ -1,0 +1,17 @@
+[world]
+name = "zkmine F1"
+seed = "zkmine_f1"
+
+[namespace]
+default = "zkmine_f1"
+
+[env]
+rpc_url = "http://localhost:5050/"
+# Cuenta katana devnet local (--seed 0): determinística, pública y conocida. NO sensible.
+# Address y clave son las mismas en cualquier instancia de katana con seed=0.
+account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
+private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
+# world_address = ""  # se completa después del primer sozo migrate
+
+[writers]
+"zkmine_f1" = ["zkmine_f1-actions"]

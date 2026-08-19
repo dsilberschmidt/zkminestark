@@ -1,0 +1,16 @@
+[world]
+name = "zkmine F1"
+seed = "zkmine_f1"
+
+[namespace]
+default = "zkmine_f1"
+
+[env]
+rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
+account_address = "0x077bd7696ed8573ee1f1d3aef662455d22f918e62de532d424134aaf24924192"
+# Clave real de Sepolia — cargada desde variable de entorno, nunca en texto plano.
+private_key = "${ZKMINE_SEPOLIA_PRIVATE_KEY}"
+# world_address = ""  # se completa después del primer sozo migrate --profile sepolia
+
+[writers]
+"zkmine_f1" = ["zkmine_f1-actions"]
