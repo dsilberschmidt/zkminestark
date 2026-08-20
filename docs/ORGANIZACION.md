@@ -104,6 +104,12 @@ la memoria global. Para que no se fragmente:
    ROADMAP, ECOSISTEMAS, este doc) van a `docs/` del repo y como archivos
    de conocimiento en Dirección 001.
 
+## Reglas de seguridad
+
+- Ningún secreto/clave privada real se tipea, pega, o pasa a Claude Code bajo ninguna circunstancia — ni siquiera en la terminal. Ese paso lo hace Daniel manualmente, fuera de cualquier sesión de agente, usando read -s NOMBRE_VAR (oculta el input y no lo registra en el historial de bash) en vez de export VAR=valor directo.
+
+---
+
 ## Sobre tu ventana de Fable 5
 No puedo ver los datos de tu cuenta (ni cuota ni hora de corte), así que no
 te puedo decir la hora exacta — se consulta en Configuración → Uso, o en el

@@ -413,6 +413,105 @@ Registro de involucramiento comunitario de la sesión. Relevante como evidencia 
 
 ---
 
+## F1-A — Dojo World zkmine_f1 (Katana devnet, 2026-08-19)
+
+Primer deploy y prueba de integración de zkmine_f1. Lógica completa: spawn_game + VRF +
+click, ambas ramas (safe click y mine hit) verificadas on-chain.
+
+### Configuración
+
+| Campo | Valor |
+|---|---|
+| Katana | 1.8.0-rc.9, `--dev --dev.seed 0` |
+| vrf-server | cartridge-gg/vrf v0.3.1, `--secret-key 420` |
+| VrfProvider class | `0x148ab1961b07a4488b81e025e5876623a197e7436811411a628da02aca3b9df` |
+| zkmine_f1-actions class | `0x47470bf45c8ba7262fd5a2c082135f096a37df30bd961c050c25b3bcb30de2c` |
+| Dojo World class | `0x613551abceb2b37073b1149bb862ea70cf029981ce1ca47e9dd7c7ab97cb65d` |
+| Cuenta | Katana dev seed=0 (`0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec`) |
+
+> Direcciones on-chain de Katana son efímeras (proceso katana). Los class hashes son
+> determinísticos e idénticos a los de Sepolia (mismo código, mismo compilador).
+
+### Prueba de integración — resultados (2026-08-19)
+
+Ambas ramas verificadas on-chain:
+
+| Rama | game_id | Celda | Cell | Status final |
+|---|---|---|---|---|
+| Mine hit | `0x5e835c8174e13828b6a3641a0dc7816e5ee353fb895475ced5c09eaf35aee38` | (0,0) | is_mine=1, revealed=1 | status=2 |
+| Safe click | `0x61a7f3be6ac5c170f0cd7f2ff1193c6d8763dbea34e84d80bdb8a1e9835e7af` | (0,0) | is_mine=0, revealed=1 | status=0, revealed_count=1 |
+
+Tx hashes completos y outputs on-chain en `docs/bitacora.md` — sección
+"Prueba de integración F1: ejecución completa (2 juegos)".
+
+### Fórmulas verificadas
+
+- **game_id:** `poseidon_hash([tx_nonce, player, actions, chain_id])`
+- **VRF seed:** `poseidon_hash([nonce_k, player, actions, chain_id])`
+  donde `nonce_k` = nonce del VrfProvider para el player (0 en primer juego, +1 por consume_random)
+- **Lazy sampling:** `bucket = raw % (total_cells - revealed_count); is_mine = bucket < remaining_mines`
+
+### Nota operativa Katana — sozo 1.8.7
+
+- `sozo execute` (no sncast) para invocaciones en sistema Dojo
+- Katana 1.8.0-rc.9: `starknet_getNonce` requiere tag `pre_confirmed` (no `pending`)
+
+---
+
+## F1-A — Dojo World zkmine_f1 (Sepolia testnet, 2026-08-20)
+
+Deploy completo en Sepolia. Primeras transacciones de zkmine_f1 en red pública con VRF real.
+
+### Contratos desplegados
+
+| Contrato | Dirección | Tx |
+|---|---|---|
+| VrfProvider (cartridge-gg/vrf v0.3.1) | `0x05284b1597a91df6db38a25eae873063d08d37fd8cb5d0357d310b6e5dcffe37` | `0x0713d868b6f49f8d1a98116446c92ab5de56a5c382a30b5296216a0f79e44cf2` |
+| Dojo World zkmine_f1 | `0x027b48a001297a0da77eb50f6f52837cd8ea5e128f1a57f3d8fe7a3d1fd5e14d` | (sozo migrate) |
+| zkmine_f1-actions | `0x292763cd8c85375a2d1f16d347ab93036b261305ff021715b49c91f1f43b2ba` | (sozo migrate) |
+
+Tx set_config: `0x0061bac85a32a5284b611d4f222e1dfa7dabb500f60b302c1e3bf1ac11d3d9fb`
+
+### Class hashes (determinísticos, idénticos a Katana)
+
+| Contrato | Class Hash |
+|---|---|
+| VrfProvider | `0x148ab1961b07a4488b81e025e5876623a197e7436811411a628da02aca3b9df` |
+| Dojo World | `0x613551abceb2b37073b1149bb862ea70cf029981ce1ca47e9dd7c7ab97cb65d` |
+| zkmine_f1-actions | `0x47470bf45c8ba7262fd5a2c082135f096a37df30bd961c050c25b3bcb30de2c` |
+
+### Prueba de integración — resultados (2026-08-20)
+
+game_id: `0x686b989ce684941e21cb3dc097567f6846897147cab1ab30964fbd0c93a1651`
+spawn_game tx: `0x07205c78d5d68719fc50e43a5f550f1eab368b14622b26bf7623460ee52d73cf`
+
+| Rama | Tx multicall | Celda | Cell | Game |
+|---|---|---|---|---|
+| Safe click | `0x1b7107c971c5174fd00c797a7c9d3167ab86024e0fc72ce7e35dd8ff5802410` | (0,0) | is_mine=0, revealed=1 | status=0, revealed_count=1 |
+| Mine hit | `0x78ffa919d9916a4be323702b20fb03092c33888ebb1d930865ff790980b0731` | (1,0) | is_mine=1, revealed=1 | status=2, remaining_mines=98 |
+
+Voyager mine hit tx:
+https://sepolia.voyager.online/tx/0x078ffa919d9916a4be323702b20fb03092c33888ebb1d930865ff790980b0731
+
+### Hallazgos técnicos del deploy
+
+**sozo 1.8.7 — perfil no-dev:**
+- `[profile.NAME]` debe existir en `Scarb.toml` (aunque vacío) antes de `sozo build/migrate --profile NAME`
+- `sozo build --profile NAME` debe correr antes de `sozo migrate --profile NAME`
+
+**sozo 1.8.7 — env var en toml:**
+- `${VAR}` en `dojo_*.toml` NO se expande antes de parsear como Felt252
+- Workaround: `sozo [migrate|execute] --profile NAME --private-key $VAR`
+
+**VrfProvider v0.3.1 en Sepolia:**
+- `nonces` no expuesto; función disponible: `get_consume_count()` (sin args, conteo global)
+- El campo `rnd` del vrf-server API **no coincide** con el output de `consume_random` on-chain
+  — no es posible predecir outcomes off-chain con este campo
+- Seed array format: `{"seed": ["0x..."], "address": "0x..."}` (array, no string directa)
+- sncast 0.62.1 + RPC Cartridge Sepolia: warning "incompatible version 0.9.0" — no bloqueante
+
+---
+
 ## Estado al cierre de sesión 2026-08-04
 
 ### COMPLETADO Y VERIFICADO

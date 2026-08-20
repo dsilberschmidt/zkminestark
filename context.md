@@ -12,7 +12,7 @@ Diseño central: lazy sampling — el tablero no existe hasta que se clickea, VR
 - Si algo falla o da un resultado inesperado: parar y reportar. No encadenar intentos nuevos por cuenta propia.
 - No asumir compatibilidad de versiones sin verificar (fuente concreta o prueba empírica) — ya costó horas de diagnóstico varias veces en este proyecto.
 - No agrandar el alcance de una tarea ("ya que estoy, agrego..."). Alcance fijo se respeta.
-- Ningún secreto/clave privada real se tipea, pega, o pasa a Claude Code bajo ninguna circunstancia — ni siquiera en la terminal. Ese paso lo hace Daniel manualmente, fuera de cualquier sesión de agente.
+- Ningún secreto/clave privada real se tipea, pega, o pasa a Claude Code bajo ninguna circunstancia — ni siquiera en la terminal. Ese paso lo hace Daniel manualmente, fuera de cualquier sesión de agente, usando read -s NOMBRE_VAR (oculta el input y no lo registra en el historial de bash) en vez de export VAR=valor directo.
 
 ## Dónde está el detalle
 
