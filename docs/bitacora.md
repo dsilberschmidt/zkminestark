@@ -653,3 +653,25 @@ Agregadas dos secciones nuevas a docs/INSTALACIONES-001.md:
 Deploy F1-A completo y documentado.
 
 ---
+
+## 2026-08-20 — Auditoría JSONL: análisis refinado de claves privadas
+
+Retomando análisis de 5fdc57de...jsonl y f87ed580...jsonl.
+Filtro: hex 63-64 chars en contexto de private_key/--private-key/PRIVATE_KEY/read -s,
+excluyendo hashes de tx/contract/class. Resultado en pending_review.
+
+### Resultado del análisis (resumen para bitácora):
+- 7 valores únicos identificados, 17 apariciones totales
+- TODOS en rol assistant/tool — ninguno en rol human/user
+- 5 de 7 son direcciones/hashes CONOCIDOS (contratos Sepolia y tx hashes de esta sesión)
+- 2 de 7 no verificados contra tabla de addresses conocidas (KEY-01: 0x127fd5, KEY-03: 0x6d3eb2)
+- La clave privada real de Sepolia NUNCA aparece en texto plano — siempre como referencia a variable $ZKMINE_SEPOLIA_PRIVATE_KEY
+- Todos los hits son falsos positivos por ventana de contexto de 300 chars: el flag --private-key $VAR aparece cerca de direcciones de contratos legítimas
+
+### Cierre de auditoría (confirmado por Daniel, 2026-08-20):
+- KEY-01 (0x127fd5...): dirección katana0 — pública, documentada desde F0
+- KEY-03 (0x6d3eb2...): pubkey.y de la clave VRF de test (secret-key 420) — pública, documentada desde F0
+- VEREDICTO FINAL: ninguna clave privada real aparece en texto plano en ninguno de los dos .jsonl
+  ni en ningún otro archivo del proyecto. Auditoría de seguridad de sesión CERRADA.
+
+---
