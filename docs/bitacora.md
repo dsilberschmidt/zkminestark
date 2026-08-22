@@ -238,107 +238,6 @@ Contratos inicializados: 1 (zkmine_f1-actions)
 tag:     zkmine_f1-actions
 address: 0x292763cd8c85375a2d1f16d347ab93036b261305ff021715b49c91f1f43b2ba
 
----
-
-## 2026-08-22 — Simplificación visual de client/minasweeper.html hacia GNOME Mines
-
-### Objetivo aprobado
-
-Tomar el prototipo existente en `client/minasweeper.html` y convertirlo en una
-versión visualmente cercana a GNOME Mines, manteniendo solo la lógica esencial
-de Buscaminas: tablero `30x16`, `99` minas, banderas, chord, conteo de clicks,
-derrota, victoria, reinicio y récord persistido.
-
-### Eliminado del prototipo original
-
-Se retiró por completo todo lo que no era esencial para jugar:
-- nombre visible del prototipo
-- selector de temas
-- seed y RNG determinista por seed
-- wallet, balance, MINA, pozo y premios
-- cooldowns por derrota
-- overlays y modal de "prueba zk"
-- textos explicativos, tarjetas y cabeceras decorativas
-- lógica de registry por seed, récord por seed y economía simulada
-
-### Interfaz final
-
-La pantalla quedó reducida a:
-- tablero principal de `30x16`
-- columna lateral derecha con indicadores mínimos
-- récord persistido arriba a la izquierda, mostrado como `R`
-- botón de reinicio arriba a la derecha, reducido a flecha circular
-
-Ajustes de layout aprobados e implementados:
-- tablero centrado verticalmente
-- columna lateral también centrada verticalmente respecto al tablero
-- contador de minas a la derecha en formato `xx/99`
-- contador de clicks debajo del contador de minas
-- récord fuera de la columna lateral, arriba a la izquierda
-
-### Reescritura de HTML/CSS
-
-Se rehizo la estructura y la presentación para acercarla a GNOME Mines:
-- fondo general `#f6f5f4`
-- celdas cerradas `#babdb6`
-- celdas abiertas vacías `#dededc`
-- separaciones blancas entre celdas
-- tablero escalable según viewport, manteniendo celdas cuadradas
-- visual mínimo, sin gradientes, neón, sombras llamativas ni paneles del prototipo
-
-Cambio importante en celdas reveladas:
-- el número ya no cambia de color
-- todos los números usan texto `#2e3436`
-- lo que cambia es el color de fondo de la casilla según su valor
-
-Fondos aplicados:
-- `1` → `#ddfac3`
-- `2` → `#ecedbf`
-- `3` → `#eddab4`
-- `4` → `#edc38a`
-- `5` → `#e7b17a`
-- `6` → `#df9f73`
-- `7` → `#d58d6b`
-- `8` → `#cb7d63`
-
-### Mina y estados de derrota
-
-La mina dejó de representarse con un carácter Unicode y pasó a dibujarse con
-SVG embebido para aproximar la silueta de GNOME Mines:
-- cuerpo circular oscuro `#2e3436`
-- ocho puntas cortas en horizontal, vertical y diagonal
-- brillo blanco pequeño
-- minas reveladas sobre fondo `#888a85`
-- mina detonada sobre fondo rojo
-
-### Limpieza de JavaScript
-
-Se conservó solamente la lógica necesaria para jugar:
-- generación del tablero
-- vecinos
-- reveal normal
-- `floodReveal`
-- banderas
-- chord
-- derrota y victoria
-- reinicio
-- escalado responsivo del tablero
-- lectura/escritura del récord en `localStorage`
-
-Se cambió la apertura inicial:
-- ya no existe apertura automática a `0` clicks
-- el primer click siempre es seguro
-- el primer click sí cuenta
-
-### Persistencia del récord
-
-El récord quedó como valor único local, no por seed.
-Se guarda en `localStorage` con la clave:
-
-`minesweeper-best-clicks`
-
-Se actualiza solo al ganar una partida con menos clicks que el mejor valor previo.
-
 (De manifest_dev.json generado por sozo migrate)
 Nota: IPFS credentials not found — metadata upload skipped. No afecta el deploy.
 
@@ -837,3 +736,102 @@ Layout GNOME:
 - Este gnome-demo puede ir en el mismo commit o en uno separado, a confirmar.
 
 ---
+
+## 2026-08-22 — Simplificación visual de client/minasweeper.html hacia GNOME Mines
+
+### Objetivo aprobado
+
+Tomar el prototipo existente en `client/minasweeper.html` y convertirlo en una
+versión visualmente cercana a GNOME Mines, manteniendo solo la lógica esencial
+de Buscaminas: tablero `30x16`, `99` minas, banderas, chord, conteo de clicks,
+derrota, victoria, reinicio y récord persistido.
+
+### Eliminado del prototipo original
+
+Se retiró por completo todo lo que no era esencial para jugar:
+- nombre visible del prototipo
+- selector de temas
+- seed y RNG determinista por seed
+- wallet, balance, MINA, pozo y premios
+- cooldowns por derrota
+- overlays y modal de "prueba zk"
+- textos explicativos, tarjetas y cabeceras decorativas
+- lógica de registry por seed, récord por seed y economía simulada
+
+### Interfaz final
+
+La pantalla quedó reducida a:
+- tablero principal de `30x16`
+- columna lateral derecha con indicadores mínimos
+- récord persistido arriba a la izquierda, mostrado como `R`
+- botón de reinicio arriba a la derecha, reducido a flecha circular
+
+Ajustes de layout aprobados e implementados:
+- tablero centrado verticalmente
+- columna lateral también centrada verticalmente respecto al tablero
+- contador de minas a la derecha en formato `xx/99`
+- contador de clicks debajo del contador de minas
+- récord fuera de la columna lateral, arriba a la izquierda
+
+### Reescritura de HTML/CSS
+
+Se rehizo la estructura y la presentación para acercarla a GNOME Mines:
+- fondo general `#f6f5f4`
+- celdas cerradas `#babdb6`
+- celdas abiertas vacías `#dededc`
+- separaciones blancas entre celdas
+- tablero escalable según viewport, manteniendo celdas cuadradas
+- visual mínimo, sin gradientes, neón, sombras llamativas ni paneles del prototipo
+
+Cambio importante en celdas reveladas:
+- el número ya no cambia de color
+- todos los números usan texto `#2e3436`
+- lo que cambia es el color de fondo de la casilla según su valor
+
+Fondos aplicados:
+- `1` → `#ddfac3`
+- `2` → `#ecedbf`
+- `3` → `#eddab4`
+- `4` → `#edc38a`
+- `5` → `#e7b17a`
+- `6` → `#df9f73`
+- `7` → `#d58d6b`
+- `8` → `#cb7d63`
+
+### Mina y estados de derrota
+
+La mina dejó de representarse con un carácter Unicode y pasó a dibujarse con
+SVG embebido para aproximar la silueta de GNOME Mines:
+- cuerpo circular oscuro `#2e3436`
+- ocho puntas cortas en horizontal, vertical y diagonal
+- brillo blanco pequeño
+- minas reveladas sobre fondo `#888a85`
+- mina detonada sobre fondo rojo
+
+### Limpieza de JavaScript
+
+Se conservó solamente la lógica necesaria para jugar:
+- generación del tablero
+- vecinos
+- reveal normal
+- `floodReveal`
+- banderas
+- chord
+- derrota y victoria
+- reinicio
+- escalado responsivo del tablero
+- lectura/escritura del récord en `localStorage`
+
+Se cambió la apertura inicial:
+- ya no existe apertura automática a `0` clicks
+- el primer click siempre es seguro
+- el primer click sí cuenta
+
+### Persistencia del récord
+
+El récord quedó como valor único local, no por seed.
+Se guarda en `localStorage` con la clave:
+
+`minesweeper-best-clicks`
+
+Se actualiza solo al ganar una partida con menos clicks que el mejor valor previo.
