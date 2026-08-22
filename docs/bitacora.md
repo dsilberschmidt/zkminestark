@@ -835,3 +835,19 @@ Se guarda en `localStorage` con la clave:
 `minesweeper-best-clicks`
 
 Se actualiza solo al ganar una partida con menos clicks que el mejor valor previo.
+
+---
+
+## 2026-08-22 — Despliegue público del Minesweeper en Vercel
+
+Se publicó el cliente Minesweeper en Vercel.
+
+URL pública: https://zkminestark.vercel.app/
+
+Configuración:
+- Root Directory: `client`
+- Application Preset: `Other`
+- Sin build.
+- `client/minasweeper.html` sigue siendo el archivo principal.
+- Se añadió `client/vercel.json` con un rewrite de `/` a `/minasweeper.html`.
+- Los `git push` al repositorio disparan nuevos deployments automáticamente.

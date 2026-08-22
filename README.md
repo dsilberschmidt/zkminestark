@@ -1,5 +1,7 @@
 # zkminestark
 
+**Demo pública:** https://zkminestark.vercel.app/
+
 **MinaSweeper** es un buscaminas on-chain donde gana quien piensa menos, no quien corre: la métrica es el número de clicks, no el tiempo. Tablero de 30×16 con 99 minas, temas visuales MINA/LINUX, y una economía de récords por seed con pozo compartido — pensado para ser tranquilizador, no ansiógeno.
 
 La pieza técnica central es la generación diferida (lazy sampling): el tablero no existe hasta que se juega. Cada click sortea sobre la marcha, condicionado a los números ya revelados, vía VRF on-chain en Starknet/Dojo — así nadie, ni el propio jugador, puede precomputar de antemano la secuencia óptima. Es la salida a la falla que mataría cualquier buscaminas con premio en cripto: layouts públicos y deterministas que un bot resuelve el día uno.
