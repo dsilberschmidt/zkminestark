@@ -21,3 +21,4 @@ pending_review.md
 *.keystore
 *.key
 *.pem
+contracts/zkmine_f1/.snfoundry_cache/
