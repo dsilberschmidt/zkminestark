@@ -629,6 +629,29 @@ Lectura final:
 
 Esto revalida en el deploy endurecido la rama `mine-hit` con VRF real + lazy sampling.
 
+### Revalidación mínima F1-A — rama safe-cell
+
+World hardened:
+- `0x05cec67ca060126d1e1133ae4002001b03f1c631e6e43d8a9904cb3b7c5e392d`
+
+`zkmine_f1-actions`:
+- `0x31a8af789641e9883d23c17b072ad7d0bd5d557d4643eeda013eae0a3b048bc`
+
+`spawn_game`:
+- tx `0x066721a27ee7ad8fefc05887344eaa9ad239de38acebc6e9b06ca8dd6d5dd0f2`
+- `game_id = 0x667856c74d975dc6910ff18caf17eaf2f269f73777e7b60e645e431fa1b54de`
+
+VRF + click:
+- multicall atómico `submit_random + click`
+- tx `0x138185ae0d0d417ce26495edd689c8bcd4e2a20308601216f70156b0dc7f68`
+
+Lectura final:
+- `Game status=0, mine_count=99, remaining_mines=99, revealed_count=1, total_cells=480`
+- `Cell(0,0): is_mine=0, revealed=1`
+
+Con esta ejecución quedan ambas ramas (`mine-hit` y `safe-cell`) revalidadas contra el
+World hardened con VRF real + lazy sampling.
+
 ---
 
 ## Estado al cierre de sesión 2026-08-04
