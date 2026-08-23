@@ -851,3 +851,95 @@ Configuración:
 - `client/minasweeper.html` sigue siendo el archivo principal.
 - Se añadió `client/vercel.json` con un rewrite de `/` a `/minasweeper.html`.
 - Los `git push` al repositorio disparan nuevos deployments automáticamente.
+
+---
+
+## 2026-08-23 — Selector de tamaños + fixes de juego en client/minasweeper.html
+
+### Alcance
+
+Se extendió `client/minasweeper.html` para soportar múltiples tamaños de tablero
+desde una pantalla inicial de selección, y se corrigieron tres problemas de juego
+detectados en la versión GNOME-like anterior.
+
+### Selector inicial de tamaño
+
+Se añadió una pantalla de arranque full-screen con grid `2x2` inspirada en
+GNOME Mines:
+- `8x8 / 10 minas`
+- `16x16 / 40 minas`
+- `30x16 / 99 minas` (opción Linux / default visual)
+- `Custom` con `?`, visible pero sin funcionalidad
+
+La partida ya no arranca directamente: primero se elige un preset.
+
+### Refactor del motor a tamaño dinámico
+
+El archivo dejó de depender de constantes fijas `30x16 / 99`.
+Se refactorizó la lógica para trabajar con:
+- `width`
+- `height`
+- `mineCount`
+- `cellCount`
+- preset activo
+
+Efectos del refactor:
+- un único motor soporta `8x8`, `16x16` y `30x16`
+- el grid CSS toma el ancho desde variable dinámica
+- el escalado del tablero se recalcula según el tamaño elegido
+- el récord ya no se mezcla entre tamaños
+
+### Récord por preset
+
+El récord pasó de una única clave global a claves separadas por preset:
+
+- `minesweeper-best-clicks:beginner`
+- `minesweeper-best-clicks:intermediate`
+- `minesweeper-best-clicks:linux`
+
+### Fix 1 — contador de minas en tiempo real
+
+Bug original:
+- el contador no se actualizaba al poner o quitar banderas
+- solo se refrescaba al revelar una casilla
+
+Corrección:
+- el HUD se actualiza en cada cambio de marca
+- el indicador refleja en tiempo real cuántas banderas hay puestas
+
+### Fix 2 — victoria
+
+Criterio mantenido y explicitado:
+- la victoria depende exclusivamente de que estén reveladas todas las casillas
+  que no son mina
+- NO depende del contador de banderas
+
+Comportamiento visual final:
+- al ganar, la partida pasa a estado congelado
+- los clicks quedan congelados
+- el contador de minas se fuerza visualmente al máximo del tablero:
+  `10/10`, `40/40` o `99/99`
+- no se añadió modal, popup ni overlay
+
+### Fix 3 — ciclo de click derecho estilo GNOME Mines
+
+Se añadió el tercer estado de marca faltante:
+
+- vacía → bandera → incógnita → vacía
+
+Reglas:
+- solo la bandera cuenta en el contador de minas
+- la incógnita no altera el contador
+- las banderas siguen siendo gratis y no suman al contador de clicks
+
+### Estado final
+
+Se probó manualmente en sesión y quedó funcionando:
+- selección de tamaño
+- primer click seguro
+- contador de minas en tiempo real
+- victoria no invasiva
+- ciclo bandera/incógnita
+
+Se intentó un pulido visual adicional de la pantalla inicial, pero fue revertido
+por preferencia visual: se conservó la versión anterior del menú.

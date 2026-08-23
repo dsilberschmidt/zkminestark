@@ -34,6 +34,79 @@ body{
   font-family:"Cantarell","Noto Sans",system-ui,sans-serif;
 }
 
+button{
+  font:inherit;
+}
+
+.screen{
+  min-height:100%;
+}
+
+.hidden{
+  display:none !important;
+}
+
+.menu{
+  min-height:100%;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  grid-template-rows:repeat(2, minmax(0, 1fr));
+  gap:18px;
+  padding:20px;
+}
+
+.menu-card{
+  border:1px solid var(--border);
+  background:#ffffff;
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-end;
+  padding:24px;
+  cursor:pointer;
+  min-height:0;
+}
+
+.menu-card:hover{
+  background:#fbfbfb;
+}
+
+.menu-card:focus-visible{
+  outline:2px solid #3584e4;
+  outline-offset:2px;
+}
+
+.menu-card .eyebrow{
+  font-size:13px;
+  color:#6c6f73;
+  margin-bottom:auto;
+}
+
+.menu-card .title{
+  font-size:34px;
+  line-height:1;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.menu-card .meta{
+  font-size:16px;
+  color:#6c6f73;
+}
+
+.menu-card.default{
+  background:#f1f8e8;
+}
+
+.menu-card.custom{
+  cursor:default;
+}
+
+.menu-card.custom:hover{
+  background:#ffffff;
+}
+
 .app{
   min-height:100%;
   display:flex;
@@ -93,18 +166,7 @@ body{
   text-align:right;
 }
 
-.mines{
-  background:#ffffff;
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:6px 10px;
-  min-width:84px;
-}
-
-.mines .value{
-  font-weight:700;
-}
-
+.mines,
 .clicks{
   background:#ffffff;
   border:1px solid var(--border);
@@ -113,6 +175,7 @@ body{
   min-width:84px;
 }
 
+.mines .value,
 .clicks .value{
   font-weight:700;
 }
@@ -134,7 +197,6 @@ body{
   width:32px;
   height:32px;
   padding:0;
-  font:inherit;
   cursor:pointer;
   display:flex;
   align-items:center;
@@ -160,7 +222,7 @@ body{
 
 .board{
   display:grid;
-  grid-template-columns:repeat(30, var(--cell-size));
+  grid-template-columns:repeat(var(--board-w, 30), var(--cell-size));
   grid-auto-rows:var(--cell-size);
   gap:var(--cell-gap);
   width:max-content;
@@ -196,7 +258,7 @@ body{
   cursor:default;
 }
 
-.cell:not(.open):not(.flag)::after{
+.cell:not(.open):not(.flag):not(.question)::after{
   content:"";
   position:absolute;
   inset:0;
@@ -222,7 +284,16 @@ body{
   clip-path:polygon(0 0, 100% 20%, 68% 52%, 100% 100%, 0 82%);
   left:calc(50% - var(--cell-size) * 0.02);
   top:calc(50% - var(--cell-size) * 0.32);
-  box-shadow:none;
+}
+
+.cell.question{
+  font-weight:700;
+}
+
+.cell.question::before{
+  content:"?";
+  color:#6c6f73;
+  font-size:calc(var(--cell-size) * 0.62);
 }
 
 .cell.mine::before{
@@ -273,6 +344,14 @@ body{
 }
 
 @media (max-width:720px){
+  .menu{
+    grid-template-columns:1fr;
+    grid-template-rows:auto;
+    min-height:auto;
+  }
+  .menu-card{
+    min-height:180px;
+  }
   .app{padding:12px;}
   .topbar{margin-bottom:10px;}
   .game{
@@ -291,7 +370,30 @@ body{
 </style>
 </head>
 <body>
-<div class="app">
+<div class="screen menu" id="menuScreen">
+  <button class="menu-card" type="button" data-preset="beginner">
+    <span class="eyebrow">Beginner</span>
+    <span class="title">8×8</span>
+    <span class="meta">10 minas</span>
+  </button>
+  <button class="menu-card" type="button" data-preset="intermediate">
+    <span class="eyebrow">Intermediate</span>
+    <span class="title">16×16</span>
+    <span class="meta">40 minas</span>
+  </button>
+  <button class="menu-card default" type="button" data-preset="linux">
+    <span class="eyebrow">Linux</span>
+    <span class="title">30×16</span>
+    <span class="meta">99 minas</span>
+  </button>
+  <div class="menu-card custom" aria-disabled="true">
+    <span class="eyebrow">Custom</span>
+    <span class="title">?</span>
+    <span class="meta">Sin activar</span>
+  </div>
+</div>
+
+<div class="screen app hidden" id="gameScreen">
   <div class="topbar">
     <div class="stat record"><span class="label">R</span><span class="value" id="recordValue">-</span></div>
     <button class="restart" id="restartBtn" type="button" aria-label="Reiniciar">↻</button>
@@ -314,42 +416,65 @@ body{
 <script>
 "use strict";
 
-const W = 30;
-const H = 16;
-const N = W * H;
-const M = 99;
-const RECORD_KEY = "minesweeper-best-clicks";
+const PRESETS = {
+  beginner: { key:"beginner", label:"8x8", width:8, height:8, mines:10 },
+  intermediate: { key:"intermediate", label:"16x16", width:16, height:16, mines:40 },
+  linux: { key:"linux", label:"30x16", width:30, height:16, mines:99 }
+};
+const RECORD_KEY_PREFIX = "minesweeper-best-clicks:";
 
+let width = 30;
+let height = 16;
+let mineCount = 99;
+let cellCount = width * height;
+let selectedPreset = PRESETS.linux;
 let cells = [];
 let clicks = 0;
 let flags = 0;
 let revealedCount = 0;
-let state = "ready";
+let state = "menu";
 let firstMove = true;
 let longPressTimer = null;
 let suppressClick = false;
-let bestRecord = loadRecord();
+let bestRecord = null;
+let winDisplay = false;
 
 const $ = (id) => document.getElementById(id);
+const menuScreen = $("menuScreen");
+const gameScreen = $("gameScreen");
 const boardEl = $("board");
 const minesEl = $("minesValue");
 const clicksEl = $("clicksValue");
 const recordEl = $("recordValue");
 
+function activeRecordKey(){
+  return RECORD_KEY_PREFIX + selectedPreset.key;
+}
+
 function loadRecord(){
-  const raw = localStorage.getItem(RECORD_KEY);
+  const raw = localStorage.getItem(activeRecordKey());
   const value = Number(raw);
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 
 function saveRecord(value){
   bestRecord = value;
-  localStorage.setItem(RECORD_KEY, String(value));
+  localStorage.setItem(activeRecordKey(), String(value));
+}
+
+function applyPreset(preset){
+  selectedPreset = preset;
+  width = preset.width;
+  height = preset.height;
+  mineCount = preset.mines;
+  cellCount = width * height;
+  bestRecord = loadRecord();
+  document.documentElement.style.setProperty("--board-w", String(width));
 }
 
 function neighbors(i){
-  const x = i % W;
-  const y = (i / W) | 0;
+  const x = i % width;
+  const y = (i / width) | 0;
   const out = [];
 
   for(let dy = -1; dy <= 1; dy++){
@@ -357,7 +482,7 @@ function neighbors(i){
       if(!dx && !dy) continue;
       const nx = x + dx;
       const ny = y + dy;
-      if(nx >= 0 && nx < W && ny >= 0 && ny < H) out.push(ny * W + nx);
+      if(nx >= 0 && nx < width && ny >= 0 && ny < height) out.push(ny * width + nx);
     }
   }
 
@@ -365,14 +490,20 @@ function neighbors(i){
 }
 
 function createEmptyBoard(){
-  cells = Array.from({ length: N }, () => ({ mine:false, adj:0, open:false, flag:false }));
+  cells = Array.from({ length: cellCount }, () => ({
+    mine:false,
+    adj:0,
+    open:false,
+    flag:false,
+    question:false
+  }));
 }
 
 function placeMines(safeIndex){
   const forbidden = new Set([safeIndex, ...neighbors(safeIndex)]);
   const pool = [];
 
-  for(let i = 0; i < N; i++){
+  for(let i = 0; i < cellCount; i++){
     if(!forbidden.has(i)) pool.push(i);
   }
 
@@ -381,9 +512,9 @@ function placeMines(safeIndex){
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
 
-  for(let i = 0; i < M; i++) cells[pool[i]].mine = true;
+  for(let i = 0; i < mineCount; i++) cells[pool[i]].mine = true;
 
-  for(let i = 0; i < N; i++){
+  for(let i = 0; i < cellCount; i++){
     if(cells[i].mine) continue;
     cells[i].adj = neighbors(i).filter((n) => cells[n].mine).length;
   }
@@ -393,7 +524,7 @@ function buildBoard(){
   boardEl.innerHTML = "";
   const frag = document.createDocumentFragment();
 
-  for(let i = 0; i < N; i++){
+  for(let i = 0; i < cellCount; i++){
     const button = document.createElement("button");
     button.type = "button";
     button.className = "cell";
@@ -413,10 +544,11 @@ function paint(i){
   el.textContent = "";
 
   if(cell.flag) el.classList.add("flag");
+  if(cell.question) el.classList.add("question");
 
   if(cell.open){
     el.classList.add("open");
-    el.classList.remove("flag");
+    el.classList.remove("flag", "question");
     if(cell.mine){
       el.classList.add("mine");
       el.setAttribute("aria-label", "Mina");
@@ -429,17 +561,16 @@ function paint(i){
     }
   }else if(cell.flag){
     el.setAttribute("aria-label", "Bandera");
+  }else if(cell.question){
+    el.setAttribute("aria-label", "Incógnita");
   }else{
     el.setAttribute("aria-label", "Celda oculta");
   }
 }
 
-function paintAll(){
-  for(let i = 0; i < N; i++) paint(i);
-}
-
 function updateHUD(){
-  minesEl.textContent = String(flags).padStart(2, "0") + "/99";
+  const shownFlags = winDisplay ? mineCount : flags;
+  minesEl.textContent = String(shownFlags).padStart(2, "0") + "/" + String(mineCount);
   clicksEl.textContent = String(clicks);
   recordEl.textContent = bestRecord == null ? "-" : String(bestRecord);
 }
@@ -447,10 +578,10 @@ function updateHUD(){
 function updateBoardScale(){
   const appStyles = getComputedStyle(document.documentElement);
   const gap = parseFloat(appStyles.getPropertyValue("--cell-gap")) || 4;
-  const viewportWidth = window.innerWidth - 24;
+  const viewportWidth = window.innerWidth - 120;
   const viewportHeight = window.innerHeight - 88;
-  const cellByWidth = Math.floor((viewportWidth - gap * (W + 1)) / W);
-  const cellByHeight = Math.floor((viewportHeight - gap * (H + 1)) / H);
+  const cellByWidth = Math.floor((viewportWidth - gap * (width + 1)) / width);
+  const cellByHeight = Math.floor((viewportHeight - gap * (height + 1)) / height);
   const size = Math.max(18, Math.min(38, cellByWidth, cellByHeight));
   document.documentElement.style.setProperty("--cell-size", size + "px");
 }
@@ -479,7 +610,7 @@ function floodReveal(startIndex){
 }
 
 function revealAllMines(hitIndex){
-  for(let i = 0; i < N; i++){
+  for(let i = 0; i < cellCount; i++){
     if(cells[i].mine){
       cells[i].open = true;
       paint(i);
@@ -490,11 +621,13 @@ function revealAllMines(hitIndex){
 
 function endLost(hitIndex){
   state = "lost";
+  winDisplay = false;
   revealAllMines(hitIndex);
 }
 
 function endWon(){
   state = "won";
+  winDisplay = true;
   if(bestRecord == null || clicks < bestRecord){
     saveRecord(clicks);
   }
@@ -502,7 +635,7 @@ function endWon(){
 }
 
 function checkWin(){
-  if(revealedCount === N - M) endWon();
+  if(revealedCount === cellCount - mineCount) endWon();
 }
 
 function ensureFirstMove(index){
@@ -572,9 +705,21 @@ function handleFlag(index){
   if(state !== "ready" && state !== "playing") return;
   const cell = cells[index];
   if(cell.open) return;
-  cell.flag = !cell.flag;
-  flags += cell.flag ? 1 : -1;
+
+  if(!cell.flag && !cell.question){
+    cell.flag = true;
+    flags++;
+  }else if(cell.flag){
+    cell.flag = false;
+    cell.question = true;
+    flags--;
+  }else{
+    cell.question = false;
+  }
+
   paint(index);
+  updateHUD();
+  checkWin();
 }
 
 function resetGame(){
@@ -583,12 +728,20 @@ function resetGame(){
   revealedCount = 0;
   state = "ready";
   firstMove = true;
+  winDisplay = false;
   clearTimeout(longPressTimer);
   suppressClick = false;
   createEmptyBoard();
   updateBoardScale();
   buildBoard();
   updateHUD();
+}
+
+function startPreset(preset){
+  applyPreset(preset);
+  menuScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+  resetGame();
 }
 
 boardEl.addEventListener("click", (event) => {
@@ -622,10 +775,15 @@ boardEl.addEventListener("pointerdown", (event) => {
   boardEl.addEventListener(name, () => clearTimeout(longPressTimer));
 });
 
+document.querySelectorAll("[data-preset]").forEach((button) => {
+  button.addEventListener("click", () => startPreset(PRESETS[button.dataset.preset]));
+});
+
 $("restartBtn").addEventListener("click", resetGame);
 window.addEventListener("resize", updateBoardScale);
 
-resetGame();
+applyPreset(PRESETS.linux);
+updateHUD();
 </script>
 </body>
 </html>
