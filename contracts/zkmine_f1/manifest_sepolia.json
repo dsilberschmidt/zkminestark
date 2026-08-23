@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x613551abceb2b37073b1149bb862ea70cf029981ce1ca47e9dd7c7ab97cb65d",
-    "address": "0x27b48a001297a0da77eb50f6f52837cd8ea5e128f1a57f3d8fe7a3d1fd5e14d",
-    "seed": "zkmine_f1",
+    "address": "0x5cec67ca060126d1e1133ae4002001b03f1c631e6e43d8a9904cb3b7c5e392d",
+    "seed": "zkmine_f1_hardened",
     "name": "zkmine F1",
     "entrypoints": [
       "uuid",
@@ -33,8 +33,8 @@
   },
   "contracts": [
     {
-      "address": "0x292763cd8c85375a2d1f16d347ab93036b261305ff021715b49c91f1f43b2ba",
-      "class_hash": "0x47470bf45c8ba7262fd5a2c082135f096a37df30bd961c050c25b3bcb30de2c",
+      "address": "0x31a8af789641e9883d23c17b072ad7d0bd5d557d4643eeda013eae0a3b048bc",
+      "class_hash": "0x36d61c55b080997ab4f04eeaefd4137e0fdaaac38ed329d5e457e40cf8bc30d",
       "init_calldata": [],
       "tag": "zkmine_f1-actions",
       "selector": "0x37306e9cdf5f06ed103b6ee2affe396c44b8a09f57ae3aa7de0928dd6054939",

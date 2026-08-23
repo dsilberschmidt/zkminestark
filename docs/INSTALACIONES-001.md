@@ -512,6 +512,125 @@ https://sepolia.voyager.online/tx/0x078ffa919d9916a4be323702b20fb03092c33888ebb1
 
 ---
 
+## 2026-08-23 — F1-A hardened redeploy (Sepolia)
+
+### Motivo
+
+Se hizo un redeploy limpio de F1-A para validar desde storage cero la nueva policy de
+`set_config`: caller autorizado, rechazo de VRF cero, una sola escritura e inmutabilidad
+posterior. El World anterior no servía para esta validación porque `Config.vrf_provider`
+ya estaba cargado.
+
+### Cambio de seed
+
+Nuevo World seed:
+- `zkmine_f1_hardened`
+
+Se mantuvieron sin cambios:
+- namespace `zkmine_f1`
+- RPC de Sepolia
+- cuenta `sepolia_dev`
+- writer permissions
+
+### VRF y caller autorizado
+
+Se reutilizó el VrfProvider Sepolia ya desplegado:
+- `0x05284b1597a91df6db38a25eae873063d08d37fd8cb5d0357d310b6e5dcffe37`
+
+`CONFIG_SETTER` quedó hardcodeado deliberadamente como la cuenta pública `sepolia_dev`:
+- `0x077bd7696ed8573ee1f1d3aef662455d22f918e62de532d424134aaf24924192`
+
+Policy actual de `set_config`:
+- solo caller autorizado
+- rechazo de VRF cero
+- una sola escritura
+- inmutable después de la primera configuración válida
+- si cambia el VRF, se redepliega
+
+### Toolchain y tests locales
+
+- `snforge_std = 0.62.1`
+- `sozo build` OK
+- `snforge test` OK
+- `.snfoundry_cache/` agregado a `.gitignore`
+
+`zkmine_f1`:
+- `10` tests, `10` pass
+- `4` tests de policy de `set_config`
+- `6` tests por rangos que, en conjunto, cubren exhaustivamente las `300`
+  configuraciones del modelo ideal `5x5/2`
+
+Alcance del property test:
+- prueba un caso finito del modelo ideal de lazy sampling
+- compara orden fijo y adaptativo
+- usa racionales exactos
+- no es una demostración matemática general
+- no prueba la uniformidad exacta de `raw % remaining_cells`
+
+`vrf_bench`:
+- `2` integration tests reales, `2` pass
+- reemplazo completo del viejo template `HelloStarknet`
+- `IBenchmark` expuesto como `pub` únicamente para posibilitar esos integration tests
+
+Compatibilidad Cairo 2.13 / Dojo 1.8 aplicada en `zkmine_f1`:
+- `contract_address_const` eliminado
+- `config_setter()` definido mediante conversión `try_into().unwrap()`
+- checks de direcciones vía `is_zero()`
+- `#[cfg(test)]` agregado al módulo de tests para que `sozo build` no compile `#[test]`
+
+### Workaround Sozo 1.8.7
+
+`sozo migrate` y `sozo execute` deben recibir la clave por CLI:
+
+```bash
+--private-key $ZKMINE_SEPOLIA_PRIVATE_KEY
+```
+
+Sozo 1.8.7 no expande esa variable dentro del TOML antes de parsear.
+
+### Redeploy y evidencia real
+
+Build:
+- `sozo build --profile sepolia`
+
+Redeploy limpio:
+- `sozo migrate --profile sepolia --private-key $ZKMINE_SEPOLIA_PRIVATE_KEY`
+- bloque Sepolia `13924626`
+
+Nuevo World:
+- `0x05cec67ca060126d1e1133ae4002001b03f1c631e6e43d8a9904cb3b7c5e392d`
+
+Nuevo `zkmine_f1-actions`:
+- `0x31a8af789641e9883d23c17b072ad7d0bd5d557d4643eeda013eae0a3b048bc`
+
+Primera llamada válida a `set_config`:
+- tx `0x032e835fb3d447b7a8baa9674634b52afdffec25b8a154bc00008f5ebba29cec`
+
+Config verificado:
+- `vrf_provider = 0x05284b1597a91df6db38a25eae873063d08d37fd8cb5d0357d310b6e5dcffe37`
+
+Segunda llamada a `set_config`:
+- rechazada con revert `already configured`
+- no debe presentarse como tx exitosa
+
+### Revalidación mínima F1-A
+
+`spawn_game`:
+- tx `0x0560bd2953e9d9eefe67cc03af4213dec8defec406739484fc72d86dc6b1b599`
+- `game_id = 0x335060aeef3ab51fc10ea76b8a3a60b53372c9b43d052ac552ac46204f80ead`
+
+VRF + click:
+- multicall atómico `submit_random + click`
+- tx `0x4147c66f07556ef80d2713a016823b38f553ab32a7a936625300d70ec8776d3`
+
+Lectura final:
+- `Game status=2, mine_count=99, remaining_mines=98, revealed_count=0, total_cells=480`
+- `Cell(0,0): is_mine=1, revealed=1`
+
+Esto revalida en el deploy endurecido la rama `mine-hit` con VRF real + lazy sampling.
+
+---
+
 ## Estado al cierre de sesión 2026-08-04
 
 ### COMPLETADO Y VERIFICADO

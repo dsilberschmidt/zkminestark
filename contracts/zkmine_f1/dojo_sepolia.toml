@@ -1,6 +1,6 @@
 [world]
 name = "zkmine F1"
-seed = "zkmine_f1"
+seed = "zkmine_f1_hardened"
 
 [namespace]
 default = "zkmine_f1"

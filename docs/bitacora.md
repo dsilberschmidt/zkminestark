@@ -943,3 +943,83 @@ Se probó manualmente en sesión y quedó funcionando:
 
 Se intentó un pulido visual adicional de la pantalla inicial, pero fue revertido
 por preferencia visual: se conservó la versión anterior del menú.
+
+---
+
+## 2026-08-23 — Cierre hardening F1-A, tests y redeploy Sepolia
+
+Se cerró el hardening de `zkmine_f1` y la limpieza de tests del repo.
+
+### Cambios de contrato y compatibilidad
+
+- `set_config` quedó endurecido con policy explícita:
+  - caller autorizado (`CONFIG_SETTER = sepolia_dev`)
+  - rechazo de VRF cero
+  - una sola escritura
+  - inmutable después de la primera configuración válida
+- Compatibilidad ajustada para Cairo 2.13 / Dojo 1.8 sin cambiar la policy acordada.
+
+### Tests añadidos
+
+`zkmine_f1`:
+- `4` tests de policy para `set_config`
+- property test exhaustivo del modelo ideal de lazy sampling en `5x5/2`
+- el property test quedó particionado en `6` rangos y, en conjunto, cubre exactamente
+  las `300` configuraciones con orden fijo y adaptativo, racionales exactos y sin float
+- resultado local: `10/10` tests pass
+
+`vrf_bench`:
+- eliminación total del viejo template `HelloStarknet`
+- reemplazo por `2` integration tests reales del benchmark + mock VRF compatible con la ABI
+- resultado local: `2/2` tests pass
+- `IBenchmark` se hizo `pub` únicamente para posibilitar esos integration tests
+
+Compatibilidad Cairo 2.13 / Dojo 1.8 registrada:
+- `contract_address_const` eliminado
+- `config_setter()` mediante conversión
+- checks con `is_zero()`
+- `#[cfg(test)]` en tests
+- `.snfoundry_cache/` agregado a `.gitignore`
+
+Commits publicados relacionados:
+- `67d2153` — `Harden VRF config and replace placeholder tests`
+- `7155b90` — `Add exhaustive lazy sampling property test`
+
+### Redeploy limpio de Sepolia
+
+Motivo:
+- el World anterior ya tenía `Config.vrf_provider` cargado
+- para validar correctamente `set_config` one-shot e inmutable hacía falta storage nuevo
+
+Cambio aplicado:
+- nuevo seed `zkmine_f1_hardened`
+- reutilización del VrfProvider Sepolia existente
+- redeploy en bloque Sepolia `13924626`
+
+Direcciones nuevas:
+- World `0x05cec67ca060126d1e1133ae4002001b03f1c631e6e43d8a9904cb3b7c5e392d`
+- `zkmine_f1-actions` `0x31a8af789641e9883d23c17b072ad7d0bd5d557d4643eeda013eae0a3b048bc`
+
+Primera configuración válida:
+- tx `0x032e835fb3d447b7a8baa9674634b52afdffec25b8a154bc00008f5ebba29cec`
+- `Config.vrf_provider` verificado como
+  `0x05284b1597a91df6db38a25eae873063d08d37fd8cb5d0357d310b6e5dcffe37`
+
+Segunda configuración:
+- rechazada con revert `already configured`
+- no debe presentarse como tx exitosa
+
+### Revalidación mínima F1-A
+
+- `spawn_game` tx:
+  `0x0560bd2953e9d9eefe67cc03af4213dec8defec406739484fc72d86dc6b1b599`
+- `game_id`:
+  `0x335060aeef3ab51fc10ea76b8a3a60b53372c9b43d052ac552ac46204f80ead`
+- multicall atómico `submit_random + click` tx:
+  `0x4147c66f07556ef80d2713a016823b38f553ab32a7a936625300d70ec8776d3`
+
+Lectura final:
+- `Game status=2, mine_count=99, remaining_mines=98, revealed_count=0, total_cells=480`
+- `Cell(0,0): is_mine=1, revealed=1`
+
+Esto revalida en el deploy endurecido la rama `mine-hit` con VRF real + lazy sampling.
