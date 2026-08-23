@@ -1,4 +1,5 @@
 use starknet::ContractAddress;
+use core::num::traits::Zero;
 
 // Mirror of IVrfProvider from cartridge_vrf v0.3.1 — same pattern as vrf_bench, no package dep.
 #[derive(Drop, Copy, Clone, Serde)]
@@ -20,12 +21,46 @@ pub trait IActions<T> {
     fn click(ref self: T, game_id: felt252, x: u8, y: u8);
 }
 
+pub fn config_setter() -> ContractAddress {
+    0x077bd7696ed8573ee1f1d3aef662455d22f918e62de532d424134aaf24924192.try_into().unwrap()
+}
+
+pub fn set_config_guard_code(
+    caller: ContractAddress, current_vrf: ContractAddress, new_vrf: ContractAddress
+) -> u8 {
+    if caller != config_setter() {
+        return 1;
+    }
+    if new_vrf.is_zero() {
+        return 2;
+    }
+    if !current_vrf.is_zero() {
+        return 3;
+    }
+    0
+}
+
+fn assert_set_config_allowed(
+    caller: ContractAddress, current_vrf: ContractAddress, new_vrf: ContractAddress
+) {
+    match set_config_guard_code(caller, current_vrf, new_vrf) {
+        0 => {},
+        1 => core::panic_with_felt252('not config setter'),
+        2 => core::panic_with_felt252('invalid vrf'),
+        3 => core::panic_with_felt252('already configured'),
+        _ => core::panic_with_felt252('invalid config state'),
+    }
+}
+
 #[dojo::contract]
 pub mod actions {
     use dojo::model::ModelStorage;
     use starknet::{ContractAddress, get_caller_address, get_contract_address, get_tx_info};
     use core::poseidon::poseidon_hash_span;
-    use super::{IActions, IVrfProviderDispatcher, IVrfProviderDispatcherTrait, Source};
+    use super::{
+        IActions, IVrfProviderDispatcher, IVrfProviderDispatcherTrait, Source,
+        assert_set_config_allowed,
+    };
     use zkmine_f1::models::{Config, Game, Cell};
 
     const GRID_W: u8 = 30;
@@ -36,6 +71,9 @@ pub mod actions {
     impl ActionsImpl of IActions<ContractState> {
         fn set_config(ref self: ContractState, vrf_provider: ContractAddress) {
             let mut world = self.world_default();
+            let caller = get_caller_address();
+            let config: Config = world.read_model(0_felt252);
+            assert_set_config_allowed(caller, config.vrf_provider, vrf_provider);
             world.write_model(@Config { id: 0, vrf_provider });
         }
 

@@ -19,7 +19,7 @@ trait IVrfProvider<TContractState> {
 }
 
 #[starknet::interface]
-trait IBenchmark<TContractState> {
+pub trait IBenchmark<TContractState> {
     fn roll(ref self: TContractState);
     fn get_last_value(self: @TContractState) -> felt252;
     fn get_counter(self: @TContractState) -> u64;
