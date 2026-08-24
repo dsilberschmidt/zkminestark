@@ -138,6 +138,10 @@ VRF? Todo D1 se sostiene o se cae con ese número.
 - Detalle completo de la medición: `docs/INSTALACIONES-001.md`.
 - Consecuencia según D1: Plan B1 en juego. Ver nota de estrategia en F4 sobre priorización con financiamiento.
 
+### Nota — el ROJO mide el peor caso, no el caso típico de juego (2026-08-23)
+
+El criterio go/no-go mide latencia de clicks-VRF aislados y consecutivos — el peor patrón posible. No es el patrón real de juego. Por construcción del protocolo (Adenda 2, paso de determinación de vecinos): al abrir cualquier celda, TODOS sus vecinos indeterminados se sortean para calcular su número. Si el número da 0, la cascada de flood-fill repite el proceso — determinando, como efecto colateral, toda la orla alrededor de la región revelada, aunque esas celdas nunca se abran visualmente. Consecuencia: un click en zona ya jugada (adyacente a algo abierto — el caso normal, deducción lógica típica del buscaminas) casi siempre cae sobre una celda ya determinada por el sorteo de un vecino anterior → respuesta instantánea, sin VRF nuevo. Solo se paga el costo VRF (~3-4s medido en F0) cuando el click salta a zona sin ningún vecino ya revelado: el primer click de la partida (ya resuelto aparte — apertura inicial fijada segura sin sorteo) y saltos deliberados a zona desconectada, típicamente cuando no hay jugada lógica disponible — en la práctica, del orden del 1% de los clicks de una partida. El shimmer "sorteando…" (ya previsto en INCOGNITAS como ritual, no lag) cubre ese caso puntual. No cambia el criterio ROJO como medición técnica del ciclo VRF aislado; sí cambia cuánto pesa esa medición sobre la UX final de una partida real.
+
 ### F1 — El corazón del juego, sin cara (3–5 semanas)
 La lógica completa on-chain, jugada por terminal (feo pero
 verificable):

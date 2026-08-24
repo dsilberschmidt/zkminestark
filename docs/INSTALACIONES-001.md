@@ -310,6 +310,10 @@ Criterio go/no-go para Sepolia: p50 ≤ 2 s, p95 ≤ 5 s.
 
 **Resultado go/no-go: ROJO.** El criterio requiere p50 ≤ 2000 ms Y p95 ≤ 5000 ms. El p50 falla (3312 ms) de forma consistente — no es un outlier ni un problema de medición.
 
+### Nota — el ROJO mide el peor caso, no el caso típico de juego (2026-08-23)
+
+El criterio go/no-go mide latencia de clicks-VRF aislados y consecutivos — el peor patrón posible. No es el patrón real de juego. Por construcción del protocolo (Adenda 2, paso de determinación de vecinos): al abrir cualquier celda, TODOS sus vecinos indeterminados se sortean para calcular su número. Si el número da 0, la cascada de flood-fill repite el proceso — determinando, como efecto colateral, toda la orla alrededor de la región revelada, aunque esas celdas nunca se abran visualmente. Consecuencia: un click en zona ya jugada (adyacente a algo abierto — el caso normal, deducción lógica típica del buscaminas) casi siempre cae sobre una celda ya determinada por el sorteo de un vecino anterior → respuesta instantánea, sin VRF nuevo. Solo se paga el costo VRF (~3-4s medido en F0) cuando el click salta a zona sin ningún vecino ya revelado: el primer click de la partida (ya resuelto aparte — apertura inicial fijada segura sin sorteo) y saltos deliberados a zona desconectada, típicamente cuando no hay jugada lógica disponible — en la práctica, del orden del 1% de los clicks de una partida. El shimmer "sorteando…" (ya previsto en INCOGNITAS como ritual, no lag) cubre ese caso puntual. No cambia el criterio ROJO como medición técnica del ciclo VRF aislado; sí cambia cuánto pesa esa medición sobre la UX final de una partida real.
+
 **Nota — 43 fallos:** los fallos al final del batch se debieron a un nonce mismatch del script, no a un fallo del protocolo VRF ni de los contratos. Los 457 ciclos exitosos son representativos del comportamiento real del sistema.
 
 ---
@@ -364,6 +368,87 @@ Para que el cliente de juego pueda usar preconfirmación, necesita someter trans
 Esto es un cambio en el cliente del juego (capa F2), NO en los contratos (F1). No bloquea el desarrollo de contratos de F1.
 
 **Condición:** No invertir en implementación de cliente sin financiamiento confirmado (ver roadmap).
+
+### 3.b F0-bis pendiente — precómputo de proof sin request on-chain (2026-08-24)
+
+Objetivo puntual: responder si el `vrf-server` apuntado para Sepolia entrega una prueba
+VRF para un `seed` calculado off-chain a partir del nonce futuro, **antes** de cualquier
+`request_random`, `submit_random` o transacción relacionada on-chain.
+
+Script preparado:
+- `scripts/f0_bis_precompute_check.py`
+
+Qué hace:
+- lee `Benchmark.get_counter()` vía `sncast call`
+- calcula `seed = compute_seed(nonce_actual, caller, benchmark, chain_id)` reutilizando
+  literalmente `compute_seed()` y `get_proof()` de `measure_vrf.py`
+- consulta `POST /proof` contra un `--vrf-server` explícito
+- imprime uno de dos resultados operativos:
+  - `PRUEBA VALIDA RECIBIDA`
+  - `RECHAZO DEL SERVIDOR`
+
+Comando de corrida preparado:
+
+```bash
+python3 scripts/f0_bis_precompute_check.py \
+  --vrf-server https://<sepolia-vrf-server> \
+  --benchmark 0x002f32e302a63cc7a181563819c5933bfc402bcf87c42c945183235a7269e79b \
+  --caller 0x077bd7696ed8573ee1f1d3aef662455d22f918e62de532d424134aaf24924192 \
+  --rpc-url https://api.cartridge.gg/x/starknet/sepolia \
+  --chain-id 0x534e5f5345504f4c4941
+```
+
+Resultado: pendiente de ejecución manual fuera de este sandbox.
+
+### 3.c Resultado F0-bis — prueba entregada sin request on-chain previo (2026-08-24)
+
+Corrida manual reportada:
+
+```bash
+python3 scripts/f0_bis_precompute_check.py \
+  --vrf-server http://localhost:3001 \
+  --benchmark 0x002f32e302a63cc7a181563819c5933bfc402bcf87c42c945183235a7269e79b \
+  --caller 0x077bd7696ed8573ee1f1d3aef662455d22f918e62de532d424134aaf24924192 \
+  --rpc-url https://api.cartridge.gg/x/starknet/sepolia \
+  --chain-id 0x534e5f5345504f4c4941
+```
+
+Output relevante:
+
+```text
+Paso 1/3 - leyendo nonce actual on-chain...
+  nonce actual = 64
+Paso 2/3 - calculando seed futuro sin enviar tx...
+  seed = 0x43d6b3c44526739cbcef9877c14121092366e353dd71008ad66b3fd7c704569
+Paso 3/3 - pidiendo prueba al vrf-server sin request_random previo...
+RESULTADO: PRUEBA VALIDA RECIBIDA
+  gamma_x = 0x5d5263501c1f0b724067b451f3a4f2c48e56d77265ac10dcc16d85ee24c66ce
+  gamma_y = 0x17247626ded26740d97d0191eda62243dc2e4b4e61bbec2a1411e4e04fe04ad
+  c = 0x3d5967ae6ece82e0d0cdf157824ac21d2fd081bd008f57aa2cfe2a22b7962e3
+  s = 0x2dca381ac503cee64930714092c8374f7939639ead829e8e7d8d3be5c947ed4
+  sqrt_ratio = 0x685c65e4418911df3e0caa82db2264ea3a1785754c86c0ba98d2b34da5aeb46
+  rnd = 0x721f0df9f4ff970a22a1b8499b2eb87995680a94bc11ea3847509cf723cccdb
+```
+
+Conclusión bajo el criterio fijado antes de correrlo:
+- el servidor respondió una prueba VRF válida para un `seed` calculado off-chain a partir
+  del nonce futuro (`nonce=64`)
+- no hubo `request_random`, `submit_random` ni ninguna otra tx previa entre la lectura del
+  nonce y el pedido de `/proof`
+- por lo tanto, **el vector de precómputo existe** para el servidor que respondió en
+  `--vrf-server`
+
+Salvedad operativa importante:
+- esta corrida probó específicamente `http://localhost:3001`
+- el endpoint usado era un **servidor local autónomo**, no un backend Sepolia remoto
+- por lo tanto, esta evidencia **no responde todavía** la pregunta de seguridad sobre un
+  `vrf-server` real de Sepolia distinto de ese proceso local
+
+Estado del hallazgo:
+- **Hallazgo confirmado, alcance acotado:** un servidor VRF local autónomo que comparte la
+  pubkey/seed scheme de F0 acepta entregar proof off-chain antes de cualquier request
+  on-chain, al menos por la vía HTTP `POST /proof`
+- **Pregunta original sobre Sepolia remoto:** sigue abierta
 
 ### 4. `--vrf` nativo en katana — posible simplificación del entorno dev
 

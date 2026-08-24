@@ -22,3 +22,4 @@ pending_review.md
 *.key
 *.pem
 contracts/zkmine_f1/.snfoundry_cache/
+scripts/__pycache__/
