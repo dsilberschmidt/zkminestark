@@ -670,3 +670,55 @@ clicks exploratorios.
 **Recordatorio de diseño**: score = clicks, no tiempo ⇒ la latencia
 nunca toca la puntuación, solo la sensación — y la sensación se
 diseña (shimmer "sorteando…" = ritual, no lag).
+
+---
+
+## ADENDA 3 a #1 — Alfabeto de acciones y versionado del récord
+### (2026-08-28, a partir de un bug del prototipo)
+
+**Origen.** El prototipo contabilizaba clicks con dos criterios distintos
+según la rama: celda cerrada cobraba por intentar, chord cobraba solo si
+revelaba algo. Al unificarlo apareció una disyuntiva que parecía de reglas:
+- **A — acción comprometida**: cuenta toda acción enviada, revele o no.
+- **B — acción con efecto**: cuenta solo si revela.
+
+**Hallazgo: la disyuntiva depende de dónde vive la validación, no de las
+reglas del juego.** Con el chord enviado como conjunto explícito de celdas
+y validado en cliente, ninguna acción enviada puede revelar cero — A y B
+dan el mismo número siempre. La distinción reaparece únicamente si la
+validación se mueve al contrato y las acciones inválidas se vuelven
+enviables, y entonces la pregunta ya no es "¿qué cuenta como click?" sino
+"¿un revert cuenta?".
+
+Fijado provisionalmente A, por implementabilidad, no por convicción de que
+sea el criterio más simple. Se cierra antes de fijar la firma de `click()`
+en M1. El prototipo queda como banco de pruebas: el criterio está en un
+punto único (`clickMode` en `client/minasweeper.html`).
+
+**Restricción derivada sobre la firma del chord.** Las banderas son
+anotación local: no viajan en la transacción y el contrato no las ve. Por
+lo tanto no pueden frenar una cascada — el contrato haría flood-fill igual
+— y el cliente que las respete diverge del estado on-chain. Consecuencia:
+la cascada las ignora y las limpia al abrir. Y el chord no puede enviarse
+como `(x,y)`: sin banderas el contrato no sabe qué vecinos excluir. Tiene
+que recibir el conjunto y verificar que los vecinos cerrados fuera de él
+son exactamente `adj`. No es preferencia — es la única firma compatible
+con "banderas gratis".
+
+**Los récords son relativos al alfabeto, no absolutos.** Un récord medido
+bajo un conjunto de acciones no es comparable con otro medido bajo otro.
+En el prototipo se resolvió versionando la clave
+(`minesweeper-best-clicks:v2:<preset>`). On-chain el problema es el mismo
+y más caro:
+- el modelo `Record` necesita llevar la versión de reglas, o la `Epoch`
+  tiene que llevarla y ser inmutable dentro de la época
+- un cambio en el alfabeto de acciones FUERZA un corte de época; deja de
+  ser una decisión de diseño (#5, temporadas vs. decaimiento) y pasa a ser
+  una obligación técnica
+- el par (ZiNi-det, #7) también depende del alfabeto: si cambian las
+  acciones disponibles, cambia el mínimo. Como `score = clicks − par`, los
+  dos lados del cálculo tienen que estar versionados juntos, o el ranking
+  mezcla reglas
+
+**Pendiente para M1**: decidir si la versión de reglas vive en `Record`, en
+`Epoch`, o en la config del World, antes de fijar los modelos de Dojo.
