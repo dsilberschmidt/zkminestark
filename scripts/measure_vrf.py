@@ -17,6 +17,7 @@ Uso Sepolia (medición real):
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -32,7 +33,10 @@ VRF_PROVIDER_DEFAULT = "0x063f9d1fd88cd37da6397ec2cb746497bf3c85aca2938b06f707f5
 BENCHMARK_DEFAULT    = "0x018015db3a404681f9e0fde4d6aec8c82487ae89c6937249f4b4b0e3c02d4f87"
 KATANA0              = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
 CHAIN_ID_KATANA      = 0x4b4154414e41
-ACCOUNTS_FILE        = "/home/cactussediento/.starknet_accounts/starknet_open_zeppelin_accounts.json"
+ACCOUNTS_FILE        = os.environ.get(
+    "STARKNET_ACCOUNTS_FILE",
+    os.path.expanduser("~/.starknet_accounts/starknet_open_zeppelin_accounts.json"),
+)
 VRF_SERVER           = "http://localhost:3001"
 RPC_URL_DEFAULT      = "http://localhost:5050"
 

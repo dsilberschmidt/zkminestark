@@ -16,6 +16,7 @@ Uso:
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -28,7 +29,10 @@ import requests
 from poseidon_py.poseidon_hash import poseidon_hash_many
 
 VRF_SERVER    = "http://localhost:3001"
-ACCOUNTS_FILE = "/home/cactussediento/.starknet_accounts/starknet_open_zeppelin_accounts.json"
+ACCOUNTS_FILE = os.environ.get(
+    "STARKNET_ACCOUNTS_FILE",
+    os.path.expanduser("~/.starknet_accounts/starknet_open_zeppelin_accounts.json"),
+)
 POLL_INTERVAL = 0.25   # segundos entre consultas RPC de preconfirmación
 POLL_TIMEOUT  = 90     # segundos máximo esperando execution_status=SUCCEEDED
 
