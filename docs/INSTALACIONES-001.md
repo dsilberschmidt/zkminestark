@@ -1,3 +1,5 @@
+This document is maintained in Spanish. If automatic translation presents any difficulty, please let me know and I will maintain an English version alongside it.
+
 # Instalaciones 001 — Entorno F0 Starknet/Dojo
 
 **Fecha:** 2026-08-03  

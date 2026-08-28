@@ -1,3 +1,5 @@
+This document is maintained in Spanish. If automatic translation presents any difficulty, please let me know and I will maintain an English version alongside it.
+
 # INCÓGNITAS ABIERTAS — ranking por relevancia
 ### (Se responden una por prompt; #1 respondida abajo)
 

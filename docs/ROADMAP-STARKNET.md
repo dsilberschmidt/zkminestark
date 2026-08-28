@@ -1,262 +1,271 @@
-# MINASWEEPER — Roadmap Starknet (v3, autoexplicado, 18-jul-2026)
-### Versión para releer en tres semanas sin recordar nada.
-### Reemplaza a la v2 (misma sustancia, ahora con términos definidos).
-### El detalle técnico y los porqués completos viven en INCOGNITAS.md.
+This document is maintained in Spanish. If automatic translation presents any difficulty, please let me know and I will maintain an English version alongside it.
 
----
+# zkminestark — Roadmap Starknet v4
 
-## GLOSARIO MÍNIMO (leer primero, volver cuando haga falta)
+Actualizado para reflejar el alcance vigente del proyecto al 2026-08-28.
 
-- **Starknet**: la blockchain donde vive el juego (una L2 de Ethereum).
-- **Cairo**: el lenguaje de programación de los contratos en Starknet.
-- **Dojo**: el motor open-source para juegos on-chain en Starknet.
-  Un juego en Dojo se organiza en un **World** (el contrato-mundo que
-  contiene los modelos de datos y las reglas).
-- **scarb**: el compilador/gestor de paquetes de Cairo.
-- **Katana**: una blockchain local de mentira para desarrollar y
-  probar en tu máquina, sin red real.
-- **Testnet**: la red pública de práctica de Starknet; los tokens no
-  valen nada. **Mainnet**: la red real, con valor real.
-- **VRF** (Verifiable Random Function): "un dado con acta notarial".
-  Un servicio que entrega números aleatorios junto con una prueba de
-  que no pudo elegirlos ni predecirlos. Lo necesitamos porque los
-  contratos no pueden generar azar por sí mismos (todos los nodos
-  deben recomputar lo mismo). **Cartridge VRF**: el proveedor
-  candidato, porque resuelve el azar DENTRO de la misma transacción
-  (patrón "atómico" = rápido). Los VRF de patrón "request/callback"
-  tardan bloques extra y quedaron descartados.
-- **Session keys / Cartridge Controller**: firmar UNA vez al entrar y
-  que los clicks fluyan sin popup de wallet por transacción.
-- **Paymaster**: mecanismo para que el protocolo pague el gas de los
-  usuarios. Regla nuestra: subsidiar la entrada sí, el gas NO (o con
-  tope) — si el gas es gratis, los bots atacan gratis.
-- **Lazy sampling / generación diferida**: la idea central del juego
-  (fue de Daniel): el tablero NO existe antes de jugarse. Cada click
-  sortea en ese instante el contenido de las celdas (probabilidad =
-  minas restantes / celdas restantes), con aleatoriedad del VRF.
-  Nadie puede conocer de antemano un tablero que no existe ⇒ no hay
-  trampas de precómputo, no hay secreto que custodiar.
-- **Celda determinada**: celda cuyo contenido ya quedó fijado por un
-  sorteo anterior (p.ej. al computar el número de una vecina).
-  Clickearla no necesita VRF ⇒ respuesta instantánea.
-- **Par**: los clicks "esperables" de un tablero, como el par de un
-  hoyo de golf. Se computa al TERMINAR la partida (el tablero recién
-  entonces existe completo). En v1, par = **3BV**.
-- **3BV**: métrica estándar de la comunidad de buscaminas: nº de
-  regiones vacías (cada una se abre con 1 click) + nº de números que
-  no se abren solos con esas regiones. Algoritmo trivial, igual para
-  todos. Ignora los chords ⇒ es imperfecta, pero es LA MISMA
-  imperfección para todos, que es lo único que la justicia necesita.
-- **Chord**: click en un número que ya tiene sus banderas puestas ⇒
-  abre todos sus vecinos de golpe. Cuenta 1 click. Banderas gratis.
-- **Score**: clicks − par. Cuanto más bajo, mejor. Compara a cada
-  jugador contra lo que SU tablero exigía (la vara se ajusta al
-  tablero; la suerte del sorteo no decide el podio).
-- **Temporada/época**: período (p.ej. mensual) tras el cual los
-  récords se resetean y el pozo no reclamado pasa a la siguiente.
-- **Sybil**: ataque de crear muchas cuentas para multiplicar intentos.
-  Con entrada gratuita es EL riesgo económico; se contiene con
-  límites por cuenta/época, cooldowns y gas no subsidiado.
-- **Seed Grant**: programa de la Starknet Foundation, hasta $25k en
-  STRK, aplicación rolling. Requisitos: MVP + participación en la
-  comunidad (hackathon, builder program, o involucramiento
-  demostrable — el criterio dice "y/o").
-- **Ley 13/2011 (España)**: define juego regulado como PAGO + AZAR
-  (en alguna medida) + PREMIO transferible entre jugadores. Sin test
-  de habilidad. Nuestro esquive: quitar el PAGO ⇒ entrada gratuita.
+## 1. Qué es zkminestark
 
----
+zkminestark es un buscaminas competitivo fully onchain en Starknet/Dojo.
 
-## LAS 5 DECISIONES (D1–D5), YA TOMADAS
-(Revisables solo con evidencia nueva de F0 o dictamen legal.)
+La idea central es que el tablero no existe completo antes de jugarse. Se materializa durante la partida. Cada acción comprometida que requiere nueva materialización consume azar verificable y fija solo las celdas necesarias para resolver esa acción. Eso limita el conocimiento anticipado al estado público ya revelado y a las probabilidades condicionales que cualquiera puede calcular.
 
-**D1 — Identidad: lazy sampling + entrada gratuita.** El tablero se
-sortea click a click con VRF (nadie puede hacer trampa de precómputo)
-y entrar es gratis (así el juego queda FUERA de la ley española de
-juego, que exige pago). El pozo se financia con patrocinio/grant, no
-con entradas. El azar es parte de la identidad: "cabeza +
-administración del azar".
-- **Plan B1 (si la latencia falla en F0)**: oráculo con integridad zk
-  — un servidor genera el tablero en secreto, publica un commitment,
-  y revela celdas firmadas al instante (~0.1–0.3s/click); cada
-  revelación lleva prueba zk de consistencia y el servidor arriesga
-  un bond si miente. Mismo juego, componente centralizado.
-- **Plan B2 (archivado, NO es contingencia — es otro producto)**:
-  tableros deterministas certificados "resolubles sin adivinar" ⇒
-  sin azar ⇒ argumento legal de habilidad pura ⇒ entrada pagada
-  posible. Solo se abre con dictamen legal favorable. Su plan de
-  ejecución es el viejo ROADMAP-mina.md (docs/archivo/).
+El juego principal es zkminestark. VCLS se presenta como el paquete reusable que se extrae de la mecánica de zkminestark una vez que el núcleo esté cerrado y probado.
 
-**D2 — Anti-espiral del récord: TEMPORADAS.** Problema: el récord
-solo baja, se acerca al mínimo posible, se vuelve imbatible, nadie
-juega, el pozo muere. Cura elegida: reset periódico de récords con
-rollover del pozo (las "seasons" del gaming). Alternativa anotada:
-decaimiento (+1 click/semana al récord) si las temporadas calibran
-mal.
+## 2. Qué es VCLS
 
-**D3 — Score relativo: clicks − par, con par = 3BV en v1,
-DEFINITIVO hasta nueva versión.** Un solo leaderboard por temporada.
-Las clases de dificultad quedan para v2 si los datos las piden. El
-carril matemático de Daniel (mejorar el par, curva
-homogeneidad↔dificultad, teoremas) es upside sin fecha: NINGÚN
-milestone depende de él.
+VCLS significa Verifiable Constrained Lazy Sampling.
 
-**D4 — Bots: bienvenidos y declarados.** Un bot con Bayes perfecto
-le gana a casi cualquier humano y eso NO es trampa. Posicionamiento
-público: "gana el mejor solver, humano o no". Sin proof-of-humanity.
+Modela:
 
-**D5 — Dinero real: NO hasta F5.** Todo hasta F4 inclusive corre en
-testnet/economía simulada (legalmente inocuo). Encender valor real
-es un interruptor aparte, al final, con checklist propia.
+- un universo finito de posiciones
+- suministros exactos por categoría
+- una asignación parcial irreversible
+- pedidos adaptativos dentro de una misma acción
+- muestreo exacto sin reemplazo
 
----
+La capa base cubre conservación de cupos, irreversibilidad, lecturas idempotentes, expansión determinista desde una única semilla VRF y separación de dominios. La contribución está en convertir la equivalencia estándar del muestreo sin reemplazo en una abstracción onchain explícita y auditable, con aleatoriedad atómica, materialización adaptativa, supuestos de seguridad declarados y una interfaz reusable en Cairo/Dojo. Las reglas espaciales o causales del juego siguen siendo responsabilidad del adaptador.
 
-## LAS FASES (ordenadas por RIESGO: cada una mata la duda más
-## peligrosa que quede viva)
+## 3. Qué se quiere demostrar
 
-### F0 — El experimento que decide todo (1–2 semanas)
-Pregunta única: ¿cuánto tarda DE VERDAD un click que pide azar al
-VRF? Todo D1 se sostiene o se cae con ese número.
-1. Instalar entorno: scarb, Starknet Foundry, Dojo + Katana, wallet.
-   Documentar cada paso en Instalaciones 001. Trabajar en Claude Code.
-2. Contrato de prueba MÍNIMO con Cartridge VRF: una función que pide
-   un número y lo guarda. Nada de buscaminas todavía.
-3. Medirlo ~500 veces en testnet, en horarios variados. Criterio
-   escrito ANTES de medir (para no autoengañarse):
-   - **VERDE**: mediana ≤ 2s y peor-caso-razonable (p95) ≤ 5s
-     ⇒ seguir con lazy sampling.
-   - **ROJO**: activar Plan B1 (oráculo). F1 cambia de forma; el
-     resto del roadmap sobrevive casi entero.
-4. De paso: coste por request del VRF, session keys funcionando,
-   paymaster en testnet.
-**Milestone F0**: número real de mediana/p95 anotado + verde/rojo.
+zkminestark sirve como implementación principal de VCLS porque fuerza exactamente los problemas difíciles:
 
-**CERRADO — 2026-08-04. Resultado: ROJO.**
-- p50 = 3312 ms (criterio ≤ 2000 ms: **FAIL**)
-- p95 = 4095 ms (criterio ≤ 5000 ms: PASS)
-- 457/500 ciclos exitosos en Sepolia; 43 fallos por nonce mismatch del script, no del protocolo VRF.
-- Detalle completo de la medición: `docs/INSTALACIONES-001.md`.
-- Consecuencia según D1: Plan B1 en juego. Ver nota de estrategia en F4 sobre priorización con financiamiento.
+- orden de consulta controlado por el jugador
+- oferta global exacta de minas
+- acciones que pueden materializar varias celdas
+- cascadas de flood fill
+- consecuencias competitivas inmediatas si existe foreknowledge
 
-### Nota — el ROJO mide el peor caso, no el caso típico de juego (2026-08-23)
+La meta combina dos resultados: tener un juego jugable y cerrar un patrón reusable para juegos onchain con estado oculto diferido bajo restricciones públicas.
 
-El criterio go/no-go mide latencia de clicks-VRF aislados y consecutivos — el peor patrón posible. No es el patrón real de juego. Por construcción del protocolo (Adenda 2, paso de determinación de vecinos): al abrir cualquier celda, TODOS sus vecinos indeterminados se sortean para calcular su número. Si el número da 0, la cascada de flood-fill repite el proceso — determinando, como efecto colateral, toda la orla alrededor de la región revelada, aunque esas celdas nunca se abran visualmente. Consecuencia: un click en zona ya jugada (adyacente a algo abierto — el caso normal, deducción lógica típica del buscaminas) casi siempre cae sobre una celda ya determinada por el sorteo de un vecino anterior → respuesta instantánea, sin VRF nuevo. Solo se paga el costo VRF (~3-4s medido en F0) cuando el click salta a zona sin ningún vecino ya revelado: el primer click de la partida (ya resuelto aparte — apertura inicial fijada segura sin sorteo) y saltos deliberados a zona desconectada, típicamente cuando no hay jugada lógica disponible — en la práctica, del orden del 1% de los clicks de una partida. El shimmer "sorteando…" (ya previsto en INCOGNITAS como ritual, no lag) cubre ese caso puntual. No cambia el criterio ROJO como medición técnica del ciclo VRF aislado; sí cambia cuánto pesa esa medición sobre la UX final de una partida real.
+## 4. Modelo formal y afirmación criptográfica
 
-### F1 — El corazón del juego, sin cara (3–5 semanas)
-La lógica completa on-chain, jugada por terminal (feo pero
-verificable):
-1. World de Dojo con modelos: Partida, CeldaDeterminada, Época,
-   Récord, Pozo.
-2. Lazy sampling: UNA semilla VRF por click alimenta TODOS los
-   sorteos de ese click (un flood-fill = una sola espera, nunca una
-   request por celda). Invariante sagrado: ningún número se afirma
-   antes de sortear su vecindario.
-3. Clicks sobre celdas determinadas: sin VRF, tx barata que solo
-   registra el click (el cliente puede responder al instante).
-4. Apertura inicial "como en Linux": celda de inicio + vecinas
-   fijadas seguras antes del primer sorteo, a 0 clicks.
-5. Al terminar: computar par (3BV) y score; registrar récord por
-   época.
-6. Soundness gratis: cada click es una tx de la cuenta del jugador ⇒
-   el récord se acumula a su nombre ⇒ nadie puede robar una partida
-   ajena (el problema de front-running del diseño viejo desaparece
-   por estructura).
-**Milestone F1**: partida completa por CLI en Katana, tablero final
-auditable contra el registro de sorteos.
+Hay dos niveles distintos y deben mantenerse separados.
 
-### F2 — La cara (2–4 semanas, solapable con F1)
-1. Conectar el prototipo minasweeper.html al World vía Controller
-   (session keys: UN login, cero popups). Renombrar el tema "MINA"
-   (el chiste ya no aplica).
-2. Sensación: shimmer "sorteando…" en clicks de frontera; respuesta
-   instantánea en celdas determinadas; clicks y par visibles.
-3. Cooldowns de derrota (15s→…→24h) en cliente + límite de entradas
-   on-chain por época (ya hace trabajo antisybil).
-**Milestone F2**: alguien que NO sea Daniel juega una partida
-completa en su navegador contra testnet.
+Equivalencia exacta del sampler ideal:
 
-### F3 — El dinero de juguete (2–3 semanas)
-1. Temporadas: reset + rollover + suelo mínimo de pozo (relleno
-   post-claim). Reparto 90/10.
-2. Antisybil: entradas limitadas por cuenta/época + cooldowns + gas
-   NO subsidiado. Presupuesto de pozo con tope por época.
-3. Atacarla a propósito: script de bots codiciosos contra la
-   economía; ajustar parámetros con datos.
-**Milestone F3**: una temporada completa simulada con 3+ cuentas y
-bots, sin exploit de faucet encontrado.
+- el sampler ideal asigna posiciones nuevas exactamente sin reemplazo
+- la revelación progresiva tiene la misma distribución de transcript que revelar una asignación uniforme pre-generada compatible con las restricciones iniciales
+- esta es la afirmación matemática exacta del modelo ideal
 
-### F4 — La gente (carril PARALELO, arranca YA — sus tiempos no los
-### controlamos)
-1. Repo público ✅ (github.com/dsilberschmidt/zkminestark).
-2. Presencia real en Discord Dojo/Cartridge + foro Starknet
-   (preguntar allí lo del sesgo del sequencer/VRF: pregunta técnica
-   legítima que además da visibilidad).
-3. PR a GNOME Mines (contador de clicks): issue primero, MR mínimo
-   después. El pitch ya está escrito en ECOSISTEMAS.md §4.
-4. Vigilancia semanal: hackathon.starknet.org + @StarknetFndn +
-   anuncio de Basecamp. Inscribirse a lo primero que abra.
-5. **Aplicar al Seed Grant cuando**: port de F1 visible en el repo +
-   4+ semanas de presencia comunitaria (o hackathon/Basecamp hecho).
-   Pitch: demo + plan a 3 meses (= F1–F3) + diferenciales
-   (clicks-no-tiempo, lazy sampling, línea de investigación).
-   Economía SIEMPRE presentada como testnet/simulada, monetización
-   "sujeta a estructuración legal".
-**Milestone F4**: aplicación enviada.
+Indistinguibilidad computacional de la implementación VRF/PRF:
 
-**Nota de estrategia — demo F4 (2026-08-04):** NO se invierte tiempo en resolver la
-latencia VRF (agrupar clicks por VRF, integrar drand u otro mecanismo) sin
-financiamiento real confirmado — es investigación y rediseño, no un ajuste rápido.
-Para la demo de F4 se presentan dos piezas separadas:
-- **(a) minasweeper.html** con RNG local determinista: jugable, cero latencia, muestra
-  mecánica y UX completa sin depender de la red.
-- **(b) Trabajo on-chain de F0**: VrfProvider + Benchmark funcionando en Sepolia,
-  medición honesta con resultado rojo documentado, plan concreto de próximas direcciones
-  (`docs/INSTALACIONES-001.md` §"Próximas direcciones a evaluar"). Demuestra que el
-  problema central (precómputo/foreknowledge) está identificado y resuelto en su núcleo;
-  solo pendiente de optimizar latencia cuando haya sustento económico.
+- la implementación en Cairo consume una salida VRF atómica
+- esa salida se expande mediante un flujo PRF con separación de dominios
+- la reducción exacta de rango se implementa con rejection sampling
+- bajo seguridad de VRF y PRF, el transcript observable es computacionalmente indistinguible del sampler ideal
 
-### F5 — El dinero real (lejos; es una COMPUERTA, no una fase de
-### trabajo)
-Cinco candados, todos obligatorios antes de mainnet:
-1. Abogado de juego consultado (blindar "sin desembolso encubierto";
-   preguntar por el depósito reembolsable).
-2. Simulación de agentes en verde con parámetros finales.
-3. Revisión externa del World (audit ligero mínimo).
-4. Fuente del pozo definida (grant/tesorería/patrocinio) con tope
-   por época presupuestado.
-5. MiCA (ya en vigor) revisado para custodia/movimiento de tokens.
+En corto: el sampler ideal apunta a equivalencia exacta de distribución; la implementación concreta apunta a indistinguibilidad computacional respecto de ese ideal.
 
-### Carril matemático (de Daniel, sin fecha, sin dependencias)
-Curva homogeneidad/bolsones ↔ dificultad (no existe en la
-literatura: se genera), hipótesis, contrastes, y — si llega — dureza
-del mínimo-con-chords o caracterización a priori. Lecturas: Kaye
-2000; Scott/Stege/van Rooij 2011; Becerra 2015; Tatham; wiki
-minesweepergame; Dempsey & Guinn 2020 (arXiv 2008.04116, transición
-de fase empírica); Louf 2025 (arXiv 2506.01634, transición de fase
-demostrada). Si algo de esto madura: mejora el par (versionado) y/o
-abre la puerta legal de B2. Si no, el juego vive igual.
+## 5. Estado demostrado hoy
 
----
+### F0: benchmark de latencia VRF
 
-## MAPA DE PLANES B
-| Riesgo | Señal | Plan B |
-|---|---|---|
-| Latencia VRF injugable | F0 rojo (p50>2s o p95>5s) | B1: oráculo zk — mismo juego, servidor con bond |
-| Cartridge VRF caro/inmaduro | Coste alto en F0 | Otro VRF SOLO si es atómico; si no, oráculo |
-| Sequencer/VRF sesgado | Evidencia o aviso comunidad | Escalar en foro; pozo pausable por época |
-| Faucet farmeado (mainnet) | Drenaje anómalo del pozo | Topes por época = pérdida acotada; endurecer límites |
-| Sin hackathon/Basecamp en otoño | Nada anunciado a oct-2026 | Aplicar por la vía "y/o": repo + comunidad |
-| Grant rechazado | — | Propulsion (programa gaming), créditos de fees, re-aplicar con F3 |
-| Se desea entrada pagada | Dictamen legal favorable | B2: rama determinista (docs/archivo/) |
+Estado: cerrado como benchmark, no cerrado como diagnóstico de arquitectura.
 
-## Estado actual y próximos pasos (actualizado 2026-08-04)
+Antes de escribir lógica de juego completa se fijó un criterio de medición para clicks que consumen VRF:
 
-- [x] Repo público ✅ (github.com/dsilberschmidt/zkminestark)
-- [x] Entorno F0 instalado y documentado (`docs/INSTALACIONES-001.md`)
-- [x] Medición F0 completa — resultado ROJO (p50=3312 ms, p95=4095 ms)
-- [ ] Alta en Discord Dojo/Cartridge — pendiente
-- [ ] Abrir issue en GNOME Mines (pitch ya escrito en ECOSISTEMAS.md §4) — pendiente
-- [ ] F1: portar lógica del juego a World de Dojo — puede arrancar ya, usando el VRF
-  tal como está (lento pero funcional); no bloqueado por la decisión de latencia
-- [ ] Revisar novedades de hackathon.starknet.org / Basecamp desde la última
-  verificación (13-jul-2026, nada anunciado en ese momento)
+- verde: p50 <= 2000 ms y p95 <= 5000 ms
+- rojo: resultado insuficiente para asumir buena UX sin más investigación
+
+Resultado inicial:
+
+- p50 = 3312 ms
+- p95 = 4095 ms
+
+Rerun publicado el 2026-08-23:
+
+- 459 ciclos reportados con muestra temporal válida
+- 41 intentos fallidos aislados, con un patrón compatible con nonce races de la cuenta o del cliente
+- p50 = 3268 ms
+- p95 = 4093 ms
+
+Fuente primaria: [INSTALACIONES-001.md](./INSTALACIONES-001.md) y [raw F0 rerun log](../benchmarks/f0-sepolia-rerun-20260823-135554.log)
+
+Interpretación vigente:
+
+- F0 es ROJO
+- ese ROJO mide el camino `sncast` completo para clicks que consumen VRF
+- el punto pendiente es separar latencia de red de latencia de arquitectura cliente
+- la siguiente medición obligatoria es RPC directo con polling de preconfirmación
+
+Este roadmap presenta el ROJO como un diagnóstico abierto que M2 debe medir mejor antes de cerrar la interpretación arquitectónica.
+
+### F1-A: vertical slice onchain con lazy assignment atómico
+
+Estado: completado y verificado en Sepolia.
+
+Lo que ya existe:
+
+- creación de partida y clicks por multicall atómico con VRF real
+- consumo de VRF y actualización onchain dentro de la misma transacción
+- evidencia pública de click seguro y click sobre mina
+- endurecimiento de `set_config` con autorización, rechazo de dirección cero y escritura única
+
+F1-A demuestra el mecanismo central. M1 completa el juego con materialización de vecindad, cómputo de números y cascada de lazy sampling.
+
+### Prototipo jugable
+
+Estado: completado.
+
+[`../client/minasweeper.html`](../client/minasweeper.html) implementa la experiencia completa del buscaminas con RNG local del navegador. Sirve para validar UX, scoring por clicks y flujo de interacción. Demuestra el prototipo jugable y deja para M2 la integración final con VRF onchain.
+
+### Prueba de uniformidad del sampler ideal
+
+Estado: completado y machine-checked.
+
+[`../contracts/zkmine_f1/src/tests/test_world.cairo`](../contracts/zkmine_f1/src/tests/test_world.cairo) evalúa exhaustivamente las 300 configuraciones posibles de un tablero 5x5 con 2 minas, comparando orden fijo y orden adaptativo de consulta mediante racionales exactos.
+
+Eso apoya la afirmación del sampler ideal en un caso finito exhaustivo. La prueba escrita general y la validación de la implementación de producción se completan en M3 y en los tests distribucionales del camino desplegado.
+
+### Resumen de evidencia disponible
+
+- benchmark F0 con dataset público reproducible
+- F1-A en Sepolia con transacciones verificables
+- prototipo jugable en navegador
+- prueba exhaustiva finita del sampler ideal
+
+## 6. Alcance del roadmap
+
+Este roadmap cubre formalización, implementación, testnet y pruebas públicas del juego y del paquete reusable.
+
+Quedan explícitamente fuera de esta fase:
+
+- mainnet
+- valor transferible
+- entrada paga
+
+Esas tres cosas se tratan como una fase futura con su propia compuerta.
+
+## 7. Plan de tres meses
+
+El plan vigente tiene tres milestones. Se reproducen aquí como alcance operativo actual.
+
+### Milestone 1: core sampler y lógica completa del juego
+
+Ventana: semanas 1 a 5.
+
+Objetivo:
+
+- definir la interfaz inicial de VCLS y sus invariantes
+- implementar el núcleo en Cairo con rejection sampling, expansión PRF con separación de dominios, orden determinista de asignación, contabilidad de categorías restantes y eventos auditables
+- construir el adaptador de zkminestark y el World completo de Dojo con modelos de Game, DeterminedCell, Epoch y Record
+
+Trabajo funcional:
+
+- completar lazy sampling en todos los caminos de click y cascada
+- fijar apertura inicial estilo Linux, con la celda inicial y sus vecinas seguras antes del primer sorteo, a cero clicks
+- validar cada preset al crear la partida
+- verificar que `mine_count` quepa en la población de muestreo luego de reservar la región inicial segura
+- calcular 3BV, par y score al final de la partida
+
+Punto técnico crítico:
+
+- cuando una cascada materializa vecinos que siguen visualmente cerrados, la población de muestreo ya no coincide con `total_cells - revealed_count`
+- en ese punto F1-A deja de ser suficiente y hay que contar celdas indeterminadas reales para no romper la uniformidad
+
+Entregable verificable:
+
+- interfaz inicial de VCLS e invariantes
+- implementación de referencia en Cairo
+- partidas completas jugadas por CLI en Katana y Sepolia
+- tableros finales auditados contra su historial onchain de asignaciones
+- tests distribucionales del módulo VCLS y del camino desplegado de `click()`
+- suite `snforge`
+- direcciones de despliegue publicadas
+
+### Milestone 2: VRF de producción y cliente jugable
+
+Ventana: semanas 4 a 9, solapado con M1.
+
+Objetivo:
+
+- conectar el prototipo de navegador con el World vía Cartridge Controller y session keys
+- enviar transacciones por RPC directo
+- hacer polling de preconfirmación
+- renderizar de forma optimista las celdas ya determinadas
+- dejar que los clicks que requieren nueva materialización esperen resolución VRF
+- usar Torii para leaderboard y vistas agregadas
+
+Trabajo de seguridad:
+
+- probar el proveedor VRF de producción de Cartridge contra tres estrategias adversarias
+- precomputar un resultado antes del envío
+- simular un click vía `estimateFee` o `simulate_transaction`, inspeccionar el resultado y abortar una transacción desfavorable
+- reintentar la misma seed tras una transacción fallida o rechazada
+
+Propósito de M2:
+
+- medir si el ROJO de F0 proviene del camino `sncast` o de un piso real de latencia del stack
+- probar el flujo de request y Paymaster de producción, además de la clave de test usada en F0 y F1-A
+
+Entregable verificable:
+
+- ocho jugadores externos completan onboarding estructurado, sesiones de playtesting en Sepolia y sesiones de feedback
+- se registra telemetría de wallet setup, completion, latency, transaction cost, fresh-materialisation share y feedback cualitativo
+- se repite F0 bajo arquitectura de RPC directo con la misma metodología base
+- se publican los resultados de los tres ataques adversarios y sus transaction hashes
+
+### Milestone 3: paquete reusable y ejemplo independiente
+
+Ventana: semanas 9 a 12.
+
+Objetivo:
+
+- endurecer y publicar VCLS como paquete open source independiente en Cairo/Dojo
+- cubrir en su API universos finitos, categorías exactas, muestreo exacto sin reemplazo, materialización irreversible e internamente adaptativa, asignación por lotes desde una sola semilla VRF, replay determinista e historial auditable de transiciones
+
+Documentación obligatoria, comprimida al núcleo reusable:
+
+- especificación formal con prueba de equivalencia ideal
+- supuestos de seguridad
+- guía de integración
+- tests
+
+Segundo adaptador:
+
+- construir un ejemplo mínimo de exploración de recursos donde parcelas adquieren progresivamente suministros finitos de varias categorías
+- ese adaptador debe usar más de dos categorías
+- su función es probar que la API generaliza más allá de la semántica específica de Minesweeper
+
+Entregable verificable:
+
+- paquete VCLS publicado con especificación, prueba, suite de tests, dos adaptadores y ejemplo de exploración de recursos
+- artículo técnico sobre VCLS y sobre los resultados F0/M2 de latencia
+
+## 8. Riesgos que siguen abiertos
+
+### Latencia por click
+
+La evidencia actual apunta a que el camino de aceptación por bloque puede estar mezclando limitaciones de arquitectura cliente con limitaciones reales de red. M2 debe medir RPC directo con preconfirmación antes de cerrar ese diagnóstico.
+
+### Exposición de la ruta de prueba VRF
+
+F0-bis mostró que el `vrf-server` manual acepta `get_proof(seed)` antes de una sumisión onchain. La pregunta abierta es si el endpoint de producción de Cartridge permite algo equivalente fuera del flujo comprometido por Paymaster. M2 debe responderlo con pruebas adversarias o confirmación operativa.
+
+### Divergencia entre prueba y código
+
+La especificación, el algoritmo de referencia, el replay determinista y los tests distribucionales tienen que quedar alineados. M3 existe para cerrar exactamente ese riesgo.
+
+### Reutilización real de VCLS
+
+Si el segundo adaptador de exploración no encaja con naturalidad, la abstracción es demasiado estrecha. Por eso M3 exige un adaptador ajeno a Minesweeper y con más de dos categorías.
+
+## 9. Fase futura: mainnet, valor y entrada paga
+
+Quedan explícitamente reservados para una fase posterior.
+
+Se tratan como una fase posterior, separada, con su propio criterio de entrada:
+
+- latencia de juego aceptable bajo la arquitectura definitiva
+- VRF de producción evaluado contra los ataques relevantes
+- paquete VCLS estabilizado
+- revisión externa de seguridad proporcionada al alcance de valor real
+- análisis legal específico antes de introducir entrada paga o premios transferibles
+
+## 10. Referencias del repo
+
+- [INSTALACIONES-001.md](./INSTALACIONES-001.md)
+- [INCOGNITAS.md](./INCOGNITAS.md)
+- [bitacora.md](./bitacora.md)
+- [../README.md](../README.md)
