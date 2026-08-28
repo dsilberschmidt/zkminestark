@@ -286,6 +286,15 @@ button{
   top:calc(50% - var(--cell-size) * 0.32);
 }
 
+.cell.reject{
+  animation:reject 220ms ease-out;
+}
+
+@keyframes reject{
+  0%{box-shadow:inset 0 0 0 2px #cc0000;}
+  100%{box-shadow:inset 0 0 0 2px rgba(204,0,0,0);}
+}
+
 .cell.question{
   font-weight:700;
 }
@@ -421,7 +430,28 @@ const PRESETS = {
   intermediate: { key:"intermediate", label:"16x16", width:16, height:16, mines:40 },
   linux: { key:"linux", label:"30x16", width:30, height:16, mines:99 }
 };
-const RECORD_KEY_PREFIX = "minesweeper-best-clicks:";
+// La versión forma parte de la clave: los récords solo son comparables entre
+// sí bajo el mismo alfabeto de acciones. v2 = conteo unificado (chord como
+// conjunto explícito, cascada que ignora banderas). Los récords v1 quedan
+// huérfanos, no se borran. Cualquier cambio futuro en qué cuenta como acción
+// obliga a subir esta versión.
+const RECORD_RULES_VERSION = "v2";
+const RECORD_KEY_PREFIX = "minesweeper-best-clicks:" + RECORD_RULES_VERSION + ":";
+
+// Criterio de conteo de acciones. Punto único de decisión.
+// "committed": se cobra toda acción válida enviada, revele o no (equivale a click = tx).
+// "effective": se cobra solo si la acción revela al menos una celda.
+// Provisional: "committed". Ver INCOGNITAS — pendiente de evaluación empírica
+// antes de fijar la firma de click() en M1.
+//
+// NOTA: con el chord validado en cliente y enviado como conjunto explícito,
+// toda acción enviada revela al menos una celda, así que los dos modos dan
+// el mismo resultado. El interruptor solo pasa a ser observable si la
+// validación se mueve al contrato y las acciones inválidas se vuelven
+// enviables (revert). Se deja preparado para esa comparación.
+const CLICK_MODE_COMMITTED = "committed";
+const CLICK_MODE_EFFECTIVE = "effective";
+let clickMode = CLICK_MODE_COMMITTED;
 
 let width = 30;
 let height = 16;
@@ -451,15 +481,50 @@ function activeRecordKey(){
   return RECORD_KEY_PREFIX + selectedPreset.key;
 }
 
+// localStorage puede no estar disponible (iframe con sandbox, modo privado
+// estricto, file:// en algunos navegadores). Sin esto, saveRecord lanza
+// excepción dentro de endWon y la partida ganada se rompe a mitad.
+const memoryStore = Object.create(null);
+let storageAvailable = null;
+
+function canUseStorage(){
+  if(storageAvailable !== null) return storageAvailable;
+  try{
+    const probe = "minesweeper-probe";
+    window.localStorage.setItem(probe, "1");
+    window.localStorage.removeItem(probe);
+    storageAvailable = true;
+  }catch(err){
+    storageAvailable = false;
+  }
+  return storageAvailable;
+}
+
+function storeGet(key){
+  if(canUseStorage()){
+    try{ return window.localStorage.getItem(key); }
+    catch(err){ storageAvailable = false; }
+  }
+  return key in memoryStore ? memoryStore[key] : null;
+}
+
+function storeSet(key, value){
+  memoryStore[key] = value;
+  if(canUseStorage()){
+    try{ window.localStorage.setItem(key, value); }
+    catch(err){ storageAvailable = false; }
+  }
+}
+
 function loadRecord(){
-  const raw = localStorage.getItem(activeRecordKey());
+  const raw = storeGet(activeRecordKey());
   const value = Number(raw);
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 
 function saveRecord(value){
   bestRecord = value;
-  localStorage.setItem(activeRecordKey(), String(value));
+  storeSet(activeRecordKey(), String(value));
 }
 
 function applyPreset(preset){
@@ -593,7 +658,15 @@ function floodReveal(startIndex){
   while(stack.length){
     const index = stack.pop();
     const cell = cells[index];
-    if(cell.open || cell.flag) continue;
+    if(cell.open) continue;
+
+    // Las banderas son anotación local: no existen para el contrato y por lo
+    // tanto no pueden frenar una cascada. Se limpian al abrir la celda.
+    if(cell.flag){
+      cell.flag = false;
+      flags--;
+    }
+    cell.question = false;
 
     cell.open = true;
     count++;
@@ -644,59 +717,110 @@ function ensureFirstMove(index){
   placeMines(index);
 }
 
+// Punto único de contabilización. Ninguna otra función toca `clicks`.
+function commitClick(){
+  clicks++;
+  updateHUD();
+}
+
+function shouldCharge(revealed){
+  return clickMode === CLICK_MODE_COMMITTED || revealed > 0;
+}
+
+// Conjunto explícito de celdas que el chord abriría, o null si la acción
+// no es válida. El contrato no ve banderas: recibiría este conjunto y
+// verificaría que los vecinos cerrados fuera de él son exactamente `adj`.
+function chordTargets(index){
+  const cell = cells[index];
+  if(!cell.open || cell.adj <= 0) return null;
+
+  let flagged = 0;
+  const targets = [];
+
+  for(const n of neighbors(index)){
+    const c = cells[n];
+    if(c.flag){
+      flagged++;
+      continue;
+    }
+    if(c.open) continue;
+    targets.push(n);
+  }
+
+  if(flagged !== cell.adj) return null;
+  if(targets.length === 0) return null;
+
+  return targets;
+}
+
+function rejectAction(index){
+  const el = boardEl.children[index];
+  el.classList.remove("reject");
+  void el.offsetWidth;
+  el.classList.add("reject");
+  setTimeout(() => el.classList.remove("reject"), 240);
+}
+
 function handlePrimary(index){
   if(state !== "ready" && state !== "playing") return;
   const cell = cells[index];
-  if(cell.flag) return;
 
   if(cell.open){
-    if(cell.adj <= 0) return;
-    const around = neighbors(index);
-    const flagged = around.filter((n) => cells[n].flag).length;
-    if(flagged !== cell.adj) return;
+    const targets = chordTargets(index);
+
+    // Acción no válida: no se envía, no se cobra. El cliente valida antes
+    // para que el coste sea siempre deliberado.
+    if(!targets){
+      rejectAction(index);
+      return;
+    }
 
     let revealed = 0;
     let boom = -1;
 
-    for(const next of around){
+    for(const next of targets){
       const nextCell = cells[next];
-      if(nextCell.flag || nextCell.open) continue;
+      if(nextCell.open) continue;
       if(nextCell.mine){
         nextCell.open = true;
         paint(next);
         boom = next;
         revealed++;
-      }else{
-        revealed += floodReveal(next);
+        break;
       }
+      revealed += floodReveal(next);
     }
 
-    if(revealed > 0){
-      clicks++;
-      updateHUD();
-      if(boom >= 0){
-        endLost(boom);
-        return;
-      }
-      revealedCount += revealed;
-      checkWin();
+    if(shouldCharge(revealed)) commitClick();
+
+    if(boom >= 0){
+      endLost(boom);
+      return;
     }
+
+    revealedCount += revealed;
+    updateHUD();
+    checkWin();
     return;
   }
 
+  // Celda con bandera: guardia de interfaz, no es una acción.
+  if(cell.flag) return;
+
   ensureFirstMove(index);
   state = "playing";
-  clicks++;
 
   if(cell.mine){
     cell.open = true;
     paint(index);
-    updateHUD();
+    commitClick();
     endLost(index);
     return;
   }
 
-  revealedCount += floodReveal(index);
+  const revealed = floodReveal(index);
+  revealedCount += revealed;
+  if(shouldCharge(revealed)) commitClick();
   updateHUD();
   checkWin();
 }
@@ -719,7 +843,6 @@ function handleFlag(index){
 
   paint(index);
   updateHUD();
-  checkWin();
 }
 
 function resetGame(){
@@ -765,6 +888,9 @@ boardEl.addEventListener("pointerdown", (event) => {
   if(event.pointerType !== "touch") return;
   const cell = event.target.closest(".cell");
   if(!cell) return;
+  // Si el long-press anterior no fue seguido de un click, la bandera quedaba
+  // puesta y se tragaba la siguiente acción legítima.
+  suppressClick = false;
   longPressTimer = setTimeout(() => {
     suppressClick = true;
     handleFlag(Number(cell.dataset.i));
