@@ -469,7 +469,6 @@ let firstMove = true;
 let longPressTimer = null;
 let suppressClick = false;
 let bestRecord = null;
-let winDisplay = false;
 
 const $ = (id) => document.getElementById(id);
 const menuScreen = $("menuScreen");
@@ -636,8 +635,7 @@ function paint(i){
 }
 
 function updateHUD(){
-  const shownFlags = winDisplay ? mineCount : flags;
-  minesEl.textContent = String(shownFlags).padStart(2, "0") + "/" + String(mineCount);
+  minesEl.textContent = String(flags).padStart(2, "0") + "/" + String(mineCount);
   clicksEl.textContent = String(clicks);
   recordEl.textContent = bestRecord == null ? "-" : String(bestRecord);
 }
@@ -708,19 +706,32 @@ function revealAllMines(hitIndex){
   boardEl.children[hitIndex].classList.add("boom");
 }
 
+// Al ganar, el juego termina de anotar por el jugador: las banderas son
+// anotación local y gratuita, así que marcar las minas restantes no altera
+// el score ni el estado del juego.
+function flagAllMines(){
+  for(let i = 0; i < cellCount; i++){
+    const cell = cells[i];
+    if(!cell.mine || cell.flag) continue;
+    cell.flag = true;
+    cell.question = false;
+    flags++;
+    paint(i);
+  }
+}
+
 function endLost(hitIndex){
   state = "lost";
-  winDisplay = false;
   revealAllMines(hitIndex);
   paintRestart();
 }
 
 function endWon(){
   state = "won";
-  winDisplay = true;
   if(bestRecord == null || clicks < bestRecord){
     saveRecord(clicks);
   }
+  flagAllMines();
   updateHUD();
   paintRestart();
 }
@@ -869,7 +880,6 @@ function resetGame(){
   revealedCount = 0;
   state = "ready";
   firstMove = true;
-  winDisplay = false;
   clearTimeout(longPressTimer);
   suppressClick = false;
   createEmptyBoard();
