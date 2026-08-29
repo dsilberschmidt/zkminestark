@@ -1023,3 +1023,174 @@ Lectura final:
 - `Cell(0,0): is_mine=1, revealed=1`
 
 Esto revalida en el deploy endurecido la rama `mine-hit` con VRF real + lazy sampling.
+
+---
+
+## 2026-08-29 — Giro arquitectónico: frontera pública descartada y benchmark RPC directo de latencia
+
+### Secuencia causal
+
+#### A. Arquitectura anterior: frontera precalculada/materializada
+
+La idea para evitar esperar VRF en cada click era mantener una frontera
+precalculada. Al revelar una celda, el protocolo fijaba anticipadamente
+`is_mine` de las celdas cerradas necesarias para calcular los números de la
+frontera. Así, cuando el jugador clickeara después una celda de esa
+frontera, el resultado ya estaría determinado y ese click podría mostrarse
+sin esperar randomness nueva.
+
+La lectura de F0 descansaba en esa hipótesis: el batch de clicks-VRF
+consecutivos medía un peor caso técnico, no la UX normal de una partida.
+La expectativa era que la mayoría de los clicks "siguiendo pistas" cayeran
+sobre celdas ya determinadas y por lo tanto no pagaran espera nueva.
+
+#### B. Blocker descubierto: el secreto se rompe en storage público
+
+Esa arquitectura falla en una blockchain pública. `is_mine` de una celda
+cerrada estaba previsto como dato de modelo Dojo, por lo tanto vive en
+storage público de Starknet. Un bot puede leer ese storage antes de
+clickear y conocer el estado de la frontera.
+
+Ocultar el dato en la UI, en Torii o en cualquier capa off-chain no sirve:
+el storage on-chain sigue siendo legible. Consecuencia:
+
+**no se puede mantener `is_mine` materializado en plaintext para una celda
+todavía cerrada.**
+
+Este hallazgo invalida el precálculo secreto de frontera como mecanismo
+trustless.
+
+#### C. Salidas consideradas
+
+Se revisaron conceptualmente tres familias:
+
+1. commitment de `is_mine` con secreto/witness
+
+   El contrato necesitaría después ese secreto o witness para validar el
+   click. Reintroduce custodio de estado secreto o infraestructura
+   adicional.
+
+2. derivación determinista desde una seed VRF pública
+
+   Si la seed es pública, un bot deriva exactamente los mismos estados
+   futuros.
+
+3. no materializar hasta el click
+
+   Evita el leak, pero para publicar un número de Minesweeper hay que
+   preservar compatibilidad con todos los números ya publicados. El
+   problema se convierte en muestreo condicionado/model counting sobre el
+   conjunto de tableros compatibles con el transcript público.
+
+Conclusión conceptual:
+
+- si el futuro queda fijado, hay que ocultarlo
+- si no queremos secretos, el futuro no puede quedar fijado
+- si el futuro no queda fijado, cada nueva observación debe samplearse
+  condicionada al transcript público
+
+#### D. Nueva arquitectura candidata
+
+La alternativa que queda abierta es no guardar `is_mine` de celdas
+cerradas. Cuando el jugador realiza una acción materializante, se samplea
+únicamente el próximo resultado observable (`mine` o número compatible),
+con pesos proporcionales al número de tableros completos compatibles con
+el transcript público que producen cada resultado.
+
+Esto preservaría la distribución de un tablero uniforme sin almacenar
+estado secreto de celdas cerradas. Pero introduce dos riesgos separados:
+
+1. latencia: una parte importante de las acciones materializantes vuelve a
+   necesitar randomness fresca / VRF
+2. complejidad on-chain: el conteo condicionado/model counting debe ser lo
+   bastante barato como para ejecutarse en Cairo/gas
+
+Por eso se congeló el grant y se definieron dos experimentos go/no-go
+independientes antes de seguir.
+
+### Experimento 1 — latencia real por acción materializante
+
+Unidad correcta: **acción del jugador**, no celda revelada. Chord y
+flood-fill/cascade pueden revelar varias celdas usando un único VRF/PRF
+stream, así que "ms por celda" sería una métrica conceptualmente falsa.
+
+F0 había dado aproximadamente:
+
+- p50 ~3.3 s
+- p95 ~4.1 s
+
+pero F0 medía `sncast multicall run`, incluyendo overhead de CLI,
+`estimateFee`, build/sign y espera de aceptación. No representaba
+necesariamente la espera real del jugador.
+
+Por eso se construyó un benchmark nuevo con:
+
+- submit RPC directo
+- polling de preconfirmación
+- verificación real de que `Benchmark.get_counter()` ya es legible
+- secuencia `acción N -> result_readable -> acción N+1`
+- sin esperar `ACCEPTED_ON_L2` entre acciones
+
+Umbrales fijados **antes** de la corrida principal:
+
+- GREEN: p50 ≤ 1.5 s y p95 ≤ 2.5 s
+- YELLOW: p50 1.5–2.0 s o p95 2.5–4.0 s
+- RED: p50 > 2.0 s o p95 > 4.0 s
+
+Resultado principal — 200 acciones válidas:
+
+- N válido = 200
+- N fallido = 0
+- min = 376 ms
+- p50 = 1596 ms
+- p90 = 2669 ms
+- p95 = 2887 ms
+- p99 = 3538 ms
+- max = 4013 ms
+- media = 1449 ms
+- `Benchmark.get_counter()` legible en `pre_confirmed` en 200/200
+- clasificación = **YELLOW**
+
+Observación cualitativa a conservar como hipótesis, no como causalidad
+probada: muchas acciones ya tenían el resultado legible al volver del
+submit, mientras otras mostraban saltos de aproximadamente uno o más
+ciclos. Es compatible con ventanas/ciclos de preconfirmación del
+proveedor, pero no queda demostrado aquí.
+
+Conclusión del experimento 1:
+
+**la latencia no mata el proyecto. Queda YELLOW y justifica continuar al
+segundo experimento.**
+
+No reinterpretar como GREEN.
+
+### Experimento 2 — pendiente e independiente
+
+El segundo go/no-go debe responder si el conditional sampler / exact model
+counting necesario para no almacenar `is_mine` oculto puede ejecutarse con
+coste aceptable.
+
+Dirección de trabajo:
+
+- restricciones locales de Minesweeper
+- separación de la frontera en componentes conexas
+- conteo por número de minas `F_j(m)`
+- recombinación global por mine count
+- posible compresión de variables equivalentes / DP / estructura tipo
+  treewidth
+
+Orden correcto:
+
+1. prototipo off-chain para medir complejidad real en partidas 30×16/99
+2. si sobrevive, implementación representativa en Cairo/gas
+
+Este segundo experimento sigue siendo un blocker independiente y todavía
+puede hacer inviable zkminestark.
+
+### Estado actual
+
+- precálculo de frontera con `is_mine` en storage público: descartado
+- grant: congelado
+- experimento de latencia: terminado, YELLOW
+- conditional sampling/model counting: próximo blocker
+- arquitectura final del proyecto: todavía no cerrada

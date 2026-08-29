@@ -722,3 +722,46 @@ y más caro:
 
 **Pendiente para M1**: decidir si la versión de reglas vive en `Record`, en
 `Epoch`, o en la config del World, antes de fijar los modelos de Dojo.
+
+---
+
+## ADENDA 4 a #1 — Frontera pública descartada y blocker nuevo
+### (2026-08-29, después del benchmark RPC directo)
+
+**Cierre de la idea "la frontera evita la espera".** La arquitectura donde
+el protocolo materializa por adelantado `is_mine` de celdas cerradas para
+dejar una frontera ya resuelta queda invalidada en blockchain pública.
+Si `is_mine` vive en un modelo Dojo, vive en storage legible; un bot puede
+leerlo antes de clickear. Ocultarlo en UI o en Torii no cambia nada.
+
+**Decisión derivada.** Una arquitectura sin secretos NO puede materializar
+en plaintext el contenido oculto de celdas cerradas. Si el futuro queda
+fijado, hay que ocultarlo; si no queremos custodio de secretos, el futuro
+no puede quedar fijado por adelantado.
+
+**Salida que queda abierta.** No materializar `is_mine` hasta la acción del
+jugador y samplear solo el próximo resultado observable, condicionado al
+transcript público. Esto conserva la familia de la #1 sin volver al
+oráculo, pero mueve el peso técnico al muestreo condicionado/model
+counting exacto.
+
+**La latencia ya NO es el blocker principal.** El experimento RPC directo
+de 200 acciones materializantes dio:
+- N válido = 200, N fallido = 0
+- `Benchmark.get_counter()` legible en `pre_confirmed` en 200/200
+- min = 376 ms, p50 = 1596 ms, p90 = 2669 ms, p95 = 2887 ms, p99 = 3538 ms,
+  max = 4013 ms, media = 1449 ms
+- veredicto: **YELLOW**
+
+Conclusión: la latencia queda resuelta como **viable para continuar**. No
+es GREEN, pero tampoco mata el proyecto.
+
+**Blocker principal abierto desde ahora.** ¿Puede el muestreo
+condicionado/model counting exacto ejecutarse en Cairo con gas y latencia
+aceptables para una acción materializante?
+
+**Cuestión criptográfica que sigue abierta si más adelante se reabre una
+capa de ocultamiento.** Commitments, witness secreto, comité threshold o
+cualquier mecanismo de no-filtración siguen siendo una rama posible, pero
+ya no se los puede tratar como detalle de implementación: afectan el
+modelo de confianza entero.

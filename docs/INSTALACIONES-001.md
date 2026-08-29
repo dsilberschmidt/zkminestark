@@ -763,3 +763,59 @@ World hardened con VRF real + lazy sampling.
 Resultado F0 ROJO — pendiente de decisión de diseño. Ver sección "Próximas direcciones a evaluar" más arriba.
 
 ---
+
+## Benchmark RPC directo — latencia por acción materializante
+### (Sepolia Cartridge, 2026-08-29)
+
+Script reproducible:
+- `scripts/measure_rpc_preconfirmation.py`
+
+Configuración usada:
+- RPC: `https://api.cartridge.gg/x/starknet/sepolia`
+- `vrf-server`: `http://localhost:3001`
+- benchmark:
+  `0x002f32e302a63cc7a181563819c5933bfc402bcf87c42c945183235a7269e79b`
+- vrf provider:
+  `0x062550dc48d58ab49e84176c7bbd255c8a0d457bb08bec93eabe76c8549e4291`
+- account/caller:
+  `0x077bd7696ed8573ee1f1d3aef662455d22f918e62de532d424134aaf24924192`
+
+Métrica primaria:
+- `submit -> Benchmark.get_counter() readable at pre_confirmed`
+
+Punto metodológico clave:
+- la secuencia medida fue `acción N -> result_readable -> acción N+1`
+- no se esperó `ACCEPTED_ON_L2` entre acciones
+- `ACCEPTED_ON_L2` quedó como referencia secundaria, no como puerta de
+  avance del loop
+
+Artefactos a conservar:
+- crudo JSONL:
+  `benchmarks/rpc-preconfirm-20260829-204104.jsonl`
+- log de terminal:
+  `benchmarks/rpc-preconfirm-20260829-main.log`
+
+Resultado principal:
+
+| Métrica | Valor |
+|---|---:|
+| Acciones válidas | 200 |
+| Acciones fallidas | 0 |
+| min `result_readable` | 376 ms |
+| p50 `result_readable` | 1596 ms |
+| p90 `result_readable` | 2669 ms |
+| p95 `result_readable` | 2887 ms |
+| p99 `result_readable` | 3538 ms |
+| max `result_readable` | 4013 ms |
+| media `result_readable` | 1449 ms |
+| `get_counter()` legible en `pre_confirmed` | 200 / 200 |
+| Clasificación | **YELLOW** |
+
+Interpretación operativa:
+- el camino RPC directo evita el overhead de `sncast` incluido en F0 y
+  permite medir directamente cuándo el resultado pasa a ser legible en
+  `pre_confirmed`
+- la latencia relevante para UX queda por debajo del ROJO fijado para el
+  go/no-go
+- el benchmark responde a latencia por **acción del jugador**, no por celda
+  revelada
