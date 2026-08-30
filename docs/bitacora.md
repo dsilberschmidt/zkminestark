@@ -1461,3 +1461,58 @@ Beneficio por fase (H1, nodos):
 - `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md` (sección 2D)
 
 Commit: `experiment: freeze history-aware lazy transition 2D1`
+
+---
+
+## 2026-08-30 — Prestudy 2D2: carry-forward descartado antes de implementación
+
+### Pregunta
+
+¿Vale la pena implementar 2D2 carry-forward, que derivaría el perfil del
+componente `T_{i+1}` desde el joint profile de `T_i` sin DFS adicional?
+
+### Metodología
+
+Script de análisis `scripts/conditional_sampling_2d2_prestudy.py` ejecutado
+sobre las 3 historias smoke (84 puntos, 79 transiciones con componente special).
+
+Para cada transición se clasifica el destino del componente special:
+MERGE / DIRECTLY_CONDITIONABLE / SPLIT / DISAPPEARED / ALREADY_REUSABLE /
+TERMINAL / MERGE+SPLIT.
+
+También se rastrea si el siguiente click cae en la misma región y si es special
+u ordinary.
+
+### Hallazgos clave
+
+- MERGE (C): 42/79 = 53.2% de transiciones, 65.4% de nodos — dominante.
+  Causa: al revelar `x_i`, el constraint nuevo conecta vecinos cerrados que
+  estaban fuera de C. Inherente a Minesweeper, no evitable.
+- DIRECTLY_CONDITIONABLE (A): 29/79 = 36.7%, 1310 nodos.
+  Carry-forward matemáticamente válido: F_{C_new}[k'] = ways[k', 0, m_eff].
+- SPLIT (B): 4/79 = 5.1%. Deconvolución imposible — descartado.
+- ALREADY_REUSABLE (E): 0 casos. El componente special siempre cambia de firma.
+
+### Falla del carry-forward simple
+
+A_next_ordinary = 0 sobre los 84 puntos.
+En los 25 casos A donde el siguiente click toca la misma región, el siguiente
+uso es SPECIAL (no ordinary), lo que exige un nuevo joint DFS de todos modos.
+Carry-forward de F_C[k] no ayuda cuando la siguiente query es joint.
+
+Upper bound realista: 248 nodes / 5443 total 2D1 = 4.6%.
+Upper bound teórico (todos los A condicionables): 24.1%, no realizable.
+
+### Conclusión
+
+**2D2 simple carry-forward descartado.** No implementar.
+
+Para carry-forward útil en el caso next-special haría falta tree decomposition /
+junction tree — experimento distinto (2E).
+
+### Artefactos
+
+- `scripts/conditional_sampling_2d2_prestudy.py` (análisis, no benchmark)
+- `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md` (sección PRESTUDY 2D2 añadida)
+
+Commit: `experiment: document 2D2 carry-forward prestudy`

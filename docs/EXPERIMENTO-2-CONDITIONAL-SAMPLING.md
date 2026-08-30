@@ -1271,6 +1271,165 @@ historias largas, el argumento se hace más fuerte.
 
 Este análisis queda como hipótesis abierta. No se implementa en 2D1.
 
+---
+
+## PRESTUDY 2D2 — Carry-Forward: Análisis Experimental
+### (2026-08-30)
+
+### Pregunta
+
+¿Cuántas transiciones de las 3 historias smoke son estructuralmente aptas para
+carry-forward (simple conditioning)? ¿Cuánto trabajo de 2D1 podría evitarse?
+
+### Metodología
+
+Script `scripts/conditional_sampling_2d2_prestudy.py`.
+Para cada paso `(T_i, x_i)` de las 3 historias:
+- Se identifica el/los componentes special en `IncrementalState` de 2D1.
+- Se corre `count_component_joint()` para obtener el coste exacto del DFS.
+- Se construye el estado `T_{i+1}` y se rastrean las variables del componente.
+- Se clasifica la transición en una de 6 categorías.
+- Se verifica si el siguiente click cae en la misma región y si es special u ordinary.
+
+Los `special_nodes` del prestudy coinciden exactamente con los del benchmark
+congelado (H1=3150, H2=1592, H3=216), verificando que el análisis es coherente.
+
+### Taxonomía de transiciones
+
+**A — DIRECTLY_CONDITIONABLE**
+
+Todas las variables de C que quedaron en el frontier después de revelar `x_i`
+forman un único componente C_new sin variables externas. La fórmula:
+
+```
+F_{C_new}[k'] = ways[k', x_is_mine=0, neighbor_mines=m_eff]
+```
+
+donde `m_eff = j − adjacent_known_mines`, es matemáticamente exacta.
+`k'` no incluye `x_i` (ya no es variable del frontier).
+Las dimensiones son: `k'` ∈ [0, |V_C|−1], `m_eff` ∈ [0, 8].
+
+**B — SPLIT**
+
+La remoción de `x_i` (o el cambio de constraints) divide C en ≥2 componentes.
+No existe una deconvolución exacta del joint profile `ways[k, ·, ·]` en
+perfiles individuales:
+
+```
+ways_C[k] = Σ_{k_a+k_b=k} F_A[k_a] · F_B[k_b]
+```
+
+Múltiples pares `(F_A, F_B)` producen el mismo `ways_C`. Carry-forward es
+**matemáticamente imposible** para splits.
+
+**C — MERGE**
+
+El componente C_new en `T_{i+1}` contiene variables que no estaban en C.
+El constraint nuevo de `x_i`'s clue conecta variables previamente separadas
+(o unconstrained). Carry-forward no aplica.
+
+**D — DISAPPEARED**
+
+Las variables de C salen completamente del frontier (todo se revela).
+
+**E — ALREADY_REUSABLE**
+
+2D1 ya reutiliza el componente por firma exacta. Carry-forward no suma nada.
+
+**F — MERGE+SPLIT**
+
+Combinación de merge y split simultáneos.
+
+### Resultados sobre 79 transiciones especiales
+
+(84 pasos totales; 5 sin componente special — el click cae en región totalmente
+unconstrained.)
+
+| Categoría | Count | % | Nodes | % nodes |
+|-----------|-------|---|-------|---------|
+| C — MERGE | 42 | 53.2% | 3244 | 65.4% |
+| A — DIRECTLY_CONDITIONABLE | 29 | 36.7% | 1310 | 26.4% |
+| B — SPLIT | 4 | 5.1% | 268 | 5.4% |
+| TERMINAL | 3 | 3.8% | 90 | 1.8% |
+| F — MERGE+SPLIT | 1 | 1.3% | 46 | 0.9% |
+| E — ALREADY_REUSABLE | **0** | 0% | 0 | 0% |
+
+**MERGE domina (53.2%).** El mecanismo es inherente a Minesweeper: al revelar
+`x_i` con pista `j`, el constraint `Σ N(x_i)∩closed = j − known_adj` conecta
+vecinos cerrados de `x_i` que podían estar fuera de C (unconstrained o en otro
+componente). Esto ocurre en early/mid-game donde el frontier crece, y reaparece
+en late-game cuando la política salta a nuevas regiones.
+
+**SPLIT (5.1%)** ocurre cuando `x_i` era el único enlace estructural entre dos
+subgrafos de C. Hay 4 casos observados en H1 y H2.
+
+**E=0**: el componente special siempre cambia de firma (x_i se remueve y se
+agrega un constraint nuevo), por lo que 2D1 nunca reutiliza el componente
+special del paso anterior directamente.
+
+### El problema crítico: todos los A-cases tienen siguiente click special
+
+De los 29 casos A:
+- **25** tienen el siguiente click dentro de la misma región.
+- En esos 25, el siguiente click es **SPECIAL** (necesita `count_component_joint()` nuevo).
+- Derivar `F_{C_new}[k']` (ordinary profile) no evita ese joint DFS.
+- **A_next_ordinary = 0**.
+
+Los 4 A-cases con siguiente click fuera de la región son candidatos realistas:
+
+| Historia | Click | Comp size | Nodes |
+|----------|-------|-----------|-------|
+| H2 | 7 | 35 | 111 |
+| H2 | 10 | 30 | 128 |
+| H2 | 11 | 4 | 6 |
+| H1 | 38 | 2 | 3 |
+
+Si esos componentes fuesen luego accedidos como **ordinary** (hipótesis
+favorable), el ahorro máximo es **248 search_nodes**.
+
+### Upper bound vs ahorro realista
+
+| Escenario | Nodes ahorrados | % 2D1 total |
+|-----------|-----------------|-------------|
+| Todos los A condicionables (teórico puro) | 1310 | 24.1% |
+| A con next_ordinary (fórmula correctamente aplicada) | **0** | **0%** |
+| A sin siguiente click en región (mejor caso realista) | 248 | 4.6% |
+
+El 2D1 total = 5443 nodes (H1+H2+H3).
+
+### Carry-forward joint: ¿sirve para el caso next_special?
+
+Para evitar el joint DFS del paso siguiente necesitaríamos derivar:
+
+```
+ways_{C_new}[k', x'_mine, n'_mine]
+```
+
+para la nueva query `(x', N')` desde el joint profile de C.
+Esto requiere la distribución conjunta 4D:
+
+```
+ways_C[k, x_mine=0, n_mine=m_eff, x'_mine, n'_mine]
+```
+
+que el DFS actual no produce porque solo rastrea `(x, N)` del click corriente.
+Precomputing esto para todos los posibles `(x', N')` es equivalente a enumerar
+todas las posibles queries siguientes — impracticable sin tree decomposition.
+
+### Conclusión
+
+**2D2 simple carry-forward: descartado antes de implementación.**
+
+- MERGE es el caso dominante (53.2%, 65.4% de los nodos): prerequisito
+  estructural falla en más de la mitad de las transiciones.
+- Para los casos A, el siguiente click es siempre special → el DFS joint es
+  inevitable → ahorro ordinary = 0.
+- Upper bound realista: 4.6% del coste de 2D1 en el mejor escenario.
+- SPLIT es matemáticamente no-invertible.
+- Para carry-forward que beneficie el caso next_special haría falta una
+  representación de estado más rica (junction tree, variable elimination),
+  que sería un algoritmo distinto: EXPERIMENTO 2E o 2D3.
+
 ## Artefactos 2D
 
 - código incremental:
@@ -1283,3 +1442,5 @@ Este análisis queda como hipótesis abierta. No se implementa en 2D1.
   `benchmarks/conditional-sampling-2d-histories-smoke-20260830.jsonl`
 - benchmark 2D0 + 2D1:
   `benchmarks/conditional-sampling-2d-smoke-20260830.jsonl`
+- prestudy 2D2 (script, no congelado en benchmarks):
+  `scripts/conditional_sampling_2d2_prestudy.py`
