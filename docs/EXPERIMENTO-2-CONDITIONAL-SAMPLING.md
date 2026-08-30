@@ -979,3 +979,307 @@ Hipótesis que esto sugiere, todavía separadas del dato medido:
   `scripts/test_conditional_sampling_locality.py`
 - raw benchmark 2B:
   `benchmarks/conditional-sampling-2b-locality-20260830.jsonl`
+
+---
+
+# EXPERIMENTO 2D — History-Aware / Incremental
+### (2026-08-30)
+
+## Pregunta
+
+¿Cuánto trabajo exacto puede reutilizarse entre clicks consecutivos de una
+misma historia, cuando el transcript crece de `T_i` a `T_{i+1}` tras
+observar el outcome del click `x_i`?
+
+La métrica principal pasa de un snapshot aislado a una historia completa:
+
+```
+coste total = startup + Σ evaluation(T_i) + Σ transition(T_i → T_{i+1})
+```
+
+comparado contra `Σ 2B3-from-scratch(T_i)`.
+
+## Historias smoke
+
+Tres historias reproducibles sobre tablero 12×12/20:
+
+| id | política | seed | resultado | clicks |
+|----|----------|------|-----------|--------|
+| H1 | oracle_safe_local_center | 2026083001 | victoria | 46 |
+| H2 | oracle_safe_jump_edge    | 2026083003 | victoria | 32 |
+| H3 | public_risky_aggressive  | 2026083109 | derrota  |  6 |
+
+Total: 84 puntos históricos.
+
+El oracle solo genera la historia (board, outcome real, transcript siguiente).
+Nunca interviene en los conteos: cada `(T_i, x_i)` se evalúa como si fuera
+un transcript público opaco.
+
+## 2D0 — Baseline Incremental Eager
+
+### Diseño
+
+2D0 preserva entre transcripts consecutivos:
+
+- constraints
+- componentes conectados y sus firmas exactas
+- perfiles ordinarios `F_C[k]` de componentes reutilizados
+
+**Transición `T_i → T_{i+1}`** (`build_state`, modo "2D0"):
+
+1. Reconstruye constraints y componentes desde el transcript.
+2. Para componentes con firma idéntica al step anterior: reutiliza el perfil.
+3. Para componentes con firma nueva (changed): ejecuta `count_component()`
+   eager → DFS ordinario → nodos cobrados en `transition.search_nodes`.
+
+**Evaluación en `(T_i, x_i)`** (`evaluate_candidate_with_state`):
+
+- Componente que contiene `x_i` o vecinos cerrados (special):
+  ejecuta `count_component_joint()` → joint DFS.
+- Otros componentes (ordinary): usa perfil cacheado, 0 DFS.
+
+### Diagnóstico de doble conteo
+
+Para un componente changed en la transición que resulta special en eval:
+
+- Transición: `count_component()` ordinary → S nodos
+- Evaluación: `count_component_joint()` sobre el mismo árbol → S nodos
+- **Total: 2×S. Desperdicio: S.**
+
+Verificación empírica: `eval_nodes[i] ≈ transition_nodes[i-1]` en el 91% de
+los pasos de H1 (41/45) y el 100% de H3. En H2 (política jump), el 68%
+(21/31), porque la política salta entre regiones y el componente changed
+no siempre es el special del siguiente click.
+
+El overhead de 2D0 respecto de 2B3 está compuesto íntegramente por las
+transiciones eager: 120% del overhead en H1, 152% en H2, 100% en H3.
+(Valores > 100% significan que el eval de 2D0 ya era más barato que 2B3 por
+reutilización, pero el costo de transición lo superaba.)
+
+### Resultado 2D0 (search_nodes, métrica oficial)
+
+| historia | 2B3  | 2D0 eval | 2D0 trans | 2D0 total |
+|----------|------|----------|-----------|-----------|
+| H1 (46 clicks) | 3672 | 3150 | 3163 | 6313 |
+| H2 (32 clicks) | 2202 | 1592 | 1779 | 3371 |
+| H3 (6 clicks)  |  216 |  216 |  216 |  432 |
+| total 84        | 6090 | —    | —    | 10116 |
+
+2D0 es exacto (84/84 contra 2A/2B/2B2/2B3) pero peor que 2B3 en coste
+total de historia. Sirve como baseline para cuantificar el beneficio de 2D1.
+
+## 2D1 — Lazy Transition
+
+### Idea
+
+No ejecutar el DFS eager durante la transición. Los componentes changed quedan
+marcados como `deferred` (profile=None). El DFS se corre una sola vez en el
+momento en que realmente se necesita.
+
+### Diseño
+
+**Transición `T_i → T_{i+1}`** (`build_state`, modo "2D1"):
+
+1. Reconstruye constraints y componentes.
+2. Para componentes con firma idéntica: reutiliza el perfil (sin cambio).
+3. Para componentes changed: marca `profile=None, profile_source="deferred"`.
+   **No ejecuta ningún DFS. `transition.search_nodes = 0`.**
+
+**Evaluación en `(T_i, x_i)`**:
+
+- Componente deferred + special:
+  ejecuta `count_component_joint()` directamente → 1 DFS (en lugar de 2 en 2D0).
+- Componente deferred + ordinary:
+  ejecuta `count_component()` al momento de usar su perfil → 1 DFS diferido.
+  El perfil queda cacheado en el estado para reutilización posterior.
+- Componente reused + ordinary: perfil disponible, 0 DFS.
+- Componente reused + special: joint DFS necesario (siempre, igual que 2B3).
+
+### Contabilidad de nodos
+
+Por diseño y verificado en auditoría:
+
+```
+transition.search_nodes = 0  (siempre, en todo step 2D1)
+eval.total_search_nodes = ordinary_materialization_nodes + special_evaluation_nodes
+```
+
+No existe DFS escondido en ninguna otra ruta de código.
+
+### Correcciones al harness
+
+Antes de implementar 2D1 se corrigieron tres problemas en
+`conditional_sampling_history_smoke.py`:
+
+1. **Bug real**: `IncrementalTransition` nunca tuvo el campo
+   `recomputed_components` ni `recomputed_component_sizes`; el harness
+   los referenciaba → `AttributeError` en producción. Corregido reemplazando
+   por los campos reales (`eagerly_counted_components`,
+   `changed_component_sizes`).
+
+2. **Necesario para 2D1**: `persistent_state_size()` hacía
+   `component.profile.solution_vector` sin verificar `None` → crash para
+   componentes deferred. Corregido con guard `if component.profile is not None`.
+
+3. **Limitación del harness**: `build_state()` solo se llamaba con modo
+   implícito "2D0". Refactorizado para aceptar `modes=("2D0","2D1")` y
+   correr cadenas de estado independientes por variante.
+
+## Validación de exactitud
+
+Sobre exactamente los 84 `(T_i, x_i)` de H1/H2/H3:
+
+```
+2A == 2B == 2B2 == 2B3 == 2D0 == 2D1
+```
+
+para `N_mine`, `N_0..N_8`, `sum_counts`, `compatible_total_before_click`
+y `partition_ok`. Cero mismatches. El harness lanza `AssertionError` al
+primer desvío; no hubo ninguno.
+
+Tests: 28/28 OK (suite completa de conditional sampling).
+
+## Resultado 2D1 — Métricas finales (calculadas desde raw)
+
+### search_nodes (startup + Σ evaluation + Σ transition)
+
+| historia | 2B3  | 2D0 eval | 2D0 trans | 2D0 total | 2D1 eval | 2D1 trans | 2D1 total | 2B3/2D1 | 2D0/2D1 |
+|----------|------|----------|-----------|-----------|----------|-----------|-----------|---------|---------|
+| H1 (46)  | 3672 | 3150 | 3163 | 6313 | 3187 | 0 | **3187** | **1.152x** | 1.981x |
+| H2 (32)  | 2202 | 1592 | 1779 | 3371 | 2040 | 0 | **2040** | **1.079x** | 1.652x |
+| H3 (6)   |  216 |  216 |  216 |  432 |  216 | 0 |  **216** | **1.000x** | 2.000x |
+| total 84 | 6090 |    — |     — | 10116 |  5443 | 0 | **5443** | **1.119x** | 1.860x |
+
+### branch_ops (misma métrica)
+
+| historia | 2B3   | 2D1 total | 2B3/2D1 |
+|----------|-------|-----------|---------|
+| H1 (46)  | 6784  | 5922      | 1.146x  |
+| H2 (32)  | 4100  | 3900      | 1.051x  |
+| H3 (6)   |  364  |  364      | 1.000x  |
+| total 84 | 11248 | 10186     | 1.104x  |
+
+### Desglose eval de 2D1 (search_nodes)
+
+| historia | ordinary_mat | special_eval | reused_costo_0 |
+|----------|-------------|--------------|----------------|
+| H1 |  37 (1%) | 3150 (99%) | dominante |
+| H2 | 448 (22%) | 1592 (78%) | moderado  |
+| H3 |   0  (0%) |  216 (100%) | ninguno  |
+
+Los 448 nodos de ordinary_mat en H2 corresponden a componentes que la
+política jump deja como changed-pero-no-special. En 2D0, esos mismos
+componentes se pagaban en transición; en 2D1 se pagan en eval. Mismo costo,
+distinto momento. Sin pérdida neta.
+
+### Pasos donde 2D1 gana/empata/pierde vs 2B3 (per-step)
+
+| historia | gana | empata | pierde |
+|----------|------|--------|--------|
+| H1 | 27 | 19 | **0** |
+| H2 | 25 |  7 | **0** |
+| H3 |  0 |  6 | **0** |
+
+2D1 nunca pierde contra 2B3 en ningún paso individual.
+
+### Desglose por fase (search_nodes)
+
+| historia | fase   | steps | 2B3  | 2D0  | 2D1  | 2B3/2D1 |
+|----------|--------|-------|------|------|------|---------|
+| H1 | early |  9 | 1482 | 3001 | 1482 | 1.000x |
+| H1 | mid   | 15 | 1140 | 2280 | 1125 | 1.013x |
+| H1 | late  | 22 | 1050 | 1032 |  580 | **1.810x** |
+| H2 | early |  6 |  370 |  525 |  370 | 1.000x |
+| H2 | mid   |  1 |  155 |  111 |  155 | 1.000x |
+| H2 | late  | 25 | 1677 | 2735 | 1515 | **1.107x** |
+| H3 | early |  6 |  216 |  432 |  216 | 1.000x |
+
+El beneficio crece en late-game: los componentes acumulan pasos sin cambiar
+de firma, aumentando la reutilización efectiva. Early-game tiene pocas
+constraints establecidas y casi todo es nuevo.
+
+## Interpretación
+
+Lo que muestran los datos directamente:
+
+- 2D1 es más eficiente que 2B3 en coste total de historia para H1 (−13.2%)
+  y H2 (−7.4%). H3 empata (historia corta, sin late-game).
+- La lazy transition elimina el doble conteo sin introducir pérdidas.
+- La ganancia viene exclusivamente de los componentes reutilizados entre steps
+  (0 DFS en 2D1 vs DFS completo en 2B3).
+- Los ordinarios materializados en 2D1 cuestan lo mismo que en 2D0 (solo
+  se desplaza el momento del pago de transición a eval).
+- El beneficio se concentra en late-game, donde los componentes son estables.
+
+Lo que esto sugiere, separado del dato medido:
+
+- El factor 1.81x de H1-late indica potencial real de reutilización en
+  historias largas con política local estable.
+- H2 (jump) extrae menos beneficio porque la política espacialmente dispersa
+  reduce la coincidencia de firmas entre steps consecutivos.
+- H3 (6 clicks, solo early) es un caso degenerado: ningún componente
+  alcanza a estabilizarse.
+
+## Análisis de carry-forward (hipótesis no implementada)
+
+Después de evaluar `(T_i, x_i)`, `count_component_joint()` produjo:
+
+```
+ways[k, x_is_mine, neighbor_mines]
+```
+
+Al observar el outcome real:
+
+- Si `x` revela mina: condicionar `x_is_mine = 1`
+- Si `x` revela pista `j`: condicionar `x_is_mine = 0` y
+  `neighbor_mines = j - known_adjacent_mines`
+
+Para el caso simple (x estaba en el componente C, ningún split ni merge
+al pasar a `T_{i+1}`):
+
+```
+F_{C_new}[k'] = ways[k', x_is_mine=0, m_needed]
+```
+
+Esto daría el perfil ordinario de `C_new` en `T_{i+1}` sin ningún DFS
+adicional.
+
+### Límites del carry-forward simple
+
+1. **Split**: si revelar `x` divide C en `C_a` y `C_b`, el joint profile
+   agrega las dos subregiones y no puede descomponerse sin información
+   del árbol de descomposición.
+2. **Merge**: si la nueva constraint conecta componentes antes separados,
+   hace falta convolucionarlos.
+3. **Consulta special subsiguiente**: el ordinary derivado no alcanza para
+   contestar una nueva query joint sin un DFS fresco sobre `C_new`.
+4. **Firma exacta**: el sistema actual reconoce reutilización solo por firma
+   idéntica; `C_new` tiene distinta firma que C (variable `x` removida,
+   nueva constraint), por lo que no habría match automático.
+
+### Para implementar carry-forward real
+
+- Guardar el joint profile después del special eval (no solo el ordinary).
+- Lógica de "derivación de firma": detectar que `C_new` = C − {x} con
+  conditioning y aplicar la derivación directa.
+- Manejo explícito de splits y merges (posiblemente junction tree o
+  representación factorizada).
+
+Para el rango actual (componentes 5–20 variables, tablero 12×12) el overhead
+de esta maquinaria adicional puede no justificarse. Para 30×16/99 con
+historias largas, el argumento se hace más fuerte.
+
+Este análisis queda como hipótesis abierta. No se implementa en 2D1.
+
+## Artefactos 2D
+
+- código incremental:
+  `scripts/conditional_sampling_2d_incremental.py`
+- harness de historias:
+  `scripts/conditional_sampling_history_smoke.py`
+- tests:
+  `scripts/test_conditional_sampling_2d_incremental.py`
+- historias smoke (84 puntos, 3 historias):
+  `benchmarks/conditional-sampling-2d-histories-smoke-20260830.jsonl`
+- benchmark 2D0 + 2D1:
+  `benchmarks/conditional-sampling-2d-smoke-20260830.jsonl`

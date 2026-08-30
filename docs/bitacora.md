@@ -1371,3 +1371,93 @@ Lectura de cierre:
 - la mejora grande aparece sobre todo en la cola cara del corpus
 - quedan pendientes sólo optimizaciones internas sobre esta arquitectura,
   no un cambio de formulación
+
+---
+
+## 2026-08-30 — Freeze 2D1: history-aware lazy transition
+
+### Contexto
+
+Tras congelar 2B3 como baseline de evaluación independiente, se abrió el
+EXPERIMENTO 2D para medir cuánto trabajo exacto puede reutilizarse entre
+clicks consecutivos de una misma historia.
+
+### 2D0 — baseline incremental eager
+
+Se implementó un estado incremental que preserva entre transcripts:
+constraints, componentes conectados, firmas exactas y perfiles ordinarios.
+
+Para cada componente changed en la transición `T_i → T_{i+1}`, 2D0 ejecuta
+`count_component()` de forma eager (DFS ordinario completo).
+
+Resultado sobre 3 historias smoke 12×12/20 (84 puntos, H1/H2/H3):
+
+- 2D0 baja el coste de eval pointwise frente a 2B3 (reutilización real)
+- pero el coste de transición eager lo supera con creces
+- total historia: H1 6313 vs 2B3 3672, H2 3371 vs 2202, H3 432 vs 216
+- 2D0 es exacto (84/84) pero peor que 2B3 en coste total de historia
+
+### Diagnóstico: doble conteo
+
+Auditoría del lifecycle `T_i → T_{i+1} → x_{i+1}` reveló:
+
+- transición (2D0): `count_component()` ordinary → S nodos por componente changed
+- evaluación: `count_component_joint()` joint → S nodos sobre el mismo árbol
+
+Para componentes que son changed en transición Y special en eval:
+2D0 paga 2×S. El doble conteo se verifica empíricamente:
+eval[i] ≈ trans[i−1] en 41/45 pasos de H1 (91%), 100% en H3.
+
+El overhead de 2D0 vs 2B3 proviene 100–152% de la transición eager.
+
+### 2D1 — lazy transition
+
+Implementación minimal: en `build_state()` modo "2D1", los componentes
+changed se marcan como `deferred` (profile=None) sin ejecutar ningún DFS.
+
+En `evaluate_candidate_with_state()`:
+- deferred + special → `count_component_joint()` directamente (1 DFS)
+- deferred + ordinary → `count_component()` materializado (1 DFS, diferido)
+- reused + ordinary → perfil cacheado (0 DFS)
+- reused + special → joint DFS (necesario siempre)
+
+Ordinarios materializados durante eval quedan cacheados en el estado para
+reutilización posterior.
+
+### Resultado 2D1 — métricas finales (recalculadas desde raw)
+
+Exactitud: 2A == 2B == 2B2 == 2B3 == 2D0 == 2D1 en 84/84 puntos.
+
+search_nodes (startup + Σ eval + Σ transition):
+
+| historia | 2B3  | 2D0   | 2D1  | 2B3/2D1 |
+|----------|------|-------|------|---------|
+| H1 (46)  | 3672 | 6313  | 3187 | 1.152x  |
+| H2 (32)  | 2202 | 3371  | 2040 | 1.079x  |
+| H3 (6)   | 216  | 432   | 216  | 1.000x  |
+| total 84 | 6090 | 10116 | 5443 | 1.119x  |
+
+2D1 nunca pierde contra 2B3 en ningún paso individual (gana 52, empata 32).
+
+Beneficio por fase (H1, nodos):
+- early (9 steps): 2D1 = 2B3 (sin reutilización)
+- mid  (15 steps): 2D1/2B3 = 1.013x
+- late (22 steps): 2D1/2B3 = 1.810x
+
+### Bugs corregidos en el harness
+
+- `recomputed_components` / `recomputed_component_sizes` no existían en
+  `IncrementalTransition` → AttributeError en producción; corregidos
+- `persistent_state_size` crasheaba con `profile=None` en 2D1 → corregido
+- harness no exponía parámetro `mode` → refactorizado para 2D0 y 2D1
+
+### Artefactos congelados
+
+- `scripts/conditional_sampling_2d_incremental.py`
+- `scripts/conditional_sampling_history_smoke.py`
+- `scripts/test_conditional_sampling_2d_incremental.py`
+- `benchmarks/conditional-sampling-2d-histories-smoke-20260830.jsonl` (84 puntos)
+- `benchmarks/conditional-sampling-2d-smoke-20260830.jsonl` (2D0 + 2D1)
+- `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md` (sección 2D)
+
+Commit: `experiment: freeze history-aware lazy transition 2D1`
