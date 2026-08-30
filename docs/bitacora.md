@@ -1549,6 +1549,71 @@ Datasets: corpus 30×16/99 (120 casos) + historias smoke 12×12/20 (84 pasos).
 - Caso más grande: n=56, w=4, factor=16 (2a-033 group)
 - Caso más caro (DFS): n=46, w=4, factor=16, DFS=4952 nodos → ratio DFS/factor = 309x
 
+---
+
+## 2026-08-30 — Cierre de EXPERIMENTO 2E2: exact variable elimination
+
+Se implementó 2E2 como contador exacto alternativo por componente usando
+variable elimination sobre el primal constraint graph, manteniendo intacta la
+semántica global de 2B3 para `N_mine, N_0..N_8`.
+
+Arquitectura congelada:
+
+- snapshot only: mejora within-click de `count(T,x)`
+- sin reuse entre transcripts todavía
+- superficie lista para 2E3:
+  `ComponentSignature`, `ComponentEliminationPlan`,
+  `EliminationStep`, `SparseCountFactor`
+
+Artefactos:
+
+- `scripts/conditional_sampling_2e2_variable_elimination.py`
+- `scripts/test_conditional_sampling_2e2_variable_elimination.py`
+- `benchmarks/conditional-sampling-2e2-variable-elimination-20260830.jsonl`
+- `benchmarks/conditional-sampling-2e2-variable-elimination-repeated-20260830.jsonl`
+- `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md` (sección 2E2)
+
+Validación final:
+
+- exactitud `2E2 == 2B3` en `120/120` casos del corpus congelado `30×16/99`
+- igualdad exacta también en:
+  `sum_counts`, `compatible_total_before_click`, `partition_ok`
+- suite tracked completa de conditional sampling:
+  `32` tests, `OK`
+
+Auditoría de fairness del timing:
+
+- `2B3 wall_clock_ms` mide solo `evaluate_cell_shared_outcomes(T,x)`
+- `2E2 wall_clock_ms` mide solo `evaluate_cell_2e2(T,x)`
+- benchmark repetido con corpus precargado, `1` warmup no medido y `20`
+  repeticiones medidas por caso
+- validación de exactitud hecha fuera de la ventana temporal
+
+Hechos medidos:
+
+- width efectivo especial `<= 6` en todo el corpus
+- sparsity fuerte observada:
+  `peak_nonzero_entries` p50 `20`, max `103`
+- mediana wall-clock por caso:
+  `2B3 p50=6.66 ms`, `2E2 p50=8.70 ms`
+- cola wall-clock por caso:
+  `2B3 p99=21.64 ms`, `2E2 p99=15.03 ms`
+
+Crossover DFS -> VE por dificultad 2B3 (`search_nodes`):
+
+- `<250`: 2E2 pierde `52/52`
+- `250-499`: 2E2 gana `7/24`
+- `500-999`: 2E2 gana `4/24`
+- `1000-1999`: 2E2 gana `7/12`
+- `>=2000`: 2E2 gana `8/8`, speedup mediano `1.400x`
+
+Lectura de cierre:
+
+- VE paga overhead claro en los casos fáciles
+- la zona de crossover aparece en `1000-1999` nodos; para `>=2000` VE domina en los `8/8` casos observados
+- 2E2 queda validado como checkpoint exacto y estructuralmente manejable
+- siguiente paso correcto: **2E3 history-aware VE**
+
 **12×12/20 historias**:
 - width range: 1–7, max 7 en 5 casos
 - Phase evolution: w/n = 0.52 (early), 0.17 (mid), 0.25 (late)

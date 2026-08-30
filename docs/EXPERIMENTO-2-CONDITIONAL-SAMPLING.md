@@ -1655,17 +1655,276 @@ Razón:
 **No se reporta speedup estimado.** El rendimiento de VE frente al DFS actual
 queda como hipótesis pendiente de implementación y benchmark real.
 
-### Experimento mínimo siguiente
+### Paso siguiente desde el prestudy
 
-Si se decide abrir 2E:
-1. Implementar variable elimination con ordering min-fill sobre las sum
-   constraints del frontier.
-2. Extender para query joint `(x_mine, neighbor_mines)` como dimensiones extra.
-3. Verificar exactitud contra 2B3 (mismos counts) sobre el corpus 120 casos.
-4. Benchmarkar search_nodes equivalentes (operaciones de factor table) vs
-   DFS nodes actuales.
-5. Si confirma speedup en 30×16/99: considerar Cairo.
+El paso correcto después de este prestudy quedó definido como:
 
-No implementar todavía.
+1. implementar **2E2 snapshot VE** con ordering min-fill determinista
+2. verificar exactitud `2E2 == 2B3` sobre el corpus congelado `120` casos
+3. medir tamaño real de factores, sparsity y wall-clock Python
+4. si la estructura sigue siendo manejable, avanzar a **2E3 history-aware VE**
+
+No abrir variantes algorítmicas nuevas salvo blocker concreto.
+
+## EXPERIMENTO 2E2 — Exact Variable Elimination
+### (2026-08-30)
+
+## Objetivo
+
+Implementar un contador exacto alternativo por componente usando
+**variable elimination sobre el primal constraint graph**, manteniendo
+exactamente la semántica global validada en 2B3:
+
+- componentes ordinary -> `F_C[k]`
+- componente special -> `ways[k, x_is_mine, neighbor_mines]`
+- mismo tratamiento global de `remaining_mines`, otros componentes,
+  unconstrained interior, vecinos locales unconstrained y proyección final
+
+El experimento 2E2 estudia deliberadamente **solo la eficiencia within-click**:
+
+- mejora de `count(T,x)` dentro de un snapshot
+- **sin** reuse entre `T_i` y `T_{i+1}`
+- pero con arquitectura preparada para persistir/reusar en 2E3:
+  firmas de componente, ordering, factores y estado intermedio
+
+## Implementación
+
+Código nuevo:
+
+- `scripts/conditional_sampling_2e2_variable_elimination.py`
+- `scripts/test_conditional_sampling_2e2_variable_elimination.py`
+
+Raw benchmark:
+
+- `benchmarks/conditional-sampling-2e2-variable-elimination-20260830.jsonl`
+- `benchmarks/conditional-sampling-2e2-variable-elimination-repeated-20260830.jsonl`
+
+Diseño elegido:
+
+1. ordering **min-fill determinista** con desempate estable
+2. factores **sparse** con `int` exactos de Python
+3. tracking explícito de:
+   `scope`, assignment del separator, `mine_count`, `x_is_mine`,
+   `neighbor_mines`
+4. la dimensión `k` de minas **se incrementa solo al eliminar variables**,
+   no al crear factors base, para evitar doble conteo
+5. la consulta special se expresa en la misma estructura que la ordinary,
+   agregando solo dos acumuladores:
+   `x_is_mine in {0,1}` y `neighbor_mines in [0,d]`
+
+Esto deja una superficie directa para 2E3:
+
+- `ComponentSignature`
+- `ComponentEliminationPlan`
+- `EliminationStep`
+- `SparseCountFactor`
+
+## Validación
+
+Antes del corpus completo se agregaron tests para:
+
+- creación/join/marginalización de factores
+- tracking correcto de minas
+- componente satisfacible / insatisfacible
+- ordinary `F_C[k]` vs DFS de 2A
+- special joint profile vs `count_component_joint()` de 2B3
+- oracle exhaustivo chico `5x5/2`
+- end-to-end sobre casos del corpus
+
+Resultado local observado:
+
+- `python3 -m unittest scripts/test_conditional_sampling_2e2_variable_elimination.py`
+- `8` tests, `OK`
+
+Exigencia fuerte del experimento:
+
+- `2E2[N_mine, N_0..N_8] == 2B3[N_mine, N_0..N_8]`
+- igualdad exacta también en:
+  `compatible_total_before_click`, `sum_counts`, `partition_ok`
+
+Resultado observado sobre el corpus congelado `30×16/99`:
+
+- casos: `120`
+- exactitud `2E2 == 2B3`: **120 / 120**
+- mismatches: `0`
+
+## Resultado medido
+
+Auditoría de fairness del wall-clock:
+
+- `2B3 wall_clock_ms` mide solo `evaluate_cell_shared_outcomes(T,x)`:
+  arranca antes de `analyze_joint_problem()` y termina después de proyectar
+  la `joint_distribution` a `counts`, sin incluir `compare_case()` ni
+  validación externa.
+- `2E2 wall_clock_ms` mide solo `evaluate_cell_2e2(T,x)`:
+  arranca antes de `analyze_joint_problem_ve()` y termina después de la misma
+  proyección final a `counts`, también sin incluir `compare_case()`.
+- para eliminar ruido de carga/JSON/validación se corrió además un benchmark
+  repetido por caso con corpus ya cargado, `1` warmup no medido y `20`
+  repeticiones medidas por caso.
+- la comprobación `2E2 == 2B3` se hizo fuera de la ventana temporal antes de
+  tomar muestras.
+
+Comando corrido:
+
+```bash
+python3 scripts/conditional_sampling_2e2_variable_elimination.py benchmark \
+  --corpus benchmarks/conditional-sampling-2a-corpus-20260830.jsonl \
+  --out benchmarks/conditional-sampling-2e2-variable-elimination-20260830.jsonl
+```
+
+Benchmark repetido usado para la comparación final de wall-clock:
+
+```bash
+python3 scripts/conditional_sampling_2e2_variable_elimination.py benchmark-repeated \
+  --corpus benchmarks/conditional-sampling-2a-corpus-20260830.jsonl \
+  --out benchmarks/conditional-sampling-2e2-variable-elimination-repeated-20260830.jsonl \
+  --repeats 20 --warmup 1
+```
+
+### Wall-clock Python total por evaluación
+
+| variante | p50 | p90 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2E2 | 8.70 ms | 12.25 ms | 13.19 ms | 15.03 ms | 16.76 ms |
+| 2B3 | 6.66 ms | 12.16 ms | 16.41 ms | 21.64 ms | 22.62 ms |
+
+Aclaración de ratios:
+
+- `2E2 / 2B3` reportado abajo significa
+  `percentile( median_2e2_i / median_2b3_i )`, caso por caso.
+- **No** es igual a `percentile(2E2) / percentile(2B3)`.
+
+Con estas medianas repetidas:
+
+- `percentile(2E2_i / 2B3_i)`: p50 `1.209x`, p90 `2.134x`,
+  p95 `2.255x`, p99 `2.597x`, max `2.661x`
+- `percentile(2B3_i / 2E2_i)`: p50 `0.827x`, p90 `1.044x`,
+  p95 `1.157x`, p99 `1.917x`, max `1.995x`
+- cociente de percentiles absolutos:
+  p50 `8.70/6.66 = 1.305x`, p90 `12.25/12.16 = 1.008x`,
+  p95 `13.19/16.41 = 0.804x`, p99 `15.03/21.64 = 0.695x`
+
+Esto resuelve la aparente contradicción:
+
+- por caso, la mediana favorece a 2B3 en la mayoría del corpus
+- pero en la cola alta los percentiles absolutos favorecen a 2E2 porque
+  los casos más duros son justamente donde VE empieza a ganar
+
+### Métricas VE observadas
+
+| métrica 2E2 | p50 | p90 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `component_size` | 30 | 49 | 53 | 56 | 56 |
+| `special_min_fill_width_max` | 5 | 6 | 6 | 6 | 6 |
+| `effective_special_width_max` | 5 | 6 | 6 | 6 | 6 |
+| `peak_factor_entries` | 7328 | 17920 | 26976 | 36611 | 46080 |
+| `peak_nonzero_entries` | 20 | 40.5 | 60 | 82.05 | 103 |
+| `total_entries_processed` | 29215 | 115734 | 150138 | 174440 | 228304 |
+| `total_nonzero_entries` | 355.5 | 618.1 | 759.4 | 1084.46 | 1117 |
+| `peak_live_entries` | 96 | 129.7 | 163 | 170 | 170 |
+| `bigint_additions` | 13 | 40 | 56 | 83.15 | 107 |
+| `bigint_multiplications` | 77 | 183 | 239.6 | 397.92 | 405 |
+
+Hallazgo estructural principal:
+
+- el width especial efectivo real coincide con el width min-fill estructural
+  del prestudy: nunca superó `6`
+- la sparsity fue fuerte: `peak_nonzero_entries` quedó muy por debajo de la
+  capacidad densa `peak_factor_entries`
+- no apareció explosión de factores intermedios en el corpus `120/120`
+
+### Casos pedidos
+
+`2a-005` (caso más caro por DFS en 2B3):
+
+- `2B3`: `4952` search nodes, `8932` branch ops, mediana repetida `17.61 ms`
+- `2E2`: width especial `4`, `peak_factor_entries=13056`,
+  `peak_nonzero_entries=40`, mediana repetida `8.88 ms`
+- speedup mediano `2B3 / 2E2 = 1.984x`
+
+Casos con componente `n=56` (`2a-033`..`2a-036`):
+
+- todos preservan width especial `4`
+- `peak_nonzero_entries=10` en los cuatro
+- `peak_factor_entries` entre `8480` y `20160`
+- `2E2` mediana repetida entre `9.60 ms` y `10.66 ms`
+- `2B3` mediana repetida entre `6.56 ms` y `7.63 ms`
+
+Lectura correcta de estos `n=56`:
+
+- el tamaño del componente no fuerza un width grande
+- VE sigue siendo estructuralmente manejable
+- en Python puro todavía paga overhead frente al DFS compartido de 2B3
+
+### Crossover por dificultad DFS -> VE
+
+Buckets definidos por `search_nodes` de 2B3:
+
+| bucket | casos | mediana nodes 2B3 | mediana wall 2B3 | mediana wall 2E2 | mediana speedup `2B3/2E2` | wins / ties / losses de 2E2 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `<250` | 52 | 123.0 | 5.39 ms | 7.44 ms | 0.748x | 0 / 0 / 52 |
+| `250-499` | 24 | 373.0 | 7.00 ms | 9.65 ms | 0.819x | 7 / 0 / 17 |
+| `500-999` | 24 | 611.5 | 5.71 ms | 9.65 ms | 0.743x | 4 / 0 / 20 |
+| `1000-1999` | 12 | 1453.0 | 7.82 ms | 9.63 ms | 1.014x | 7 / 0 / 5 |
+| `>=2000` | 8 | 3996.5 | 17.36 ms | 11.81 ms | 1.400x | 8 / 0 / 0 |
+
+Dato principal:
+
+- 2E2 paga overhead claro en los casos fáciles
+- el crossover aparece entre `1000` y `2000` nodos DFS
+- para `>=2000` nodos, 2E2 gana en `8/8` casos y mejora fuertemente la cola
+
+### Correlaciones observadas
+
+Usando speedup por caso `2B3_wall / 2E2_wall` sobre medianas repetidas:
+
+- correlación con `search_nodes_2B3`: `+0.686`
+- correlación con tamaño máximo de componente: `-0.349`
+- correlación con width efectivo: `+0.323`
+
+No conviene sobreinterpretarlas:
+
+- la única señal realmente fuerte es que el speedup de VE crece con la
+  dificultad DFS
+- tamaño de componente por sí solo no explica el crossover
+- width efectivo ayuda, pero no captura toda la estructura del caso
+
+## Evaluación del criterio de éxito
+
+1. **Exactitud 120/120**: cumplido.
+2. **Factores estructuralmente manejables**: cumplido.
+3. **Señal para continuar a 2E3**: cumplido.
+
+### Hechos
+
+- exactitud `120/120` contra 2B3
+- width efectivo especial `<= 6` en todo el corpus
+- sparsity fuerte observada: `peak_nonzero_entries` muy por debajo de
+  `peak_factor_entries`
+- wall-clock Python medido con benchmark repetido por caso
+- crossover empírico: VE pierde en casos fáciles y gana sistemáticamente en
+  los casos con `>= 2000` `search_nodes` de 2B3
+
+### Interpretación
+
+La evidencia no sugiere descartar VE. Tampoco justifica vender wall-clock
+Python como estimación de Cairo. Lo que sí queda validado para la hoja de ruta:
+
+- la estructura real de factores es regular
+- el width observado permanece bajo
+- VE es especialmente atractivo para hard cases del corpus actual
+- la representación modular ya deja abierta la persistencia/reuse
+  necesaria para **2E3 history-aware VE**
+
+## Conclusión
+
+2E2 queda validado como checkpoint exacto y arquitectónicamente correcto:
+
+- reemplaza el DFS por componente por VE snapshot
+- preserva exactamente `2B3`
+- muestra que el cuello de botella no es explosión estructural de factors
+- deja cerrada la siguiente ruta experimental:
+  `2E2 snapshot VE -> 2E3 history-aware VE -> historias 30×16/99 -> Cairo`
 
 ## Artefactos 2D
