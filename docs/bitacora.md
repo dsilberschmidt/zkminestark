@@ -1194,3 +1194,111 @@ puede hacer inviable zkminestark.
 - experimento de latencia: terminado, YELLOW
 - conditional sampling/model counting: próximo blocker
 - arquitectura final del proyecto: todavía no cerrada
+
+---
+
+## 2026-08-30 — EXPERIMENTO 2A iniciado: baseline exacto off-chain
+
+Se abrió la siguiente fase técnica tras cerrar el benchmark de latencia:
+medir la factibilidad del conditional sampling exacto sin materializar
+`is_mine` oculto en storage público.
+
+Artefactos creados:
+- `scripts/conditional_sampling_exact.py`
+- `scripts/test_conditional_sampling_exact.py`
+- `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md`
+- `benchmarks/conditional-sampling-2a-smoke-20260830.jsonl`
+
+Resultado de esta primera iteración:
+- oracle exhaustivo independiente `5x5/2` implementado
+- tests exactos: `5` corridos, `OK`
+- smoke reproducible `30x16/99`: `12` evaluaciones, `0` errores
+- baseline deliberadamente poco optimizado: recalcula desde cero cada
+  outcome/click y deja 2B/2C para locality + reuse
+
+La nota detallada del experimento, con algoritmo, métricas, resultados,
+interpretación e hipótesis, queda en
+`docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md`.
+
+---
+
+## 2026-08-30 — EXPERIMENTO 2A-hardening continuado desde working tree
+
+Se reconstruyó el estado únicamente desde el working tree y quedó claro que
+la capa de hardening ya estaba parcialmente implementada en
+`scripts/conditional_sampling_exact.py`, aunque todavía no documentada por
+completo:
+
+- benchmark dedicado `2A-hardening`
+- budgets por wall-clock, `search_nodes` y `branch_ops`
+- serialización JSONL por evaluación
+- resumen agregado con percentiles y top casos costosos
+
+Parte faltante detectada y corregida:
+
+- si el aborto ocurría durante el conteo base previo a evaluar los
+  outcomes, el código caía como `error` genérico
+- ahora esa ruta devuelve `timeout` o `budget_exceeded` con resultado
+  parcial serializable, igual que los abortos dentro del loop de outcomes
+
+Cobertura ampliada:
+
+- tests exactos/hardening: `8` corridos, `OK`
+- nuevos tests para timeout parcial, budget parcial y mini-benchmark sin
+  degradación a `error`
+
+Benchmark principal corrido:
+
+- archivo raw:
+  `benchmarks/conditional-sampling-2a-benchmark-20260830.jsonl`
+- configuración:
+  `30x16/99`, seeds `20260840..20260849`, `120` evaluaciones
+- resultado:
+  `ok=120`, `timeouts=0`, `budget_exceeded=0`, `errors=0`
+- wall-clock:
+  p50 `9.93 ms`, p95 `71.96 ms`, p99 `160.24 ms`, max `163.09 ms`
+- mayor componente observado:
+  `56`
+
+Conclusión acotada de esta iteración:
+
+- 2A queda mejor endurecido como baseline reproducible
+- sigue faltando el trabajo estructural de 2B/2C
+  (locality/reuse), no implementado todavía
+
+---
+
+## 2026-08-30 — Auditoría final para congelar EXPERIMENTO 2A
+
+Se hizo una revisión crítica del baseline 2A antes de abrir 2B. Hallazgos
+reales corregidos en esta auditoría:
+
+- `timeout`/`budget_exceeded` podían degradarse a `error` si el aborto
+  ocurría durante el conteo base previo al loop de outcomes
+- `max_search_nodes` y `max_branch_ops` no se aplicaban globalmente a toda
+  la evaluación de la celda; quedaban efectivamente locales por
+  problema/componente
+- la instrumentación `total_search_nodes` / `total_branch_ops` estaba
+  reportando solo el coste base previo al click, no el coste total de la
+  evaluación completa
+
+Acciones tomadas:
+
+- clasificación de abortos unificada en smoke/benchmark
+- budgets corregidos a semántica global por evaluación
+- métricas `total_*` corregidas para agregar
+  `before_click_* + Σ per_outcome[*]`
+- smoke y benchmark raw regenerados desde el código final
+- fixtures manuales simples agregados a tests para no depender solo del
+  oracle exhaustivo
+- documentación actualizada con historia técnica, reproducibilidad, entorno
+  local y límites de interpretación
+
+Estado de cierre de 2A:
+
+- tests: `12`, `OK`
+- smoke raw: `12` registros `ok`
+- benchmark raw: `120` registros `ok`
+- baseline listo para congelar como referencia comparativa de 2B/2C
+- cierre cuantitativo completado desde raw: baseline comparativo documentado para `search_nodes` y `branch_ops`
+- corpus congelado creado: `benchmarks/conditional-sampling-2a-corpus-20260830.jsonl` (`120` casos)
