@@ -1516,3 +1516,134 @@ junction tree — experimento distinto (2E).
 - `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md` (sección PRESTUDY 2D2 añadida)
 
 Commit: `experiment: document 2D2 carry-forward prestudy`
+
+---
+
+## 2026-08-30 — Prestudy 2E: treewidth del frontier constraint graph
+
+### Pregunta
+
+¿El primal constraint graph del frontier tiene treewidth acotada mientras n
+crece? Si sí, variable elimination / junction tree sería factible.
+
+### Metodología
+
+Script `scripts/conditional_sampling_treewidth_prestudy.py`.
+Para cada componente del frontier:
+- Construir primal graph (clique por scope de constraint).
+- Calcular upper bounds min-fill y min-degree.
+- Calcular lower bound Bron-Kerbosch (max clique size − 1).
+- Si lower_bound == upper_bound: exact treewidth confirmado.
+- Reporte 2^{upper_bound_best} como factor size de junction tree.
+
+Datasets: corpus 30×16/99 (120 casos) + historias smoke 12×12/20 (84 pasos).
+
+### Hallazgos clave
+
+**30×16/99 corpus (tamaño objetivo)**:
+- n range: 2–56 variables por componente
+- width range: **1–6** (¡max 6 en todos los 120 casos!)
+- 116/120 treewidths exactos confirmados (lower == upper)
+- Distribución: w=4 (55 casos, n_mean=35.6), w=5 (28 casos), w=6 (36 casos, n_mean=10.4)
+- Los componentes GRANDES (n=40-56) tienen width 4-5, NO 6
+- Caso más grande: n=56, w=4, factor=16 (2a-033 group)
+- Caso más caro (DFS): n=46, w=4, factor=16, DFS=4952 nodos → ratio DFS/factor = 309x
+
+**12×12/20 historias**:
+- width range: 1–7, max 7 en 5 casos
+- Phase evolution: w/n = 0.52 (early), 0.17 (mid), 0.25 (late)
+- Los componentes crecen (n: 10→27) pero w se mantiene (4-5)
+
+### Conclusión
+
+**Recomendación A: JUNCTION TREE / VARIABLE ELIMINATION MERECE EXPERIMENTO.**
+
+Evidencia determinante:
+1. Treewidth ≤ 6 para todos los 120 casos del corpus objetivo 30×16/99.
+2. Componentes n=40-56 tienen width 4-5 (no crece con n), ratio n/w hasta 14x.
+3. DFS más caro (4952 nodos, n=46, w=4): speedup teórico ~3-7x con VE.
+4. Factor size 2^w = 16-64, vs DFS exponencial en n (2^46 sin pruning).
+5. El beneficio se acentúa en mid-game (w/n = 0.17) donde más importa.
+
+No garantía teórica de w≤6 para todo transcript 30×16, pero los 120 casos
+más grandes y más caros del corpus jamás lo superan.
+
+### Artefactos
+
+- `scripts/conditional_sampling_treewidth_prestudy.py`
+- `benchmarks/conditional-sampling-treewidth-prestudy-20260830.jsonl`
+- `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md` (sección PRESTUDY 2E añadida)
+
+---
+
+## 2026-08-30 — Prestudy 2E1: corrección de factor aumentado y auditoría de max clique
+
+### Contexto
+
+Revisión de tres simplificaciones en el análisis de treewidth (PRESTUDY 2E):
+1. `factor_size = 2^w` era demasiado optimista — falta la dimensión de conteo de minas.
+2. La query especial `ways[k, x_mine, n_mine]` tiene dimensiones extra `2 × (d+1)`.
+3. La afirmación "max_clique ≤ max_scope ≤ 8" era conceptualmente incorrecta
+   (los cliques pueden cruzar scopes en grafos primales).
+
+### Correcciones al análisis
+
+**Factor ordinario correcto**: `2^{sep_size} × mines_range` (no `2^w`).
+`mines_range` crece con cada eliminación (acumula minas de variables ya eliminadas).
+
+**Factor especial correcto**: `2^{sep_size} × mines_range × 2 × (d+1)` donde
+`d = |N(x) ∩ component|`. En el corpus 30×16/99: mediana d=3, típico multiplicador 8.
+
+**Max clique**: Bron-Kerbosch es exacto y su cálculo era correcto. Solo el prose
+estaba mal. Max clique observado en 30×16/99: 7. No está acotado por max_scope.
+
+### Resultados de simulación (120 casos 30×16/99)
+
+**Global**:
+
+| Métrica | p50 | p90 | max |
+|---------|-----|-----|-----|
+| ord_aug_max / nodes | 1.56 | 3.61 | 5.00 |
+| spc_aug_max / nodes | 10.77 | 29.93 | 40.00 |
+| ord_aug_total / nodes | 11.46 | — | 44.71 |
+| spc_aug_total / nodes | 68.77 | — | 357.67 |
+
+**Casos duros (nodes>1500, 12 casos)**:
+
+| Métrica | p50 | p90 | max |
+|---------|-----|-----|-----|
+| ord_aug_max / nodes | 0.32 | 0.48 | 0.48 |
+| spc_aug_max / nodes | 1.92 | 2.87 | 3.87 |
+| ord_aug_total / nodes | 3.82 | 4.82 | 4.82 |
+| spc_aug_total / nodes | 21.10 | 30.56 | 38.56 |
+
+**Caso más caro (2a-005, n=46, w=4, d=2, nodes=4,952)**:
+- ord_aug_max=688, spc_aug_max=4,128
+- ord_aug_total=8,771, spc_aug_total=52,626
+
+### Conclusión revisada
+
+La señal estructural del PRESTUDY 2E se mantiene: **treewidth ≤ 6** en todos
+los casos es un hallazgo firme. El análisis aumentado no muestra explosión de
+factores intermedios en ninguno de los 120 casos.
+
+Nota importante sobre las métricas: `ord_aug_max`, `spc_aug_max`, `ord_aug_total`,
+`spc_aug_total` son capacidades estructurales bajo la ordering simulada, no
+conteos de entradas non-zero ni conteos de operaciones aritméticas. `augmented
+factor states` y `DFS nodes` son métricas de trabajo distintas; el coste
+relativo real depende de sparsity, joins, marginalizaciones y aritmética big-int,
+y sólo puede determinarse implementando y benchmarkeando VE exacta.
+
+**Recomendación A — variable elimination exacta merece experimento.**
+No se reporta speedup estimado. El rendimiento frente al DFS queda como hipótesis
+pendiente de implementación y benchmark real.
+
+### Artefactos actualizados
+
+- `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md` (sección PRESTUDY 2E corregida;
+  análisis aumentado 2E1 añadido; framing de métricas corregido en 2E1)
+- `docs/bitacora.md` (esta entrada)
+- `scripts/conditional_sampling_treewidth_prestudy.py`
+- `scripts/conditional_sampling_treewidth_augmented_prestudy.py`
+- `benchmarks/conditional-sampling-treewidth-prestudy-20260830.jsonl`
+- `benchmarks/conditional-sampling-treewidth-augmented-20260830.jsonl`

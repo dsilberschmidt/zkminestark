@@ -1442,5 +1442,230 @@ todas las posibles queries siguientes — impracticable sin tree decomposition.
   `benchmarks/conditional-sampling-2d-histories-smoke-20260830.jsonl`
 - benchmark 2D0 + 2D1:
   `benchmarks/conditional-sampling-2d-smoke-20260830.jsonl`
-- prestudy 2D2 (script, no congelado en benchmarks):
+- prestudy 2D2 (script de análisis):
   `scripts/conditional_sampling_2d2_prestudy.py`
+
+## Artefactos prestudy 2E + 2E1
+
+- script de análisis de treewidth (2E):
+  `scripts/conditional_sampling_treewidth_prestudy.py`
+- raw de métricas treewidth por componente (2E):
+  `benchmarks/conditional-sampling-treewidth-prestudy-20260830.jsonl`
+- script de simulación de factor aumentado (2E1):
+  `scripts/conditional_sampling_treewidth_augmented_prestudy.py`
+- raw de métricas de factor aumentado por componente (2E1):
+  `benchmarks/conditional-sampling-treewidth-augmented-20260830.jsonl`
+
+---
+
+## PRESTUDY 2E — Treewidth del Frontier Constraint Graph
+### (2026-08-30)
+
+### Pregunta
+
+¿Los grandes componentes del frontier tienen baja treewidth de su primal
+constraint graph? Si la treewidth `w` está acotada mientras `n` crece,
+variable elimination / junction tree sería exponencial en `w` en vez de en
+`n`, con potencial aceleración significativa.
+
+### Definiciones
+
+**Primal constraint graph**: un nodo por variable booleana del frontier,
+dos variables conectadas iff aparecen juntas en algún constraint.
+Cada scope de constraint induce una clique en el primal graph.
+
+**Treewidth** de este grafo = anchura del árbol de descomposición óptimo.
+Para variable elimination: el ancho de eliminación de la mejor ordering.
+
+**Métricas reportadas** (por componente):
+- `upper_bound_min_fill`: ancho de eliminación con heurística min-fill
+- `upper_bound_min_degree`: ancho de eliminación con heurística min-degree
+- `upper_bound_best`: mínimo de los dos
+- `lower_bound_clique`: max_clique_size − 1 (cota inferior)
+- `exact_or_uncertain`: "exact" si lower_bound == upper_bound
+
+**Bron-Kerbosch** para max clique: exacto. Nota: en grafos primales los
+cliques pueden cruzar scopes (variables compartidas entre constraints),
+así que max_clique no está acotado por max_scope. En el corpus 30×16/99
+el max clique observado es 7.
+
+### Datasets analizados
+
+**A. Corpus 30×16/99** (benchmark objetivo): 120 casos, 124 componentes total,
+120 especiales. Transcripts con 2-56 variables en el frontier.
+
+**B. Historias smoke 12×12/20**: 81 pasos, 210 componentes total, 79 especiales.
+Permite observar evolución early/mid/late.
+
+### Resultados clave: 30×16/99
+
+| Estadístico | n (size) | w (upper_bound) | 2^w | DFS nodes |
+|-------------|----------|-----------------|-----|-----------|
+| min | 2 | 1 | 2 | 64 |
+| p50 | 30 | 5 | 32 | 324 |
+| p90 | 49 | 6 | 64 | 3041 |
+| p95 | 53 | 6 | 64 | 3041 |
+| max | **56** | **6** | **64** | **4952** |
+
+**Distribución de width (120 componentes especiales):**
+
+| w | count | n range | n_mean | 2^w | avg_nodes |
+|---|-------|---------|--------|-----|-----------|
+| 1 | 1 | [2,2] | 2.0 | 2 | 535 |
+| 4 | 55 | [16,56] | 35.6 | 16 | 808 |
+| 5 | 28 | [33,53] | 43.3 | 32 | 956 |
+| 6 | 36 | [10,12] | 10.4 | 64 | 302 |
+
+**116/120 treewidths exactos** (lower_bound == upper_bound, confirmado por
+Bron-Kerbosch).
+
+Hallazgo estructural crítico: **los componentes grandes (n=40-56) tienen
+width 4-5, no 6**. La width=6 pertenece a componentes pequeños y densos
+(n=10-12). La treewidth no crece con n para el rango objetivo 30×16/99.
+
+### Casos extremos
+
+**Caso más caro por DFS** (2a-005): n=46, w=4, d=2, DFS=**4,952 nodos**
+- Factor ordinario pico (paso 41): 2^4 × 43 = **688 entradas** (sep=4, mines_range=43)
+- Factor especial pico: 688 × 2 × (2+1) = **4,128 entradas**
+- ord_aug_max / DFS nodes = **0.14x** — el factor ordinario es más pequeño que el DFS
+- spc_aug_max / DFS nodes = **0.83x** — el factor especial también por debajo del DFS
+- Totales sobre todas las eliminaciones: ord_aug_total=8,771; spc_aug_total=52,626
+
+**Componente más grande** (2a-033): n=**56**, w=4, d=1, DFS=1,453 nodos
+- n/w = **14x** (el componente tiene 14 veces más variables que width)
+- Factor especial pico: **3,392 entradas**; spc_aug_total=37,340
+- spc_aug_total / nodes = 25.7x (la suma acumulada de tablas supera el DFS total)
+
+**Nota**: el caso n=56, w=4, DFS=1,453 es "más fácil" que n=46, DFS=4,952
+porque tiene más constraints (más determinación), no por la estructura de width.
+
+### Correlación n/w y su interpretación
+
+La relación n/w es el indicador clave de cuánto beneficia junction tree:
+
+- p50 n/w = 6.6x en 30×16/99
+- max n/w = 14.0x (caso n=56, w=4)
+
+Esto significa: para el componente más grande, la treewidth es 1/14 del
+tamaño del componente. Variable elimination procesa este componente en
+tablas de tamaño 2^{sep_size} × mines_range (factor aumentado) — ver
+análisis 2E1 para los tamaños concretos.
+
+Para 2a-005 (el caso más caro): ord_aug_max=688, spc_aug_max=4,128,
+comparado con 4,952 DFS nodes. La estimación O(n × 2^w) = 736 subestimaba
+el factor de minas y sobreestimaba el beneficio — el análisis aumentado 2E1
+da números más precisos.
+
+### Resultados: 12×12/20 historias
+
+| Phase | count | n range | med_n | w range | med_w | w/n mean |
+|-------|-------|---------|-------|---------|-------|----------|
+| early | 17 | [3,20] | 10 | [2,7] | 5 | 0.519 |
+| mid | 15 | [23,29] | 27 | [4,6] | 4 | 0.166 |
+| late | 47 | [2,35] | 22 | [1,7] | 5 | 0.247 |
+
+**Resultado más importante**: la razón w/n cae de 0.52 (early) a 0.17 (mid).
+Los componentes crecen de n≈10 a n≈27, pero la width media se mantiene en
+4-5. El beneficio estructural de junction tree **se acentúa con el progreso**
+del juego.
+
+### Análisis aumentado de factores (PRESTUDY 2E1 — 2026-08-30)
+
+La dimensión de factor correcta no es `2^w` sino `2^{sep_size} × mines_range`,
+donde `mines_range` crece con cada eliminación (acumula el rango de minas
+posibles en las variables ya eliminadas):
+
+- **Factor ordinario** (F_C[k]): tamaño = `2^{sep_size} × mines_range`
+- **Factor especial** (ways[k, x_mine, n_mine]): tamaño = `2^{sep_size} × mines_range × 2 × (d+1)`
+
+donde `d = |N(x) ∩ component|` (vecinos del click dentro del componente).
+Distribución de d en corpus 30×16/99: d=3 en 51 casos, d=2 en 38, d=1 en 11,
+d=4 en 10, d=0 en 6, d=5 en 4. Mediana d=3; multiplicador extra típico = 2×4=8.
+
+**Simulación sobre 120 casos** (usando la eliminación min-fill del prestudy 2E):
+
+`ord_aug_max`, `spc_aug_max`, `ord_aug_total`, `spc_aug_total` son capacidades
+estructurales bajo la ordering simulada: el número máximo de entradas que
+tendría el factor table más grande, o la suma de entradas sobre todos los pasos.
+**No equivalen** a entradas non-zero (sparsity puede reducirlos), ni a operaciones
+aritméticas (joins/convoluciones y aritmética big-int pueden aumentarlas).
+
+| Estadístico | ord_aug_max/nodes | spc_aug_max/nodes | ord_aug_total/nodes | spc_aug_total/nodes |
+|-------------|:-----------------:|:-----------------:|:-------------------:|:-------------------:|
+| p50 (global) | 1.56 | 10.77 | 11.46 | 68.77 |
+| p90 (global) | 3.61 | 29.93 | — | — |
+| max (global) | 5.00 | 40.00 | 44.71 | 357.67 |
+
+**Para los 12 casos más caros (nodes>1500) — los que más necesitan optimización:**
+
+| Estadístico | ord_aug_max/nodes | spc_aug_max/nodes | ord_aug_total/nodes | spc_aug_total/nodes |
+|-------------|:-----------------:|:-----------------:|:-------------------:|:-------------------:|
+| p50 | 0.32 | 1.92 | 3.82 | 21.10 |
+| p90 | 0.48 | 2.87 | 4.82 | 30.56 |
+| max | 0.48 | 3.87 | 4.82 | 38.56 |
+
+**Interpretación**: los ratios globales altos están inflados por los casos fáciles
+(DFS ya pequeño). Para los casos que más necesitan optimización (nodes>1500):
+- Factor ordinario pico: 32-48% de DFS nodes. Factor especial pico: 2-4x DFS nodes.
+- No se observa explosión de factores intermedios en ninguno de los 120 casos.
+- `augmented factor states` y `DFS nodes` son métricas de trabajo distintas;
+  el coste relativo real depende de sparsity, joins, marginalizaciones y
+  aritmética big-int, y sólo puede determinarse implementando y benchmarkeando
+  VE exacta.
+
+**Limitaciones del análisis**:
+1. Las entradas de factor son big integers (~344 bits según 2A); joins/marginalizaciones
+   involucran sumas de enteros grandes, no operaciones elementales simples.
+2. La sparsity de las factor tables (entradas cero por violación de constraint)
+   puede reducir el trabajo real de forma significativa, pero no está medida.
+3. El DFS propaga constraints en la recursión (poda temprana); VE no propaga
+   equivalentemente — el coste relativo no se puede deducir de los tamaños de tabla.
+
+### ¿Crece la treewidth con tableros más grandes?
+
+Los datos del corpus son sobre tableros 30×16/99 (el objetivo de producción),
+no tableros más grandes. El max width observado es **6** — no 7, no 8.
+
+La razón estructural: el primal graph de las constraints del frontier de
+Minesweeper refleja la topología local del tablero (celdas adyacentes
+comparten constraints). Esta topología tiene treewidth acotada por ~3+
+(largo del band más corto de un separator en el tablero 2D). Para 30×16,
+el band puede ser hasta 16 — pero los componentes típicos son más cortos
+y delgados, dando width ≤ 6 en todos los 120 casos observados.
+
+No hay garantía teórica de que width ≤ 6 para todo 30×16 transcript, pero
+los 120 casos del corpus (incluyendo los más grandes) nunca lo superan.
+
+### Conclusión y recomendación
+
+**Recomendación A — variable elimination exacta merece experimento.**
+
+Razón:
+1. Treewidth ≤ 6 observado en todos los 120 casos 30×16/99 (el tamaño objetivo).
+2. Componentes de hasta 56 variables mantienen width 4-5; la treewidth no crece
+   con n (n/w llega a 14x).
+3. El análisis aumentado no muestra explosión de factores intermedios en ninguno
+   de los 120 casos, incluso para los componentes más grandes y costosos.
+4. Esto hace técnicamente plausible VE/junction-tree exacta sobre el corpus objetivo.
+5. En historias 12×12: w/n cae de 0.52→0.17 con el progreso — el beneficio
+   estructural se acentúa donde más importa (mid/late game).
+6. 116/120 treewidths exactos confirmados — los bounds son precisos.
+
+**No se reporta speedup estimado.** El rendimiento de VE frente al DFS actual
+queda como hipótesis pendiente de implementación y benchmark real.
+
+### Experimento mínimo siguiente
+
+Si se decide abrir 2E:
+1. Implementar variable elimination con ordering min-fill sobre las sum
+   constraints del frontier.
+2. Extender para query joint `(x_mine, neighbor_mines)` como dimensiones extra.
+3. Verificar exactitud contra 2B3 (mismos counts) sobre el corpus 120 casos.
+4. Benchmarkar search_nodes equivalentes (operaciones de factor table) vs
+   DFS nodes actuales.
+5. Si confirma speedup en 30×16/99: considerar Cairo.
+
+No implementar todavía.
+
+## Artefactos 2D
