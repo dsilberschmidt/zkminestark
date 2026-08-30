@@ -1302,3 +1302,69 @@ Estado de cierre de 2A:
 - baseline listo para congelar como referencia comparativa de 2B/2C
 - cierre cuantitativo completado desde raw: baseline comparativo documentado para `search_nodes` y `branch_ops`
 - corpus congelado creado: `benchmarks/conditional-sampling-2a-corpus-20260830.jsonl` (`120` casos)
+
+---
+
+## 2026-08-30 — EXPERIMENTO 2B iniciado: locality sobre corpus congelado
+
+Se implementó una variante 2B separada (`scripts/conditional_sampling_locality.py`)
+que reutiliza por firma exacta los componentes untouched del grafo de
+constraints por outcome.
+
+Resultado de validación actual:
+
+- igualdad exacta `2A == 2B` en `120/120` casos del corpus común
+- reuse efectivo observado en `4/120` casos
+- merges de componentes previamente separados: `0`
+- benchmark 2B raw generado en
+  `benchmarks/conditional-sampling-2b-locality-20260830.jsonl`
+
+---
+
+## 2026-08-30 — Cierre de EXPERIMENTO 2B3 simple: shared exact outcomes
+
+Se congeló 2B3 como checkpoint reproducible antes de abrir optimizaciones
+adicionales.
+
+Artefactos:
+
+- código:
+  `scripts/conditional_sampling_2b3_shared_outcomes.py`
+- tests:
+  `scripts/test_conditional_sampling_2b3_shared_outcomes.py`
+- raw:
+  `benchmarks/conditional-sampling-2b3-shared-outcomes-20260830.jsonl`
+
+Definición congelada:
+
+- una sola pasada compartida produce directamente
+  `N_mine, N_0..N_8`
+- sin `10` conteos independientes
+- sin memoización adicional todavía
+- `memo_entries = 0`
+- `dp_states_explored = 0`
+
+Validación final:
+
+- exactitud `120/120` contra 2A
+- `problems_executed = 1`
+- `shared_single_pass = True`
+
+Resumen cuantitativo principal:
+
+- `total_search_nodes`:
+  media `5451.25 -> 688.20`,
+  p50 `1790 -> 324.5`,
+  p95 `23048.95 -> 3041`,
+  max `60554 -> 4952`
+- `total_branch_ops`:
+  media `10052.55 -> 1276.67`,
+  p95 `43864.50 -> 5596`,
+  max `109444 -> 8932`
+
+Lectura de cierre:
+
+- 2B3 simple ya captura sharing real fuerte entre outcomes
+- la mejora grande aparece sobre todo en la cola cara del corpus
+- quedan pendientes sólo optimizaciones internas sobre esta arquitectura,
+  no un cambio de formulación

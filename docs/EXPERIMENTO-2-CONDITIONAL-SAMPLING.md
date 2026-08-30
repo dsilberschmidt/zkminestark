@@ -526,3 +526,451 @@ Todavía no hay un resultado medido de Cairo. La pregunta pendiente es doble:
   `benchmarks/conditional-sampling-2a-smoke-20260830.jsonl`
 - raw benchmark:
   `benchmarks/conditional-sampling-2a-benchmark-20260830.jsonl`
+
+---
+
+# EXPERIMENTO 2B — Locality
+### (2026-08-30)
+
+## Objetivo
+
+Mantener exactamente los mismos conteos `N_mine, N_0..N_8` que 2A, pero
+evitando recontar con DFS los componentes del grafo de constraints que
+quedan idénticos para un outcome dado.
+
+2B sigue tratando cada caso del corpus como independiente:
+
+- no reutiliza trabajo entre clicks distintos
+- no reutiliza trabajo entre casos del corpus
+- no introduce todavía cache incremental
+
+Eso queda explícitamente para 2C.
+
+## Idea implementada
+
+Para una evaluación de celda:
+
+1. Se computa una sola vez el perfil exacto previo al click, igual que en 2A.
+2. Para cada outcome, se reconstruye la estructura del problema resultante.
+3. Los componentes outcome cuya firma `(variables, constraints)` coincide con
+   un componente untouched del estado previo se reutilizan por su vector
+   exacto `F_C[k]`, sin DFS nuevo.
+4. Sólo los componentes outcome afectados se reenumeran con DFS.
+5. Luego se recombinan:
+   componentes recalculados + componentes reutilizados + unconstrained cells,
+   manteniendo exactamente el total global de minas restantes.
+
+La implementación de referencia quedó en:
+
+- `scripts/conditional_sampling_locality.py`
+
+## Validación incremental
+
+Antes de correr los `120` casos se hizo una validación escalonada:
+
+- primeros `5` casos del corpus: igualdad exacta `2A == 2B`
+- primeros `20` casos del corpus: igualdad exacta `2A == 2B`
+- casos dirigidos multi-componente:
+  `2a-045`, `2a-046`, `2a-047`, `2a-048`
+- verificación final sobre el corpus completo:
+  `120 / 120` casos exactos, `0` mismatches
+
+Tests agregados para 2B:
+
+- `scripts/test_conditional_sampling_locality.py`
+- suite local final:
+  `16` tests, `OK`
+
+## Resultado medido — exactitud
+
+La exigencia fuerte de 2B era:
+
+- igualdad exacta de `counts`
+- igualdad exacta de `sum_counts`
+- igualdad exacta de `compatible_total_before_click`
+- mantenimiento del partition invariant
+
+Resultado observado en el corpus congelado común:
+
+- casos verificados: `120`
+- mismatches: `0`
+- `counts`: igualdad exacta en `120/120`
+- `sum_counts`: igualdad exacta en `120/120`
+- `compatible_total_before_click`: igualdad exacta en `120/120`
+- `partition_ok`: igualdad exacta en `120/120`
+
+## Resultado medido — benchmark 2B sobre el corpus común
+
+Comando corrido:
+
+```bash
+python3 scripts/conditional_sampling_locality.py benchmark \
+  --out benchmarks/conditional-sampling-2b-locality-20260830.jsonl
+```
+
+Archivo raw:
+
+- `benchmarks/conditional-sampling-2b-locality-20260830.jsonl`
+
+Resumen 2B:
+
+| métrica | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| wall-clock Python (ms) | 2.35 | 21.17 | 10.42 | 77.45 | 177.94 | 181.49 |
+| `total_search_nodes` | 125 | 5446.37 | 1790 | 23048.95 | 57349.70 | 60554 |
+| `total_branch_ops` | 226 | 10043.28 | 3256 | 43864.50 | 103980.46 | 109444 |
+
+Instrumentación locality específica observada:
+
+- casos con reuse efectivo de al menos un componente untouched: `4 / 120`
+- casos sin reuse: `116 / 120`
+- casos con merge de componentes previamente separados: `0`
+- `components_reused_total` por evaluación:
+  media `0.1583`, max `9`
+- `largest_recomputed_component`:
+  min `1`, media `30.74`, p50 `32`, p95 `53.05`, p99 `56`, max `57`
+
+## Comparación agregada 2A vs 2B
+
+### `total_search_nodes`
+
+| variante | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2A | 125 | 5451.25 | 1790 | 23048.95 | 57349.70 | 60554 |
+| 2B | 125 | 5446.37 | 1790 | 23048.95 | 57349.70 | 60554 |
+| reducción `2A - 2B` | 0 | 4.88 | 0 | 0 | 26.43 | 532 |
+| factor `2A / 2B` | 1.0000 | 1.0084 | 1.0000 | 1.0000 | 1.0047 | 1.9907 |
+
+### `total_branch_ops`
+
+| variante | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2A | 226 | 10052.55 | 3256 | 43864.50 | 103980.46 | 109444 |
+| 2B | 226 | 10043.28 | 3256 | 43864.50 | 103980.46 | 109444 |
+| reducción `2A - 2B` | 0 | 9.27 | 0 | 0 | 35.24 | 1040 |
+| factor `2A / 2B` | 1.0000 | 1.0084 | 1.0000 | 1.0000 | 1.0032 | 1.9943 |
+
+### wall-clock Python
+
+| variante | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2A | 1.98 | 26.49 | 11.89 | 93.07 | 252.10 | 416.00 |
+| 2B | 2.35 | 21.17 | 10.42 | 77.45 | 177.94 | 181.49 |
+| reducción `2A - 2B` | -7.03 | 5.32 | 1.50 | 11.51 | 81.39 | 235.77 |
+| factor `2A / 2B` | 0.7248 | 1.1768 | 1.1313 | 1.4611 | 2.2781 | 2.3441 |
+
+Casos con mayor mejora en `search_nodes`:
+
+- `2a-047` — `seed-20260843-late`, celda `(12,11)`:
+  `532` nodos menos, `1040` branch ops menos,
+  factor `1.9907`, reuse total `1`,
+  `largest_recomputed_component = 1`
+- `2a-046` — `seed-20260843-late`, celda `(7,4)`:
+  `27` nodos menos, `36` branch ops menos,
+  factor `1.0029`, reuse total `9`
+- `2a-048` — `seed-20260843-late`, celda `(8,4)`:
+  `24` nodos menos, `32` branch ops menos,
+  factor `1.0049`, reuse total `8`
+- `2a-045` — `seed-20260843-late`, celda `(16,8)`:
+  `3` nodos menos, `4` branch ops menos,
+  factor `1.0038`, reuse total `1`
+
+Casos donde 2B no mejora `search_nodes` ni `branch_ops`:
+
+- `116 / 120`
+
+Casos donde 2B empeora en wall-clock:
+
+- `16 / 120`
+- el peor observado fue `2a-092`
+  (`seed-20260847-mid`, celda `(14,3)`),
+  con penalización de `7.03 ms`
+  aun cuando el trabajo algorítmico fue idéntico
+
+## Interpretación
+
+Lo que muestran directamente los datos:
+
+- 2B preserva exactitud total respecto de 2A en el corpus común
+- en este corpus, la locality solo encuentra reuse real en `4` casos
+- no aparecieron casos donde la nueva constraint local uniera componentes que
+  antes estaban separados
+- la mejora algorítmica agregada es pequeña porque `116/120` casos ya eran,
+  desde el inicio, esencialmente monocomponente
+- aun así, el wall-clock medio y de cola mejoró respecto de 2A en esta
+  máquina
+
+Lo que esto sugiere, sin elevarlo todavía a conclusión general:
+
+- la locality por sí sola no alcanza si el corpus está dominado por un único
+  componente grande
+- el valor de 2B aparece cuando el transcript deja componentes untouched
+  realmente separables
+- para extraer mejoras sistemáticas probablemente hará falta 2C
+  (reuse/caching entre clicks o estados cercanos), no solo locality estática
+
+Nota breve sobre 2B2 descartado:
+
+- se probó una proyección exacta por enumeración de patrones/configuraciones
+  locales sobre `x + vecinos`
+- se descartó como dirección de 2B2 porque multiplicaba innecesariamente el
+  conteo residual exacto del resto del tablero
+
+## 2B2-naive — diez conteos independientes exactos
+
+Se implementó una variante 2B2 separada que resuelve exactamente estos
+`10` problemas por celda:
+
+- `x = mine`
+- `x = safe` con una sola constraint agregada
+  `sum(minas entre vecinos cerrados de x) = j`, para `j in 0..8`
+
+Importante:
+
+- no enumera configuraciones binarias de vecinos
+- no determina qué vecinos son minas
+- no materializa tableros futuros
+
+Implementación:
+
+- `scripts/conditional_sampling_2b2_exact_outcomes.py`
+
+Tests:
+
+- `scripts/test_conditional_sampling_2b2_exact_outcomes.py`
+
+Raw:
+
+- `benchmarks/conditional-sampling-2b2-exact-outcomes-20260830.jsonl`
+
+Resultado medido sobre el corpus congelado común:
+
+- exactitud `120/120` contra 2A
+- `problems_executed = 10` en `120/120`
+- `additional_top_level_subproblems = 0` en `120/120`
+
+Resumen 2B2-naive:
+
+| métrica | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| wall-clock Python (ms) | 0.61 | 16.24 | 6.42 | 67.93 | 165.85 | 184.64 |
+| `total_search_nodes` | 48 | 4763.05 | 1340.5 | 21291.60 | 52760.79 | 55602 |
+| `total_branch_ops` | 94 | 8775.88 | 2563 | 40422.20 | 96244.32 | 100512 |
+
+Interpretación medida:
+
+- 2B2-naive elimina el conteo global previo redundante de 2A
+- pero el coste de sus `10` outcomes coincide exactamente con el coste
+  outcome-only de 2A
+- por eso 2B2-naive queda preservado como checkpoint correcto, pero
+  descartado como dirección final por redundancia algorítmica
+
+## 2B3 — shared exact outcomes
+
+Objetivo de 2B3:
+
+- producir directamente `N_mine, N_0..N_8`
+- en una sola resolución compartida del transcript
+- sin lanzar `10` DFS independientes
+
+Implementación:
+
+- `scripts/conditional_sampling_2b3_shared_outcomes.py`
+
+Tests:
+
+- `scripts/test_conditional_sampling_2b3_shared_outcomes.py`
+
+Raw:
+
+- `benchmarks/conditional-sampling-2b3-shared-outcomes-20260830.jsonl`
+
+### Diseño
+
+2B3 no resuelve `10` hipótesis separadas. En cambio:
+
+1. construye una sola vez el problema de constraints del transcript público
+2. descompone en componentes conectados
+3. cada componente totalmente ajeno a `x` se cuenta una sola vez con su
+   vector usual `F_C[k]`
+4. el único componente especial que toca `x` y/o vecinos cerrados de `x`
+   se cuenta una sola vez con una distribución conjunta
+   `ways[mines_in_component, x_is_mine, neighbor_mines]`
+5. las celdas unconstrained locales se incorporan combinatoriamente por
+   coeficientes binomiales, sin enumerar configuraciones
+6. las demás unconstrained cells se integran con su vector combinatorio
+   habitual
+7. la convolución final produce directamente los `10` outcomes observables
+
+Lo que 2B3 comparte realmente:
+
+- el recorrido DFS del componente local
+- la contabilidad de minas globales
+- la clasificación por outcome visible de `x`
+
+Lo que 2B3 todavía no hace:
+
+- memoización adicional
+- DP sobre separadores/estados comprimidos
+
+Eso queda explícito en la instrumentación actual:
+
+- `memo_entries = 0`
+- `dp_states_explored = 0`
+
+### Auditoría crítica
+
+Revisión hecha sobre el código final de 2B3:
+
+- no hace ningún conteo oculto previo del transcript:
+  usa `build_constraints()` + `connected_components()`, no `problem_profile()`
+- ejecuta una sola resolución compartida:
+  cada componente ordinary se cuenta una vez y el componente special se
+  cuenta una vez con distribución conjunta
+- `total_search_nodes` y `total_branch_ops` agregan todo el trabajo DFS
+  ejecutado por 2B3
+- las unconstrained local cells se integran por combinatoria cerrada, sin
+  enumerar configuraciones
+- el total global de minas se aplica filtrando exactamente los estados con
+  `mines_used == remaining_mines`
+- la clasificación `x=mine` vs `x=safe + neighbor_mines=j` particiona las
+  completaciones exactamente una vez
+- `Σ N_o` coincide exactamente con el total de completaciones del transcript
+  en `120/120`
+- no apareció doble conteo ni pérdida de completaciones en la validación
+  completa contra 2A
+
+### Validación
+
+Exigencia fuerte sobre el corpus congelado común:
+
+- igualdad exacta de `N_mine, N_0..N_8`
+- igualdad exacta de `sum_counts`
+- igualdad exacta de `compatible_total_before_click`
+- `partition_ok = True`
+- `problems_executed = 1`
+- `shared_single_pass = True`
+
+Resultado:
+
+- casos verificados: `120`
+- mismatches: `0`
+- exactitud `2A == 2B3`: `120 / 120`
+
+### Resultado medido
+
+Resumen 2B3:
+
+| métrica | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| wall-clock Python (ms) | 2.89 | 7.40 | 6.54 | 16.82 | 21.91 | 22.69 |
+| `total_search_nodes` | 64 | 688.20 | 324.5 | 3041 | 4952 | 4952 |
+| `total_branch_ops` | 116 | 1276.67 | 581 | 5596 | 8932 | 8932 |
+| `convolutions` | 2 | 2.81 | 3 | 3 | 4 | 4 |
+| `ordinary_component_count` | 0 | 0.03 | 0 | 0 | 1 | 1 |
+| `special_component_count` | 1 | 1.00 | 1 | 1 | 1 | 1 |
+| `unconstrained_local_count` | 0 | 2.48 | 3 | 5 | 5 | 5 |
+
+Comparación agregada:
+
+### `total_search_nodes`
+
+| variante | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2A | 125 | 5451.25 | 1790 | 23048.95 | 57349.70 | 60554 |
+| 2B2-naive | 48 | 4763.05 | 1340.5 | 21291.60 | 52760.79 | 55602 |
+| 2B3 | 64 | 688.20 | 324.5 | 3041 | 4952 | 4952 |
+
+Factores:
+
+- `2A / 2B3`: min `1.4748`, mean `9.6318`, p50 `7.1506`,
+  p95 `31.1684`, p99 `35.6159`, max `37.3750`
+- `2B2 / 2B3`: min `0.4748`, mean `8.6318`, p50 `6.1506`,
+  p95 `30.1684`, p99 `34.6159`, max `36.3750`
+
+### `total_branch_ops`
+
+| variante | min | mean | p50 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2A | 226 | 10052.55 | 3256 | 43864.50 | 103980.46 | 109444 |
+| 2B2-naive | 94 | 8775.88 | 2563 | 40422.20 | 96244.32 | 100512 |
+| 2B3 | 116 | 1276.67 | 581 | 5596 | 8932 | 8932 |
+
+Factores:
+
+- `2A / 2B3`: min `1.4693`, mean `9.8288`, p50 `7.2078`,
+  p95 `31.6708`, p99 `35.7680`, max `37.8276`
+- `2B2 / 2B3`: min `0.4693`, mean `8.8288`, p50 `6.2078`,
+  p95 `30.6708`, p99 `34.7680`, max `36.8276`
+
+### Cola cara: p95 / p99 / máximo
+
+Umbrales 2A:
+
+- `p95 total_search_nodes = 23048.95`
+- `p99 total_search_nodes = 57349.70`
+- `max total_search_nodes = 60554`
+
+Casos p95 observados y su coste en 2B3:
+
+- `2a-006`:
+  `2A=60554`, `2B2=55602`, `2B3=4952`
+- `2a-008`:
+  `2A=59871`, `2B2=54919`, `2B3=4952`
+- `2a-010`:
+  `2A=46601`, `2B2=43560`, `2B3=3041`
+- `2a-012`:
+  `2A=36939`, `2B2=33898`, `2B3=3041`
+- `2a-058`:
+  `2A=26772`, `2B2=26034`, `2B3=738`
+- `2a-090`:
+  `2A=44444`, `2B2=43089`, `2B3=1355`
+
+Casos p99:
+
+- `2a-006`: `2B3=4952`
+- `2a-008`: `2B3=4952`
+
+Máximo de 2A:
+
+- `2a-006` (`seed-20260840-mid`, celda `(20,12)`)
+- `2A=60554`, `2B2=55602`, `2B3=4952`
+- factor `2A / 2B3 = 12.2282`
+- factor `2B2 / 2B3 = 11.2282`
+
+### Interpretación
+
+Resultado medido directamente:
+
+- 2B3 preserva exactitud total contra 2A en el corpus común
+- 2B3 baja de forma fuerte la media, la mediana y especialmente la cola
+  cara frente a 2A y 2B2-naive
+- el componente special fue siempre único en este corpus
+- no hubo todavía memoización ni DP adicional: la mejora viene solo del
+  sharing estructural de los outcomes
+
+Hipótesis que esto sugiere, todavía separadas del dato medido:
+
+- el sharing entre outcomes ya captura una parte sustancial de la
+  redundancia dominante de 2A/2B2
+- la ganancia debería crecer cuando la celda tenga más outcomes positivos y
+  más unconstrained local cells
+- un siguiente paso natural sería memo/DP adicional dentro del componente
+  special, no más recálculos outcome por outcome
+
+## Hipótesis pendientes
+
+- medir si un corpus futuro más fragmentado hace crecer claramente la ventaja
+  de 2B
+- medir cuánto trabajo logra recortar 2C sobre el mismo corpus común
+- recién después preguntar cuánto cuesta en Cairo una unidad de este trabajo
+  y si la reducción previa alcanza para volver razonable un port
+
+## Artefactos 2B
+
+- código:
+  `scripts/conditional_sampling_locality.py`
+- tests:
+  `scripts/test_conditional_sampling_locality.py`
+- raw benchmark 2B:
+  `benchmarks/conditional-sampling-2b-locality-20260830.jsonl`
