@@ -68,6 +68,21 @@ class ConditionalSampling2B3SharedOutcomesTests(unittest.TestCase):
         self.assertLess(shared["total_search_nodes"], naive["total_search_nodes"])
         self.assertLess(shared["total_branch_ops"], naive["total_branch_ops"])
 
+    def test_partition_invariant_is_checked_against_independent_joint_total(self):
+        case = load_corpus_case("2a-046")
+        transcript = b3.transcript_from_corpus_row(case)
+        cell_index = int(case["clicked_cell"]["index"])
+        analysis = b3.analyze_joint_problem(transcript, cell_index)
+        shared = b3.evaluate_cell_shared_outcomes(transcript, cell_index)
+        compatible_total = b3.compatible_total_from_joint_distribution(
+            transcript,
+            analysis["joint_distribution"],
+        )
+        self.assertEqual(shared["compatible_total_before_click"], compatible_total)
+        self.assertEqual(shared["sum_counts"], sum(shared["counts"].values()))
+        self.assertEqual(shared["partition_ok"], shared["sum_counts"] == compatible_total)
+        self.assertTrue(shared["partition_ok"])
+
 
 if __name__ == "__main__":
     unittest.main()

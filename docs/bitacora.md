@@ -1349,6 +1349,9 @@ Validación final:
 - exactitud `120/120` contra 2A
 - `problems_executed = 1`
 - `shared_single_pass = True`
+- partition invariant interno independiente de la clasificación por outcome:
+  `compatible_total_before_click` ahora se deriva de la `joint_distribution`
+  antes de sumar `N_mine + N_0 + ... + N_8`
 
 Resumen cuantitativo principal:
 

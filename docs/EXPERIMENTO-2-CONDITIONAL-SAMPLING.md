@@ -839,6 +839,11 @@ Revisión hecha sobre el código final de 2B3:
   en `120/120`
 - no apareció doble conteo ni pérdida de completaciones en la validación
   completa contra 2A
+- el partition invariant interno quedó calculado de forma independiente a la
+  clasificación por outcome:
+  `compatible_total_before_click` se deriva directamente de la
+  `joint_distribution` filtrando `mines_used == remaining_mines`, y luego se
+  verifica `partition_ok = (Σ N_o == compatible_total_before_click)`
 
 ### Validación
 

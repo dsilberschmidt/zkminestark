@@ -326,6 +326,18 @@ def counts_from_joint_distribution(
     return counts
 
 
+def compatible_total_from_joint_distribution(
+    transcript: cs.Transcript,
+    joint_distribution: dict[tuple[int, int, int], int],
+) -> int:
+    remaining_mines = transcript.total_mines - len(transcript.known_mines)
+    return sum(
+        ways
+        for (mines_used, _x_mine, _neighbor_mines), ways in joint_distribution.items()
+        if ways and mines_used == remaining_mines
+    )
+
+
 def evaluate_cell_shared_outcomes(
     transcript: cs.Transcript,
     cell_index: int,
@@ -377,13 +389,17 @@ def evaluate_cell_shared_outcomes(
         adjacent_known_mines=int(analysis["adjacent_known_mines"]),
     )
     total_count = sum(counts.values())
-    partition_ok = total_count == sum(counts.values())
+    compatible_total = compatible_total_from_joint_distribution(
+        transcript=transcript,
+        joint_distribution=analysis["joint_distribution"],
+    )
+    partition_ok = total_count == compatible_total
     max_count = max(counts.values()) if counts else 0
     return {
         "status": "ok",
         "counts": counts,
         "sum_counts": total_count,
-        "compatible_total_before_click": total_count,
+        "compatible_total_before_click": compatible_total,
         "partition_ok": partition_ok,
         "missing_outcomes": [],
         "outcomes_positive": sum(1 for value in counts.values() if value > 0),
