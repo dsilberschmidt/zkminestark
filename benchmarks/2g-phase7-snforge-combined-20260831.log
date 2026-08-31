@@ -1,0 +1,973 @@
+   Compiling test(zkmine_2g_unittest) zkmine_2g v0.1.0 (/home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/Scarb.toml)
+warn: Unused import: `zkmine_2g::cell::u512_from_u32`
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/cell.cairo:20:69
+use zkmine_2g::bigint::{binom, u512_add, u512_mul_small, u512_zero, u512_from_u32};
+                                                                    ^^^^^^^^^^^^^
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:24:9
+    let outcomes = extract_outcomes(@aggregate, 99, 345, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:40:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:56:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:72:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:88:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:104:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:120:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:136:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:152:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:168:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:184:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:200:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:216:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:232:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:248:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:264:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:280:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:296:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:312:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:328:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:344:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:360:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:376:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:392:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:408:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:424:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:440:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:456:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:472:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:488:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:504:9
+    let outcomes = extract_outcomes(@aggregate, 99, 461, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:520:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:536:9
+    let outcomes = extract_outcomes(@aggregate, 99, 462, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:552:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:568:9
+    let outcomes = extract_outcomes(@aggregate, 99, 462, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:584:9
+    let outcomes = extract_outcomes(@aggregate, 99, 465, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:600:9
+    let outcomes = extract_outcomes(@aggregate, 99, 463, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:616:9
+    let outcomes = extract_outcomes(@aggregate, 99, 453, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:632:9
+    let outcomes = extract_outcomes(@aggregate, 99, 451, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:648:9
+    let outcomes = extract_outcomes(@aggregate, 99, 455, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:664:9
+    let outcomes = extract_outcomes(@aggregate, 99, 451, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:680:9
+    let outcomes = extract_outcomes(@aggregate, 99, 438, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:696:9
+    let outcomes = extract_outcomes(@aggregate, 99, 436, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:709:9
+    let outcomes = extract_outcomes(@aggregate, 99, 441, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:725:9
+    let outcomes = extract_outcomes(@aggregate, 99, 438, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:741:9
+    let outcomes = extract_outcomes(@aggregate, 99, 434, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:757:9
+    let outcomes = extract_outcomes(@aggregate, 99, 432, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:773:9
+    let outcomes = extract_outcomes(@aggregate, 99, 436, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:789:9
+    let outcomes = extract_outcomes(@aggregate, 99, 433, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:805:9
+    let outcomes = extract_outcomes(@aggregate, 99, 432, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:821:9
+    let outcomes = extract_outcomes(@aggregate, 99, 431, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:837:9
+    let outcomes = extract_outcomes(@aggregate, 99, 434, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:853:9
+    let outcomes = extract_outcomes(@aggregate, 99, 432, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:866:9
+    let outcomes = extract_outcomes(@aggregate, 99, 433, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:882:9
+    let outcomes = extract_outcomes(@aggregate, 99, 428, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:898:9
+    let outcomes = extract_outcomes(@aggregate, 99, 432, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:914:9
+    let outcomes = extract_outcomes(@aggregate, 99, 430, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:930:9
+    let outcomes = extract_outcomes(@aggregate, 99, 420, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:946:9
+    let outcomes = extract_outcomes(@aggregate, 99, 416, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:962:9
+    let outcomes = extract_outcomes(@aggregate, 99, 420, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:978:9
+    let outcomes = extract_outcomes(@aggregate, 99, 418, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:994:9
+    let outcomes = extract_outcomes(@aggregate, 99, 420, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1010:9
+    let outcomes = extract_outcomes(@aggregate, 99, 416, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1023:9
+    let outcomes = extract_outcomes(@aggregate, 99, 421, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1039:9
+    let outcomes = extract_outcomes(@aggregate, 99, 417, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1052:9
+    let outcomes = extract_outcomes(@aggregate, 99, 418, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1068:9
+    let outcomes = extract_outcomes(@aggregate, 99, 413, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1084:9
+    let outcomes = extract_outcomes(@aggregate, 99, 417, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1100:9
+    let outcomes = extract_outcomes(@aggregate, 99, 414, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1113:9
+    let outcomes = extract_outcomes(@aggregate, 99, 407, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1129:9
+    let outcomes = extract_outcomes(@aggregate, 99, 402, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1142:9
+    let outcomes = extract_outcomes(@aggregate, 99, 407, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1158:9
+    let outcomes = extract_outcomes(@aggregate, 99, 404, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1171:9
+    let outcomes = extract_outcomes(@aggregate, 99, 397, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1187:9
+    let outcomes = extract_outcomes(@aggregate, 99, 392, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1200:9
+    let outcomes = extract_outcomes(@aggregate, 99, 397, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1216:9
+    let outcomes = extract_outcomes(@aggregate, 99, 393, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1232:9
+    let outcomes = extract_outcomes(@aggregate, 99, 390, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1248:9
+    let outcomes = extract_outcomes(@aggregate, 99, 386, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1261:9
+    let outcomes = extract_outcomes(@aggregate, 99, 391, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1277:9
+    let outcomes = extract_outcomes(@aggregate, 99, 387, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1290:9
+    let outcomes = extract_outcomes(@aggregate, 99, 392, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1306:9
+    let outcomes = extract_outcomes(@aggregate, 99, 387, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1319:9
+    let outcomes = extract_outcomes(@aggregate, 99, 392, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1335:9
+    let outcomes = extract_outcomes(@aggregate, 99, 389, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1348:9
+    let outcomes = extract_outcomes(@aggregate, 99, 369, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1364:9
+    let outcomes = extract_outcomes(@aggregate, 99, 367, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1377:9
+    let outcomes = extract_outcomes(@aggregate, 99, 369, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1393:9
+    let outcomes = extract_outcomes(@aggregate, 99, 368, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1406:9
+    let outcomes = extract_outcomes(@aggregate, 99, 381, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1422:9
+    let outcomes = extract_outcomes(@aggregate, 99, 379, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1435:9
+    let outcomes = extract_outcomes(@aggregate, 99, 381, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1448:9
+    let outcomes = extract_outcomes(@aggregate, 99, 381, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1464:9
+    let outcomes = extract_outcomes(@aggregate, 99, 360, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1480:9
+    let outcomes = extract_outcomes(@aggregate, 99, 357, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1493:9
+    let outcomes = extract_outcomes(@aggregate, 99, 361, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1509:9
+    let outcomes = extract_outcomes(@aggregate, 99, 358, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1522:9
+    let outcomes = extract_outcomes(@aggregate, 99, 384, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1538:9
+    let outcomes = extract_outcomes(@aggregate, 99, 380, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1551:9
+    let outcomes = extract_outcomes(@aggregate, 99, 384, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1567:9
+    let outcomes = extract_outcomes(@aggregate, 99, 380, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1589:9
+    let outcomes = extract_outcomes(@aggregate, 99, 344, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1611:9
+    let outcomes = extract_outcomes(@aggregate, 99, 341, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1633:9
+    let outcomes = extract_outcomes(@aggregate, 99, 342, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1649:9
+    let outcomes = extract_outcomes(@aggregate, 99, 373, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1665:9
+    let outcomes = extract_outcomes(@aggregate, 99, 370, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1678:9
+    let outcomes = extract_outcomes(@aggregate, 99, 374, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1694:9
+    let outcomes = extract_outcomes(@aggregate, 99, 372, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1707:9
+    let outcomes = extract_outcomes(@aggregate, 99, 370, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1723:9
+    let outcomes = extract_outcomes(@aggregate, 99, 365, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1736:9
+    let outcomes = extract_outcomes(@aggregate, 99, 370, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1752:9
+    let outcomes = extract_outcomes(@aggregate, 99, 366, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1765:9
+    let outcomes = extract_outcomes(@aggregate, 99, 367, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1781:9
+    let outcomes = extract_outcomes(@aggregate, 99, 362, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1794:9
+    let outcomes = extract_outcomes(@aggregate, 99, 367, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1810:9
+    let outcomes = extract_outcomes(@aggregate, 99, 366, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1823:9
+    let outcomes = extract_outcomes(@aggregate, 99, 341, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1839:9
+    let outcomes = extract_outcomes(@aggregate, 99, 340, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1852:9
+    let outcomes = extract_outcomes(@aggregate, 99, 341, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
+ --> /home/cactussediento/Proyectos/zkminestark/contracts/zkmine_2g/src/tests/test_ve_phase7.cairo:1868:9
+    let outcomes = extract_outcomes(@aggregate, 99, 340, 0);
+        ^^^^^^^^
+note: this error originates in the attribute macro: `test`
+
+    Finished `dev` profile target(s) in 73 seconds
+
+
+Collected 240 test(s) from zkmine_2g package
+Running 240 test(s) from src/
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_001 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~120027046)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_013 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~100610762)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_002 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~156256717)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_009 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~149185905)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_014 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~215179934)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_008 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~397603012)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_011 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~148116155)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_010 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~278493128)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_083 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~81954017)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_081 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~112890650)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_082 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~156276226)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_012 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~326523581)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_084 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~82334477)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_087 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~96260139)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_085 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95269867)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_086 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~223534514)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_089 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~83921213)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_088 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~164024756)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_090 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~132663969)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_091 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~108072335)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_093 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~125745477)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_092 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~186552645)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_095 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~124151946)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_094 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~175223056)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_029 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~57836956)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_096 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~137189061)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_028 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~293680366)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_097 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~182376590)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_027 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~321976682)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_031 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~65319039)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_032 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~72769039)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_030 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~65204316)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_098 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~291073544)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_101 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95948593)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_033 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~92145859)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_100 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~184456362)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_099 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~212954406)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_034 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~121261298)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_035 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95608533)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_103 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~70494519)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_102 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~98580237)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_036 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~109937223)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_104 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~138817958)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_105 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~55008703)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_037 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~194626540)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_107 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~57982993)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_106 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~165278072)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_038 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~336553674)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_109 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~94338040)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_108 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~134864294)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_110 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~135578994)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_041 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~82875988)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_039 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~242634382)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_111 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~97182030)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_040 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~234644894)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_112 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~129949836)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_042 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~104684883)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_113 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~66507433)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_043 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~74118768)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_044 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~97378648)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_114 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~137900201)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_115 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~66510073)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_116 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~126706885)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_117 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~64820053)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_045 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~85068977)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_118 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~85749339)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_046 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~105948587)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_047 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~111191179)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_003 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~131604618)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_005 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~170322288)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_007 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~157237839)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_048 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~99036287)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_004 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~342618654)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_049 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~129140298)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_050 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~149658358)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_006 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~398378304)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_002 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~156276347)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_003 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~131621248)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_005 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~170338918)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_007 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~157254469)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_004 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~342638884)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_009 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~149202535)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_051 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~110963188)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_006 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~398398534)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_052 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~91078910)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_008 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~397623242)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_053 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~82629310)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_011 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~148132785)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_010 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~278513758)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_013 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~100630392)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_015 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~132423020)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_016 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~114419094)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_014 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~215201364)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_017 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~51707867)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_018 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~60001237)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_012 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~326543811)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_020 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~56435127)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_019 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~44482207)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_054 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~79646553)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_055 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~51479699)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_021 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~97946764)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_056 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~63655533)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_023 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~99365084)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_022 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~213319812)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_024 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~150486983)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_025 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~246469194)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_029 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~57853586)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_026 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~446981794)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_027 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~321997512)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_030 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~65222146)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_028 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~293701796)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_057 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~137432075)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_031 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~65335669)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_058 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~175365663)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_032 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~72785669)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_059 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~106824597)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_034 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~121278528)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_033 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~92162289)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_060 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~249622195)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_061 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~230832494)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_035 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95624963)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_036 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~109954453)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_037 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~194646770)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_040 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~234665124)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_038 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~336575104)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_039 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~242655212)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_041 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~82892618)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_042 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~104701513)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_063 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~225671710)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_119 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~65303653)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_062 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~417438475)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_055 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~51496329)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_120 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~90037579)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_001 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~120043676)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_064 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~449028297)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_056 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~63672163)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_065 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95611237)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_066 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~93444302)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_057 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~137449905)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_058 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~175385293)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_059 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~106841227)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_067 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~80738631)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_068 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~90558625)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_069 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~103299728)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_060 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~249642425)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_070 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~124520718)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_061 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~230852724)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_071 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95614868)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_062 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~417459905)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_063 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~225691940)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_072 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~110224518)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_064 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~449049727)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_073 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~129140298)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_065 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95627867)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_066 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~93463932)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_074 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~149658358)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_075 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~110963188)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_077 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~86657417)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_076 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~91078910)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_079 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~50289699)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_078 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~74892749)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_080 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~67090777)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_073 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~129160528)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_072 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~110242348)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_075 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~110982818)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_074 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~149679188)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_076 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~91098540)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_043 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~74135398)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_044 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~97395278)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_046 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~105967417)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_045 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~85085607)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_048 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~99054717)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_047 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~111207809)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_049 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~129160528)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_050 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~149679188)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_051 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~110982818)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_052 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~91098540)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_054 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~79666183)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_053 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~82648340)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_015 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~132402790)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_017 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~51689437)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_016 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~114399464)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_018 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~59981607)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_019 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~44465577)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_020 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~56416097)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_021 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~97930134)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_023 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~99348454)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_022 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~213298982)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_024 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~150467353)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_085 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95289497)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_025 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~246448964)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_087 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~96279769)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_088 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~164044986)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_086 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~223555344)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_089 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~83937843)
+[PASS] zkmine_2g::tests::test_ve_phase7::p7_2a_026 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~446960364)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_090 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~132684799)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_091 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~108088965)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_092 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~186572275)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_093 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~125762107)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_095 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~124168576)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_094 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~175242486)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_096 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~137206891)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_097 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~182396820)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_100 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~184476592)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_099 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~212974636)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_098 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~291094974)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_103 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~70511149)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_101 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95967623)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_102 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~98596867)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_105 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~55025333)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_107 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~57999623)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_104 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~138838188)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_108 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~134883924)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_109 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~94357670)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_106 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~165299502)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_110 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~135599824)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_113 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~66524063)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_111 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~97201660)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_112 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~129970666)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_115 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~66526703)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_117 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~64836683)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_114 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~137916831)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_119 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~65320283)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_116 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~126725915)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_118 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~85765969)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_120 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~90056609)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_080 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~67109207)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_079 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~50306329)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_078 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~74911779)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_077 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~86676447)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_069 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~103316358)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_067 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~80755261)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_068 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~90577655)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_070 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~124539748)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_071 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~95631498)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_081 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~112907280)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_082 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~156294656)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_084 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~82351107)
+[PASS] zkmine_2g::tests::test_ve_phase7_exact::p7_exact_2a_083 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~81970647)
+Tests: 240 passed, 0 failed, 0 ignored, 287 filtered out
+

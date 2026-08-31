@@ -1,0 +1,33 @@
+{
+  "date": "2026-08-31",
+  "phase": 7,
+  "description": "Full CELL pipeline: joint VE + ordinary VE convolution + unconstrained local + extract_outcomes",
+  "benchmark": {
+    "n": 120,
+    "min": 44465577,
+    "p50": 111191179,
+    "p90": 278493128,
+    "p95": 342618654,
+    "p99": 446960364,
+    "max": 449028297,
+    "mean": 142576712,
+    "pct_under_1100M": 100.0,
+    "worst_case": "2a_064"
+  },
+  "exact": {
+    "n": 120,
+    "min": 44482207,
+    "p50": 111207809,
+    "p90": 278513758,
+    "p95": 342638884,
+    "p99": 446981794,
+    "max": 449049727,
+    "mean": 142595328,
+    "pct_under_1100M": 100.0,
+    "worst_case": "2a_064"
+  },
+  "overhead": {
+    "max_gas": 21430,
+    "max_pct_of_bench_max": 0.0048
+  }
+}
