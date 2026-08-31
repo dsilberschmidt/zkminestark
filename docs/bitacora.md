@@ -2173,3 +2173,66 @@ estructura pública de constraints. No usa counts, board oculto ni oráculos.
 
 **2a-109 min-fill vs sorted**: min-fill order es [223,253,283,224,225,...] (distinto de sorted [223,224,225,226,...]). No medido en Cairo; se registra diferencia estructural.
 
+
+---
+## 2026-08-31 — Phase 6: corpus-scale min-fill campaign (120 casos)
+
+**Campaña**: `count_joint_component_with_order` sobre 120 casos del corpus 30×16/99.
+
+**Fuente de datos**: `conditional-sampling-2e2-variable-elimination-20260830.jsonl` (signatures + min-fill orderings) + `conditional-sampling-2a-corpus-20260830.jsonl` (transcripts).
+
+**Fixture generator**: `scripts/gen_phase6_fixtures.py` → `benchmarks/2g-phase6-fixtures-20260831.jsonl`.
+
+**Test generator**: `scripts/gen_phase6_cairo_tests.py` → `contracts/zkmine_2g/src/tests/test_ve_phase6.cairo` (120 tests).
+
+**Resultados**:
+
+| Métrica | Valor |
+|---------|-------|
+| Casos | 120 |
+| PASS | 120 (100%) |
+| FAIL | 0 |
+| % < 1.1B gate | **100%** |
+| min gas | 720,446 (size=2) |
+| p50 gas | 70,049,051 |
+| p90 gas | 139,238,839 |
+| p95 gas | 197,648,551 |
+| p99 gas | 260,881,552 |
+| **max gas** | **261,796,804** (2a-006, size=46) |
+
+**Top 3 más costosos**:
+- 2a-006: size=46, width=4, 261.8M gas
+- 2a-008: size=46, width=4, 260.9M gas
+- 2a-026: size=10, width=6, 257.4M gas (width=6 > width=4 en cost)
+
+**Hallazgo clave**: El factor determinante del costo es `min_fill_width`, no el número de variables. Los casos size=56 (width=4) cuestan ~82M gas mientras los size=10 (width=6) llegan a ~257M gas.
+
+**Gate**: 100% de los 120 casos reales del corpus pasan < 1.1B.
+
+**Archivos generados**:
+- `benchmarks/2g-phase6-fixtures-20260831.jsonl` (120 fixtures con joint counts verificados)
+- `benchmarks/2g-phase6-minfill-corpus-20260831.jsonl` (120 resultados de gas)
+- `contracts/zkmine_2g/src/tests/test_ve_phase6.cairo` (120 tests generados)
+- `scripts/gen_phase6_fixtures.py`
+- `scripts/gen_phase6_cairo_tests.py`
+
+---
+## 2026-08-31 — Phase 6 correctness fix: exact joint parity
+
+**Bug encontrado**: `gen_phase6_cairo_tests.py` original sólo generaba `assert(joint.len() == N)` — verificaba cardinalidad pero NO paridad exacta.
+
+**Fix**: nuevo archivo `test_ve_phase6_exact.cairo` con `find_joint_local` per-entry para cada `(mines, x_mine, nbrs) -> count` esperado.
+
+**Resultado**: 120/120 exact parity Python↔Cairo.
+
+**Overhead de assertions** (gas exacto - gas benchmark):
+- min: 8,250 | p50: 86,780 | p90: 582,230 | max: 1,354,050 gas
+- max overhead ≈ 0.5% del caso más costoso (261.8M gas)
+
+**Distribución de gas Phase 6**: los valores originales (test_ve_phase6.cairo, VE + len assert) son válidos como benchmark de la ejecución VE. No se necesita rerun.
+
+**Archivos modificados**:
+- `scripts/gen_phase6_cairo_tests.py`: actualizado para generar ambos archivos
+- `contracts/zkmine_2g/src/tests/test_ve_phase6.cairo`: regenerado (idéntico semánticamente)
+- `contracts/zkmine_2g/src/tests/test_ve_phase6_exact.cairo`: nuevo
+- `contracts/zkmine_2g/src/tests.cairo`: añadido `mod test_ve_phase6_exact`
