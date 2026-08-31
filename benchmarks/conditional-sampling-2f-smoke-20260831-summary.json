@@ -1,0 +1,62 @@
+{
+  "policies": {
+    "CELL": {
+      "bigint_additions_sum": 309705,
+      "bigint_multiplications_sum": 392666,
+      "binary_classifications_sum": 0,
+      "dense_factor_capacity_touched_sum": 8419780,
+      "exact_refinements_sum": 82,
+      "invalid": 0,
+      "max_factor_scope_variables_max": 8,
+      "max_induced_or_min_fill_width_max": 7,
+      "max_integer_bit_length_max": 471,
+      "nonzero_factor_entries_processed_sum": 122159,
+      "ok": 4,
+      "peak_nonzero_factor_entries_max": 135,
+      "rows": 4,
+      "solve_count_sum": 82,
+      "timeouts": 0,
+      "wall_clock_ms_max": 1287.476278928807,
+      "wall_clock_ms_median": 224.57739648234565
+    },
+    "FULL-REGION": {
+      "bigint_additions_sum": 484304,
+      "bigint_multiplications_sum": 592729,
+      "binary_classifications_sum": 82,
+      "dense_factor_capacity_touched_sum": 13782692,
+      "exact_refinements_sum": 51,
+      "invalid": 0,
+      "max_factor_scope_variables_max": 8,
+      "max_induced_or_min_fill_width_max": 7,
+      "max_integer_bit_length_max": 470,
+      "nonzero_factor_entries_processed_sum": 320046,
+      "ok": 4,
+      "peak_nonzero_factor_entries_max": 1504,
+      "rows": 4,
+      "solve_count_sum": 133,
+      "timeouts": 0,
+      "wall_clock_ms_max": 4539.251398877241,
+      "wall_clock_ms_median": 1190.0365524779772
+    },
+    "WAVE": {
+      "bigint_additions_sum": 296591,
+      "bigint_multiplications_sum": 372367,
+      "binary_classifications_sum": 82,
+      "dense_factor_capacity_touched_sum": 9163124,
+      "exact_refinements_sum": 51,
+      "invalid": 0,
+      "max_factor_scope_variables_max": 8,
+      "max_induced_or_min_fill_width_max": 7,
+      "max_integer_bit_length_max": 470,
+      "nonzero_factor_entries_processed_sum": 225835,
+      "ok": 4,
+      "peak_nonzero_factor_entries_max": 448,
+      "rows": 4,
+      "solve_count_sum": 133,
+      "timeouts": 0,
+      "wall_clock_ms_max": 3577.2472679964267,
+      "wall_clock_ms_median": 974.7130019968608
+    }
+  },
+  "rows": 12
+}
