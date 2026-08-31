@@ -2172,6 +2172,176 @@ Decisión de cierre:
 
 - `2E2` queda como candidato operativo para la siguiente etapa
 - `2E3` queda congelado como experimento negativo útil
-- `docs/PENDING-REVIEW-2E3.md` se conserva como expediente detallado de la etapa
+- el checkpoint de continuidad entre sesiones pasa a `docs/PENDING-REVIEW.md`
+
+## Análisis estructural de flood-fill sobre el corpus histórico 30×16/99
+### (2026-08-31)
+
+## Objetivo
+
+Caracterizar el flood-fill usando exclusivamente el corpus histórico público
+ya congelado, antes de decidir si vale la pena implementar y comparar tres
+políticas futuras de refinamiento del clue exacto:
+
+- `CELL`: cada celda forced-safe recibe clue exacto `0..8` inmediatamente
+- `WAVE`: dentro de cada oleada sólo se distingue `0` vs `>0`; los positivos
+  se refinan al cerrar la oleada
+- `FULL-REGION`: durante toda la expansión sólo se distingue `0` vs `>0`; la
+  frontera positiva completa se refina al cerrar toda la región
+
+Estas políticas representan distintos horizontes de diferimiento del clue
+exacto. El objetivo aquí no fue implementarlas ni estimar su costo VE, sino
+ver si el flood-fill introduce un multiplicador estructural relevante y si las
+políticas parecen realmente distintas.
+
+## Fuente de datos y restricciones
+
+Fuente única:
+
+- `benchmarks/conditional-sampling-histories-30x16-20260831.jsonl`
+
+Restricciones respetadas:
+
+- no se generaron histories nuevas
+- no se modificaron `2E2` ni `2E3`
+- no se implementaron constraints binarias `>0`
+- no se abrió Cairo
+
+Artefactos permanentes:
+
+- `scripts/analyze_flood_fill_structure.py`
+- `benchmarks/flood-fill-structure-30x16-20260831.jsonl`
+- `benchmarks/flood-fill-structure-30x16-20260831-summary.json`
+
+## Metodología
+
+Se reconstruyó cada click únicamente desde transcripts públicos ya guardados.
+
+Reconstrucción usada:
+
+- cada row del corpus es el transcript previo al click
+- cuando existe un row siguiente en la misma history, ese transcript siguiente
+  se toma como transcript posterior público del click actual
+- para losses sobre mina:
+  - `new_revealed = 0`
+  - no hay flood-fill
+- para terminales positivos `1..8` sin transcript siguiente:
+  - se reconstruye sintéticamente el transcript posterior agregando sólo esa
+    clue
+- para terminales con outcome `0` sin transcript siguiente:
+  - la región completa no se infiere; se marca como gap del dataset público
+
+Métricas reconstruidas por click:
+
+- `new_revealed`
+- outcome clickeado
+- presencia de flood-fill
+- `zero_region_size`
+- `boundary_size`
+- `wave_count`
+- tamaño de cada oleada
+- ceros y positivos por oleada
+
+Caracterización estructural adicional, sin modificar el contador:
+
+- `frontier_variables`
+- `constraint_count`
+- `component_sizes`
+- `min_fill_width_max`
+- tamaño de la unión de variables involucradas en las clues de frontera
+
+Límite metodológico explícito:
+
+- toda métrica que requiera representar realmente constraints `0/>0` queda
+  como `requiere experimento posterior`
+
+## Cobertura y limitaciones
+
+- corpus:
+  `16` histories, `259` clicks
+- clicks con outcome `0`:
+  `23`
+- flood-fills completamente reconstruibles desde el dataset público:
+  `22`
+- gap real del dataset:
+  `C03` click `47`, último `0` terminal sin transcript posterior
+
+## Resultados
+
+### Multiplicador de flood-fill
+
+Clicks sin flood-fill (`236`):
+
+- `new_revealed`: media `0.949`, mediana `1`, p95 `1`, max `1`
+
+Clicks con flood-fill (`22` reconstruibles):
+
+- `new_revealed`: media `19.545`, mediana `14.5`, p95 `38.9`, max `41`
+- `zero_region_size`: media `7.727`, mediana `4`, p95 `19`, max `20`
+- `boundary_size`: media `11.818`, mediana `10.5`, p95 `21.9`, max `22`
+- `wave_count`: media `5.182`, mediana `5`, p95 `10.85`, max `11`
+
+Distribuciones observadas:
+
+- tamaños de cascada:
+  `4, 10, 11, 12, 17, 18, 19, 25, 29, 32, 34, 37, 39, 41`
+- tamaños de oleada:
+  rango `1..10`
+
+### CELL vs WAVE vs FULL-REGION
+
+Conteos estructurales reconstruidos para flood-fills:
+
+- `CELL`:
+  - una determinación exacta `0..8` por cada celda forced-safe
+  - backlog máximo de positivos pendientes:
+    `0`
+- `WAVE`:
+  - backlog máximo de positivos pendientes:
+    `10`
+- `FULL-REGION`:
+  - backlog máximo de positivos pendientes:
+    `22`
+- diferencia máxima observada `FULL-REGION - WAVE`:
+  `16`
+
+Lectura correcta:
+
+- estos conteos no son costos computacionales equivalentes
+- `CELL`, `WAVE` y `FULL-REGION` mantienen estados condicionados distintos
+- la diferencia real para VE sigue abierta hasta implementar semántica binaria
+  `0/>0`
+
+### Relación con estructura VE exacta final
+
+En flood-fills reconstruibles:
+
+- `frontier_variables` post-cascada:
+  media `63.045`, mediana `52.5`, p95 `173.4`, max `189`
+- `constraint_count` post-cascada:
+  media `39.591`, mediana `30`, p95 `103.7`, max `122`
+- `largest_component` post-cascada:
+  media `33.455`, mediana `23.5`, p95 `90.95`, max `116`
+- `min_fill_width_max` post-cascada:
+  mediana `6`, max `7`
+- `boundary_union_variable_count`:
+  media `15.909`, mediana `16.5`, p95 `25.95`, max `32`
+
+Esto caracteriza la estructura exacta final con clues `0..8`, no la estructura
+intermedia bajo una semántica binaria `0/>0`.
+
+## Lectura técnica
+
+1. El flood-fill sí introduce un multiplicador estructural fuerte sobre el
+   número de celdas reveladas por click.
+2. `WAVE` y `FULL-REGION` sí parecen estructuralmente distintas por el backlog
+   de positivos pendientes, así que no es absurdo compararlas más adelante.
+3. No hay evidencia suficiente para descartar `CELL`, `WAVE` o `FULL-REGION`
+   antes de programarlas.
+4. Lo que sigue abierto exige implementar de verdad la semántica binaria
+   `0/>0` y medir VE:
+   - cómo cambia frontier/componentes/min-fill width durante la expansión
+   - si `>0` ayuda o empeora el sharing
+   - si `WAVE` o `FULL-REGION` reducen o inflan el costo VE real
 
 ## Artefactos 2D

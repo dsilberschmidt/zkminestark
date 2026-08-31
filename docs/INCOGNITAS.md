@@ -21,6 +21,21 @@ Estado metodológico adicional sobre conditional sampling exacto:
   sampling secuencial, sin hidden-board oracle, como validación de sistema
   completo y no solo del primitive exacto por celda sobre transcripts dados.
 
+Estado metodológico adicional sobre flood-fill:
+
+- ✅ RESPONDIDA parcialmente:
+  el análisis estructural sobre el corpus histórico largo ya mostró que
+  flood-fill introduce un multiplicador fuerte de celdas reveladas por click
+  y que `CELL`, `WAVE` y `FULL-REGION` no son triviales entre sí.
+- Veredicto corto:
+  - con flood-fill, `new_revealed` tiene mediana `14.5`, p95 `38.9`, max `41`;
+  - `WAVE` llega a un backlog máximo de `10` positivos pendientes;
+  - `FULL-REGION` llega a `22`;
+  - ninguna de las tres políticas puede descartarse todavía.
+- Sigue ABIERTA y separada:
+  implementar semántica real `0/>0` para medir VE y responder si `WAVE` o
+  `FULL-REGION` ayudan o empeoran respecto de `CELL`.
+
 1. **El secreto del tablero** — ¿cómo impedir el pre-cómputo del layout?
    Bloquea el diseño entero: sin esto no hay récords ni pozo defendibles.
    ✅ RESPONDIDA ABAJO.

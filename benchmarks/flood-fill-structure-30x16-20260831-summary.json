@@ -1,0 +1,949 @@
+{
+  "final_reading": {
+    "A": "S\u00ed hay se\u00f1al de multiplicador estructural relevante: los clicks con flood-fill revelan muchas m\u00e1s celdas que los no-flood-fill, con mediana de cascada 14.5 y p95 38.9 celdas nuevas. Eso no demuestra costo Cairo ni costo VE, pero s\u00ed justifica tratar flood-fill como fen\u00f3meno separado frente a una implementaci\u00f3n estrictamente cell-by-cell.",
+    "B": "S\u00ed parece haber diferencia estructural suficiente entre CELL, WAVE y FULL-REGION para justificar comparaci\u00f3n posterior: el total de clasificaciones coincide, pero WAVE acota positivos pendientes por oleada mientras FULL-REGION puede acumular hasta 22 positivos simult\u00e1neamente pendientes (vs 10 bajo WAVE).",
+    "C": "No hay evidencia suficiente para descartar ninguna de las tres antes de programarla. CELL es el baseline natural; WAVE y FULL-REGION s\u00ed difieren estructuralmente en backlog de positivos, pero todav\u00eda no sabemos si esa diferencia ayuda o perjudica a VE sin implementar la sem\u00e1ntica binaria `0/>0`.",
+    "D": "S\u00f3lo un experimento posterior con constraints binarias reales podr\u00e1 responder: c\u00f3mo cambian frontier, componentes y min-fill width durante la expansi\u00f3n; si `>0` introduce m\u00e1s o menos sharing que `1..8`; si WAVE o FULL-REGION reducen o inflan el costo VE; y si el backlog de positivos pendientes compensa o empeora la estructura del problema. Adem\u00e1s, queda 1 flood-fill terminal sin transcript posterior cuya regi\u00f3n final no puede reconstruirse completamente s\u00f3lo desde el dataset p\u00fablico actual."
+  },
+  "groups": {
+    "all_clicks": {
+      "boundary_size": {
+        "missing": 1,
+        "stats": {
+          "count": 258,
+          "max": 22.0,
+          "mean": 1.875968992248062,
+          "median": 1.0,
+          "min": 0.0,
+          "p90": 1.0,
+          "p95": 9.0,
+          "p99": 20.0
+        }
+      },
+      "cascade_size_distribution": {
+        "4": 1,
+        "10": 5,
+        "11": 4,
+        "12": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "25": 1,
+        "29": 2,
+        "32": 1,
+        "34": 1,
+        "37": 1,
+        "39": 1,
+        "41": 1
+      },
+      "clicks": 259,
+      "flood_fill_after_structure": {
+        "boundary_union_variable_count": {
+          "count": 22,
+          "max": 32.0,
+          "mean": 15.909090909090908,
+          "median": 16.5,
+          "min": 5.0,
+          "p90": 24.800000000000004,
+          "p95": 25.95,
+          "p99": 30.739999999999995
+        },
+        "constraint_count": {
+          "count": 22,
+          "max": 122.0,
+          "mean": 39.59090909090909,
+          "median": 30.0,
+          "min": 3.0,
+          "p90": 96.10000000000005,
+          "p95": 103.69999999999999,
+          "p99": 118.21999999999998
+        },
+        "frontier_variables": {
+          "count": 22,
+          "max": 189.0,
+          "mean": 63.04545454545455,
+          "median": 52.5,
+          "min": 5.0,
+          "p90": 160.20000000000005,
+          "p95": 173.39999999999998,
+          "p99": 185.84999999999997
+        },
+        "largest_component": {
+          "count": 22,
+          "max": 116.0,
+          "mean": 33.45454545454545,
+          "median": 23.5,
+          "min": 5.0,
+          "p90": 87.40000000000006,
+          "p95": 90.94999999999999,
+          "p99": 110.74999999999997
+        },
+        "min_fill_width_max": {
+          "count": 22,
+          "max": 7.0,
+          "mean": 5.454545454545454,
+          "median": 6.0,
+          "min": 4.0,
+          "p90": 7.0,
+          "p95": 7.0,
+          "p99": 7.0
+        }
+      },
+      "flood_fill_clicks": 23,
+      "full_region_pending_positive_max": {
+        "count": 22,
+        "max": 22.0,
+        "mean": 11.818181818181818,
+        "median": 10.5,
+        "min": 3.0,
+        "p90": 20.0,
+        "p95": 21.9,
+        "p99": 22.0
+      },
+      "new_revealed": {
+        "missing": 1,
+        "stats": {
+          "count": 258,
+          "max": 41.0,
+          "mean": 2.5348837209302326,
+          "median": 1.0,
+          "min": 0.0,
+          "p90": 1.0,
+          "p95": 11.0,
+          "p99": 35.29000000000002
+        }
+      },
+      "pending_positive_max_difference_full_minus_wave": {
+        "count": 22,
+        "max": 16.0,
+        "mean": 6.818181818181818,
+        "median": 4.5,
+        "min": 0.0,
+        "p90": 12.0,
+        "p95": 14.849999999999998,
+        "p99": 15.79
+      },
+      "reconstructable_clicks": 258,
+      "reconstructable_flood_fill_clicks": 22,
+      "wave_count": {
+        "missing": 1,
+        "stats": {
+          "count": 258,
+          "max": 11.0,
+          "mean": 0.4418604651162791,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.0,
+          "p95": 4.0,
+          "p99": 7.430000000000007
+        }
+      },
+      "wave_pending_positive_max": {
+        "count": 22,
+        "max": 10.0,
+        "mean": 5.0,
+        "median": 5.0,
+        "min": 2.0,
+        "p90": 7.900000000000002,
+        "p95": 8.0,
+        "p99": 9.579999999999998
+      },
+      "wave_size_distribution": {
+        "1": 23,
+        "2": 26,
+        "3": 15,
+        "4": 13,
+        "5": 12,
+        "6": 4,
+        "7": 6,
+        "8": 7,
+        "9": 4,
+        "10": 4
+      },
+      "zero_region_size": {
+        "missing": 1,
+        "stats": {
+          "count": 258,
+          "max": 20.0,
+          "mean": 0.6589147286821705,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.0,
+          "p95": 4.0,
+          "p99": 16.720000000000027
+        }
+      }
+    },
+    "controlled": {
+      "boundary_size": {
+        "missing": 1,
+        "stats": {
+          "count": 191,
+          "max": 22.0,
+          "mean": 1.9371727748691099,
+          "median": 1.0,
+          "min": 1.0,
+          "p90": 1.0,
+          "p95": 9.5,
+          "p99": 20.19999999999999
+        }
+      },
+      "cascade_size_distribution": {
+        "10": 2,
+        "11": 3,
+        "12": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "25": 1,
+        "29": 1,
+        "34": 1,
+        "37": 1,
+        "39": 1,
+        "41": 1
+      },
+      "clicks": 192,
+      "flood_fill_after_structure": {
+        "boundary_union_variable_count": {
+          "count": 15,
+          "max": 32.0,
+          "mean": 17.533333333333335,
+          "median": 17.0,
+          "min": 8.0,
+          "p90": 25.6,
+          "p95": 27.799999999999994,
+          "p99": 31.159999999999997
+        },
+        "constraint_count": {
+          "count": 15,
+          "max": 122.0,
+          "mean": 51.8,
+          "median": 42.0,
+          "min": 6.0,
+          "p90": 101.6,
+          "p95": 109.39999999999998,
+          "p99": 119.47999999999999
+        },
+        "frontier_variables": {
+          "count": 15,
+          "max": 189.0,
+          "mean": 83.53333333333333,
+          "median": 64.0,
+          "min": 8.0,
+          "p90": 169.2,
+          "p95": 178.49999999999997,
+          "p99": 186.9
+        },
+        "largest_component": {
+          "count": 15,
+          "max": 116.0,
+          "mean": 42.8,
+          "median": 29.0,
+          "min": 8.0,
+          "p90": 90.6,
+          "p95": 98.49999999999997,
+          "p99": 112.49999999999999
+        },
+        "min_fill_width_max": {
+          "count": 15,
+          "max": 7.0,
+          "mean": 6.0,
+          "median": 7.0,
+          "min": 4.0,
+          "p90": 7.0,
+          "p95": 7.0,
+          "p99": 7.0
+        }
+      },
+      "flood_fill_clicks": 16,
+      "full_region_pending_positive_max": {
+        "count": 15,
+        "max": 22.0,
+        "mean": 12.933333333333334,
+        "median": 11.0,
+        "min": 6.0,
+        "p90": 21.2,
+        "p95": 22.0,
+        "p99": 22.0
+      },
+      "new_revealed": {
+        "missing": 1,
+        "stats": {
+          "count": 191,
+          "max": 41.0,
+          "mean": 2.6178010471204187,
+          "median": 1.0,
+          "min": 1.0,
+          "p90": 1.0,
+          "p95": 11.5,
+          "p99": 37.19999999999999
+        }
+      },
+      "pending_positive_max_difference_full_minus_wave": {
+        "count": 15,
+        "max": 16.0,
+        "mean": 7.466666666666667,
+        "median": 5.0,
+        "min": 3.0,
+        "p90": 13.799999999999999,
+        "p95": 15.299999999999999,
+        "p99": 15.86
+      },
+      "reconstructable_clicks": 191,
+      "reconstructable_flood_fill_clicks": 15,
+      "wave_count": {
+        "missing": 1,
+        "stats": {
+          "count": 191,
+          "max": 11.0,
+          "mean": 0.41361256544502617,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.0,
+          "p95": 4.0,
+          "p99": 7.099999999999994
+        }
+      },
+      "wave_pending_positive_max": {
+        "count": 15,
+        "max": 10.0,
+        "mean": 5.466666666666667,
+        "median": 6.0,
+        "min": 2.0,
+        "p90": 7.6,
+        "p95": 8.599999999999998,
+        "p99": 9.719999999999999
+      },
+      "wave_size_distribution": {
+        "1": 16,
+        "2": 13,
+        "3": 9,
+        "4": 10,
+        "5": 10,
+        "6": 4,
+        "7": 5,
+        "8": 6,
+        "9": 2,
+        "10": 4
+      },
+      "zero_region_size": {
+        "missing": 1,
+        "stats": {
+          "count": 191,
+          "max": 20.0,
+          "mean": 0.680628272251309,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.0,
+          "p95": 4.0,
+          "p99": 19.0
+        }
+      }
+    },
+    "public_only": {
+      "boundary_size": {
+        "missing": 0,
+        "stats": {
+          "count": 67,
+          "max": 20.0,
+          "mean": 1.7014925373134329,
+          "median": 1.0,
+          "min": 0.0,
+          "p90": 1.7999999999999972,
+          "p95": 6.0,
+          "p99": 17.360000000000014
+        }
+      },
+      "cascade_size_distribution": {
+        "4": 1,
+        "10": 3,
+        "11": 1,
+        "29": 1,
+        "32": 1
+      },
+      "clicks": 67,
+      "flood_fill_after_structure": {
+        "boundary_union_variable_count": {
+          "count": 7,
+          "max": 23.0,
+          "mean": 12.428571428571429,
+          "median": 8.0,
+          "min": 5.0,
+          "p90": 20.0,
+          "p95": 21.499999999999996,
+          "p99": 22.7
+        },
+        "constraint_count": {
+          "count": 7,
+          "max": 35.0,
+          "mean": 13.428571428571429,
+          "median": 9.0,
+          "min": 3.0,
+          "p90": 27.200000000000003,
+          "p95": 31.09999999999999,
+          "p99": 34.22
+        },
+        "frontier_variables": {
+          "count": 7,
+          "max": 50.0,
+          "mean": 19.142857142857142,
+          "median": 13.0,
+          "min": 5.0,
+          "p90": 35.60000000000001,
+          "p95": 42.79999999999998,
+          "p99": 48.55999999999999
+        },
+        "largest_component": {
+          "count": 7,
+          "max": 24.0,
+          "mean": 13.428571428571429,
+          "median": 8.0,
+          "min": 5.0,
+          "p90": 23.4,
+          "p95": 23.7,
+          "p99": 23.939999999999998
+        },
+        "min_fill_width_max": {
+          "count": 7,
+          "max": 6.0,
+          "mean": 4.285714285714286,
+          "median": 4.0,
+          "min": 4.0,
+          "p90": 4.800000000000001,
+          "p95": 5.399999999999999,
+          "p99": 5.879999999999999
+        }
+      },
+      "flood_fill_clicks": 7,
+      "full_region_pending_positive_max": {
+        "count": 7,
+        "max": 20.0,
+        "mean": 9.428571428571429,
+        "median": 6.0,
+        "min": 3.0,
+        "p90": 17.6,
+        "p95": 18.799999999999997,
+        "p99": 19.759999999999998
+      },
+      "new_revealed": {
+        "missing": 0,
+        "stats": {
+          "count": 67,
+          "max": 32.0,
+          "mean": 2.298507462686567,
+          "median": 1.0,
+          "min": 0.0,
+          "p90": 2.1999999999999957,
+          "p95": 10.0,
+          "p99": 30.02000000000001
+        }
+      },
+      "pending_positive_max_difference_full_minus_wave": {
+        "count": 7,
+        "max": 12.0,
+        "mean": 5.428571428571429,
+        "median": 4.0,
+        "min": 0.0,
+        "p90": 12.0,
+        "p95": 12.0,
+        "p99": 12.0
+      },
+      "reconstructable_clicks": 67,
+      "reconstructable_flood_fill_clicks": 7,
+      "wave_count": {
+        "missing": 0,
+        "stats": {
+          "count": 67,
+          "max": 11.0,
+          "mean": 0.5223880597014925,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.7999999999999972,
+          "p95": 4.699999999999996,
+          "p99": 7.0400000000000205
+        }
+      },
+      "wave_pending_positive_max": {
+        "count": 7,
+        "max": 8.0,
+        "mean": 4.0,
+        "median": 3.0,
+        "min": 2.0,
+        "p90": 6.800000000000001,
+        "p95": 7.399999999999999,
+        "p99": 7.879999999999999
+      },
+      "wave_size_distribution": {
+        "1": 7,
+        "2": 13,
+        "3": 6,
+        "4": 3,
+        "5": 2,
+        "7": 1,
+        "8": 1,
+        "9": 2
+      },
+      "zero_region_size": {
+        "missing": 0,
+        "stats": {
+          "count": 67,
+          "max": 13.0,
+          "mean": 0.5970149253731343,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.3999999999999986,
+          "p95": 4.0,
+          "p99": 12.340000000000003
+        }
+      }
+    },
+    "with_flood_fill": {
+      "boundary_size": {
+        "missing": 1,
+        "stats": {
+          "count": 22,
+          "max": 22.0,
+          "mean": 11.818181818181818,
+          "median": 10.5,
+          "min": 3.0,
+          "p90": 20.0,
+          "p95": 21.9,
+          "p99": 22.0
+        }
+      },
+      "cascade_size_distribution": {
+        "4": 1,
+        "10": 5,
+        "11": 4,
+        "12": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "25": 1,
+        "29": 2,
+        "32": 1,
+        "34": 1,
+        "37": 1,
+        "39": 1,
+        "41": 1
+      },
+      "clicks": 23,
+      "flood_fill_after_structure": {
+        "boundary_union_variable_count": {
+          "count": 22,
+          "max": 32.0,
+          "mean": 15.909090909090908,
+          "median": 16.5,
+          "min": 5.0,
+          "p90": 24.800000000000004,
+          "p95": 25.95,
+          "p99": 30.739999999999995
+        },
+        "constraint_count": {
+          "count": 22,
+          "max": 122.0,
+          "mean": 39.59090909090909,
+          "median": 30.0,
+          "min": 3.0,
+          "p90": 96.10000000000005,
+          "p95": 103.69999999999999,
+          "p99": 118.21999999999998
+        },
+        "frontier_variables": {
+          "count": 22,
+          "max": 189.0,
+          "mean": 63.04545454545455,
+          "median": 52.5,
+          "min": 5.0,
+          "p90": 160.20000000000005,
+          "p95": 173.39999999999998,
+          "p99": 185.84999999999997
+        },
+        "largest_component": {
+          "count": 22,
+          "max": 116.0,
+          "mean": 33.45454545454545,
+          "median": 23.5,
+          "min": 5.0,
+          "p90": 87.40000000000006,
+          "p95": 90.94999999999999,
+          "p99": 110.74999999999997
+        },
+        "min_fill_width_max": {
+          "count": 22,
+          "max": 7.0,
+          "mean": 5.454545454545454,
+          "median": 6.0,
+          "min": 4.0,
+          "p90": 7.0,
+          "p95": 7.0,
+          "p99": 7.0
+        }
+      },
+      "flood_fill_clicks": 23,
+      "full_region_pending_positive_max": {
+        "count": 22,
+        "max": 22.0,
+        "mean": 11.818181818181818,
+        "median": 10.5,
+        "min": 3.0,
+        "p90": 20.0,
+        "p95": 21.9,
+        "p99": 22.0
+      },
+      "new_revealed": {
+        "missing": 1,
+        "stats": {
+          "count": 22,
+          "max": 41.0,
+          "mean": 19.545454545454547,
+          "median": 14.5,
+          "min": 4.0,
+          "p90": 36.70000000000001,
+          "p95": 38.89999999999999,
+          "p99": 40.58
+        }
+      },
+      "pending_positive_max_difference_full_minus_wave": {
+        "count": 22,
+        "max": 16.0,
+        "mean": 6.818181818181818,
+        "median": 4.5,
+        "min": 0.0,
+        "p90": 12.0,
+        "p95": 14.849999999999998,
+        "p99": 15.79
+      },
+      "reconstructable_clicks": 22,
+      "reconstructable_flood_fill_clicks": 22,
+      "wave_count": {
+        "missing": 1,
+        "stats": {
+          "count": 22,
+          "max": 11.0,
+          "mean": 5.181818181818182,
+          "median": 5.0,
+          "min": 2.0,
+          "p90": 7.900000000000002,
+          "p95": 10.849999999999998,
+          "p99": 11.0
+        }
+      },
+      "wave_pending_positive_max": {
+        "count": 22,
+        "max": 10.0,
+        "mean": 5.0,
+        "median": 5.0,
+        "min": 2.0,
+        "p90": 7.900000000000002,
+        "p95": 8.0,
+        "p99": 9.579999999999998
+      },
+      "wave_size_distribution": {
+        "1": 23,
+        "2": 26,
+        "3": 15,
+        "4": 13,
+        "5": 12,
+        "6": 4,
+        "7": 6,
+        "8": 7,
+        "9": 4,
+        "10": 4
+      },
+      "zero_region_size": {
+        "missing": 1,
+        "stats": {
+          "count": 22,
+          "max": 20.0,
+          "mean": 7.7272727272727275,
+          "median": 4.0,
+          "min": 1.0,
+          "p90": 18.60000000000001,
+          "p95": 19.0,
+          "p99": 19.79
+        }
+      }
+    },
+    "without_flood_fill": {
+      "boundary_size": {
+        "missing": 0,
+        "stats": {
+          "count": 236,
+          "max": 1.0,
+          "mean": 0.9491525423728814,
+          "median": 1.0,
+          "min": 0.0,
+          "p90": 1.0,
+          "p95": 1.0,
+          "p99": 1.0
+        }
+      },
+      "cascade_size_distribution": {},
+      "clicks": 236,
+      "flood_fill_after_structure": {
+        "boundary_union_variable_count": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "p90": null,
+          "p95": null,
+          "p99": null
+        },
+        "constraint_count": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "p90": null,
+          "p95": null,
+          "p99": null
+        },
+        "frontier_variables": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "p90": null,
+          "p95": null,
+          "p99": null
+        },
+        "largest_component": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "p90": null,
+          "p95": null,
+          "p99": null
+        },
+        "min_fill_width_max": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "p90": null,
+          "p95": null,
+          "p99": null
+        }
+      },
+      "flood_fill_clicks": 0,
+      "full_region_pending_positive_max": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "min": null,
+        "p90": null,
+        "p95": null,
+        "p99": null
+      },
+      "new_revealed": {
+        "missing": 0,
+        "stats": {
+          "count": 236,
+          "max": 1.0,
+          "mean": 0.9491525423728814,
+          "median": 1.0,
+          "min": 0.0,
+          "p90": 1.0,
+          "p95": 1.0,
+          "p99": 1.0
+        }
+      },
+      "pending_positive_max_difference_full_minus_wave": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "min": null,
+        "p90": null,
+        "p95": null,
+        "p99": null
+      },
+      "reconstructable_clicks": 236,
+      "reconstructable_flood_fill_clicks": 0,
+      "wave_count": {
+        "missing": 0,
+        "stats": {
+          "count": 236,
+          "max": 0.0,
+          "mean": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.0,
+          "p95": 0.0,
+          "p99": 0.0
+        }
+      },
+      "wave_pending_positive_max": {
+        "count": 0,
+        "max": null,
+        "mean": null,
+        "median": null,
+        "min": null,
+        "p90": null,
+        "p95": null,
+        "p99": null
+      },
+      "wave_size_distribution": {},
+      "zero_region_size": {
+        "missing": 0,
+        "stats": {
+          "count": 236,
+          "max": 0.0,
+          "mean": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "p90": 0.0,
+          "p95": 0.0,
+          "p99": 0.0
+        }
+      }
+    }
+  },
+  "limitations": {
+    "public_reconstruction_gaps": [
+      {
+        "click_number": 47,
+        "history_id": "C03",
+        "reason": "terminal-zero-without-next-transcript"
+      }
+    ],
+    "requires_binary_constraint_experiment": [
+      "comparar costo VE real de CELL vs WAVE vs FULL-REGION",
+      "medir frontier/componentes/min-fill width bajo sem\u00e1ntica binaria 0/>0 durante expansi\u00f3n"
+    ]
+  },
+  "metadata": {
+    "clicks_total": 259,
+    "controlled_histories": 4,
+    "corpus_path": "benchmarks/conditional-sampling-histories-30x16-20260831.jsonl",
+    "histories_total": 16,
+    "notes": [
+      "Usa exclusivamente transcripts p\u00fablicos ya persistidos.",
+      "No aproxima constraints binarias 0/>0; eso requiere experimento posterior.",
+      "No convierte conteos estructurales en gas ni en costo VE sin implementaci\u00f3n real."
+    ],
+    "public_only_histories": 12,
+    "raw_path": "benchmarks/flood-fill-structure-30x16-20260831.jsonl"
+  },
+  "top_flood_fills": [
+    {
+      "boundary": 22,
+      "click_number": 36,
+      "history_id": "C03",
+      "max_pending_full_region": 22,
+      "max_pending_wave": 7,
+      "phase": "early",
+      "total_revealed": 41,
+      "waves": 6,
+      "zeros": 19
+    },
+    {
+      "boundary": 20,
+      "click_number": 29,
+      "history_id": "C01",
+      "max_pending_full_region": 20,
+      "max_pending_wave": 8,
+      "phase": "early",
+      "total_revealed": 39,
+      "waves": 6,
+      "zeros": 19
+    },
+    {
+      "boundary": 22,
+      "click_number": 27,
+      "history_id": "C03",
+      "max_pending_full_region": 22,
+      "max_pending_wave": 6,
+      "phase": "early",
+      "total_revealed": 37,
+      "waves": 8,
+      "zeros": 15
+    },
+    {
+      "boundary": 14,
+      "click_number": 5,
+      "history_id": "C04",
+      "max_pending_full_region": 14,
+      "max_pending_wave": 6,
+      "phase": "early",
+      "total_revealed": 34,
+      "waves": 6,
+      "zeros": 20
+    },
+    {
+      "boundary": 20,
+      "click_number": 8,
+      "history_id": "P07",
+      "max_pending_full_region": 20,
+      "max_pending_wave": 8,
+      "phase": "early",
+      "total_revealed": 32,
+      "waves": 5,
+      "zeros": 12
+    },
+    {
+      "boundary": 16,
+      "click_number": 1,
+      "history_id": "P06",
+      "max_pending_full_region": 16,
+      "max_pending_wave": 4,
+      "phase": "early",
+      "total_revealed": 29,
+      "waves": 11,
+      "zeros": 13
+    },
+    {
+      "boundary": 16,
+      "click_number": 1,
+      "history_id": "C04",
+      "max_pending_full_region": 16,
+      "max_pending_wave": 4,
+      "phase": "early",
+      "total_revealed": 29,
+      "waves": 11,
+      "zeros": 13
+    },
+    {
+      "boundary": 16,
+      "click_number": 44,
+      "history_id": "C04",
+      "max_pending_full_region": 16,
+      "max_pending_wave": 4,
+      "phase": "mid",
+      "total_revealed": 25,
+      "waves": 6,
+      "zeros": 9
+    },
+    {
+      "boundary": 15,
+      "click_number": 35,
+      "history_id": "C04",
+      "max_pending_full_region": 15,
+      "max_pending_wave": 10,
+      "phase": "early",
+      "total_revealed": 19,
+      "waves": 3,
+      "zeros": 4
+    },
+    {
+      "boundary": 11,
+      "click_number": 9,
+      "history_id": "C03",
+      "max_pending_full_region": 11,
+      "max_pending_wave": 3,
+      "phase": "early",
+      "total_revealed": 18,
+      "waves": 7,
+      "zeros": 7
+    }
+  ]
+}

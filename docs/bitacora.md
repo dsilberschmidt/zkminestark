@@ -1670,8 +1670,44 @@ Decisión de cierre:
   auditado, no como rama de producción
 
 La nota detallada del experimento y la tabla longitudinal quedan en
-`docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md`. El expediente detallado de esta
-etapa queda preservado en `docs/PENDING-REVIEW-2E3.md`.
+`docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md`. El estado de continuidad entre
+sesiones pasa a `docs/PENDING-REVIEW.md`.
+
+---
+
+## 2026-08-31 — Análisis estructural de flood-fill sobre el corpus histórico largo
+
+Se cerró un primer análisis estructural de flood-fill usando únicamente el
+corpus público congelado `30×16/99`:
+
+- fuente única:
+  `benchmarks/conditional-sampling-histories-30x16-20260831.jsonl`
+- cobertura:
+  `16` histories, `259` clicks
+- clicks con outcome `0`:
+  `23`
+- flood-fills completamente reconstruibles:
+  `22`
+- gap del dataset:
+  `C03` click `47`, último `0` terminal sin transcript posterior
+
+Resultado principal:
+
+- sin flood-fill, `new_revealed` tiene mediana `1` y max `1`
+- con flood-fill, `new_revealed` tiene mediana `14.5`, p95 `38.9`, max `41`
+- `WAVE` acumula hasta `10` positivos pendientes
+- `FULL-REGION` acumula hasta `22`
+
+Lectura de cierre:
+
+- flood-fill sí parece un multiplicador estructural relevante
+- `CELL`, `WAVE` y `FULL-REGION` sí parecen lo bastante distintas como para
+  justificar comparación posterior
+- no hay evidencia suficiente para descartar ninguna antes de implementar la
+  semántica real `0/>0`
+
+El detalle técnico, la metodología y los artefactos permanentes quedan en
+`docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md`.
 
 **12×12/20 historias**:
 - width range: 1–7, max 7 en 5 casos
