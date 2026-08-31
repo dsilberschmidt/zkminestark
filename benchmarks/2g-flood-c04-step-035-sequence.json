@@ -1,0 +1,155 @@
+{
+  "date": "2026-08-31",
+  "case_id": "2g-flood-c04-step-035-cell-sequence",
+  "source": "benchmarks/conditional-sampling-2f-full-20260831.jsonl",
+  "history_id": "C04",
+  "click_number": 35,
+  "clicked_cell": 252,
+  "policy": "CELL",
+  "new_revealed": 19,
+  "step_count": 18,
+  "wave_count": 2,
+  "selection_rationale": "Medium real flood-fill already frozen in 2F: 19 revealed cells across 18 sequential CELL evaluations, clearly beyond isolated CELL but below the largest 34-41 reveal cascades.",
+  "instrumentation": {
+    "bigint_additions": 116336,
+    "bigint_multiplications": 132722,
+    "binary_classifications": 0,
+    "dense_factor_capacity_touched": 2865478,
+    "exact_refinements": 18,
+    "max_factor_scope_variables": 8,
+    "max_induced_or_min_fill_width": 7,
+    "max_integer_bit_length": 231,
+    "nonzero_factor_entries_processed": 60071,
+    "peak_factor_entries": 86016,
+    "peak_nonzero_factor_entries": 220,
+    "total_solves": 18
+  },
+  "steps_summary": [
+    {
+      "cell_index": 221,
+      "oracle_clue": 1,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 185,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 222,
+      "oracle_clue": 0,
+      "counts_positive": 2,
+      "max_outcome_count_bitlen": 185,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 223,
+      "oracle_clue": 1,
+      "counts_positive": 4,
+      "max_outcome_count_bitlen": 184,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 251,
+      "oracle_clue": 0,
+      "counts_positive": 2,
+      "max_outcome_count_bitlen": 183,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 253,
+      "oracle_clue": 1,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 182,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 281,
+      "oracle_clue": 1,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 181,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 282,
+      "oracle_clue": 1,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 181,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 283,
+      "oracle_clue": 0,
+      "counts_positive": 4,
+      "max_outcome_count_bitlen": 180,
+      "wave_index": 1
+    },
+    {
+      "cell_index": 191,
+      "oracle_clue": 1,
+      "counts_positive": 1,
+      "max_outcome_count_bitlen": 179,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 192,
+      "oracle_clue": 1,
+      "counts_positive": 2,
+      "max_outcome_count_bitlen": 179,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 193,
+      "oracle_clue": 2,
+      "counts_positive": 2,
+      "max_outcome_count_bitlen": 176,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 220,
+      "oracle_clue": 2,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 176,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 250,
+      "oracle_clue": 1,
+      "counts_positive": 2,
+      "max_outcome_count_bitlen": 175,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 254,
+      "oracle_clue": 2,
+      "counts_positive": 4,
+      "max_outcome_count_bitlen": 173,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 280,
+      "oracle_clue": 2,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 172,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 284,
+      "oracle_clue": 1,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 171,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 313,
+      "oracle_clue": 1,
+      "counts_positive": 3,
+      "max_outcome_count_bitlen": 171,
+      "wave_index": 2
+    },
+    {
+      "cell_index": 314,
+      "oracle_clue": 2,
+      "counts_positive": 4,
+      "max_outcome_count_bitlen": 169,
+      "wave_index": 2
+    }
+  ]
+}

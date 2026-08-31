@@ -1,0 +1,174 @@
+{
+  "experiment": "2G Phase 3 — bigint u512 + joint VE + CELL evaluation 2a-109",
+  "date": "2026-08-31",
+  "toolchain": {
+    "scarb": "2.13.1",
+    "cairo": "2.13.1",
+    "snforge": "0.62.1",
+    "sierra": "1.7.0"
+  },
+  "resource_metric": "l2_gas (sierra gas); l1_gas=0 and l1_data_gas=0 for all tests (pure computation, no syscalls)",
+  "status": "MEASURED — Phase 3 executed locally; Phase 4 local confirmations persisted on 2026-08-31",
+
+  "bigint_u512": {
+    "description": "u512 = 4×u128 limbs; custom add/mul_small/div_small; binom iterative C(n,k)",
+    "motivation": "binom(465, k) for k≤99 reaches 343–344 bits; intermediate products ≤24×binom ~ 2^466; all fit in 512 bits",
+    "max_bit_length_needed": 466,
+    "max_bit_length_available": 512,
+    "margin_bits": 46,
+    "operations_available": ["u512_add", "u512_mul_small (×u32)", "u512_div_small (exact /u32)", "binom(n,k)->u512", "binom_range"],
+    "operations_not_needed": ["u512×u512 (too expensive, not required for CELL eval)"]
+  },
+
+  "joint_ve_fix": {
+    "description": "Bug found and fixed in joint VE: x_mine and nbrs must be stored-only (set only in eliminate_variable, never in constraint_factor or join_factors). Original constraint_factor incorrectly computed x_mine/nbrs from live mask, causing double-counting when variables appear in multiple joined constraints.",
+    "root_cause": "constraint_factor set x_mine=mine_bit_at_var(mask), but eliminate_variable also added bit_val when eliminating x_var/neighbor. For shared variables (like x_var=225 appearing in both C0 and C1), this double-counted.",
+    "fix": "constraint_factor: always x_mine=0, nbrs=0. join_factors: simple le.x_mine+re.x_mine (safe since stored-only). eliminate_variable: unchanged (accumulates bit_val on elimination).",
+    "secondary_fix": "join_factors now takes x_var/neighbor_vars parameters to signal joint vs ordinary VE intent, though body uses simple addition in both cases.",
+    "join_factors_params_added": true
+  },
+
+  "2a109_corpus_case": {
+    "case_id": "2a-109",
+    "clicked_cell": 225,
+    "board": "30x16/99",
+    "special_component": {
+      "n_variables": 10,
+      "n_constraints": 2,
+      "x_var": 225,
+      "neighbor_vars": [224, 226, 256],
+      "elimination_order_used": [223, 224, 225, 226, 253, 256, 283, 284, 285, 286]
+    },
+    "unconstrained_other_count": 465,
+    "remaining_mines": 99,
+    "joint_counts_expected": {
+      "(1,0,0)": 2,
+      "(1,0,1)": 1,
+      "(1,1,0)": 1,
+      "(2,0,0)": 3,
+      "(2,0,1)": 6
+    },
+    "joint_counts_status": "EXACT MATCH with Python oracle",
+    "outcome_counts_expected": {
+      "mine": "9040557845611419596542982750139841871473942469813632521875685849104975802452721315622994277207606265800",
+      "k=0": "12482796598748057883177089682781828055595296368251529780073827639107662104554617271155847496399594132500",
+      "k=1": "21521961173451245429176507217697013988346993335836937799838394279029810036292249195189610613612466227500",
+      "k=2": "11785130038944594824753678455516957357558834515487198206132293847014080432902729939033864010596038795700",
+      "k=3": "2618970762418893203888813571219987332501691121805866858274851676027305678068957626064788382009236284500",
+      "k=4": "205461916989181961169006993347513895621214920823849784634792313442238044389475684641802120102811460800"
+    },
+    "outcome_counts_status": "EXACT MATCH with Python 2E2 oracle (verified u512 limb-by-limb)",
+    "bit_lengths": {
+      "binom_465_98": 343,
+      "binom_465_97": 343,
+      "binom_465_96": 342,
+      "binom_465_95": 342,
+      "binom_465_94": 341,
+      "max_output_count": 344
+    }
+  },
+
+  "gas_measurements": {
+    "note": "All l2_gas values measured with snforge --detailed-resources. l1_gas=l1_data_gas=0 for all (pure sierra computation, no contract storage).",
+
+    "bigint_microbenchmarks": {
+      "b1_u512_add_basic": 13840,
+      "b2_u512_add_carry_limb1": 13840,
+      "b3_u512_add_crosses_256bit": 13840,
+      "b4_u512_mul_small_basic": 33320,
+      "b4_u512_mul_small_carry": 33320,
+      "b5_binom_small_c30_2_c10_0_c5_5": 337480,
+      "b6_binom_crosses_256_c480_99": 4480470,
+      "b7_binom_344bit_c465_98": 4435520,
+      "b8_binom_461bit_range_c400_130": 5877180
+    },
+
+    "joint_ve_2a109": {
+      "j1_joint_component_only": 23387266,
+      "j2_full_cell_eval_bigint_convolution": 45366416
+    },
+
+    "phase4_local_confirmations": {
+      "scarb_build": "PASS without warnings after import cleanup",
+      "suite_default": {
+        "tests_total": 33,
+        "tests_pass": 32,
+        "note": "j3 exhausted the default step limit before rerun"
+      },
+      "j3_rerun_with_max_n_steps_100000000": {
+        "status": "PASS",
+        "l2_gas": 2071551573
+      },
+      "j2b_recurrence_coupling_2a109": 4976940,
+      "j4_recurrence_coupling_p12_step_005": 5149160
+    },
+
+    "ordinary_ve_baseline_for_comparison": {
+      "f3_4var_2constr": 1441024,
+      "f6_chain_10var": 9025594,
+      "f7_chain_16var": 16984074
+    },
+
+    "derived_estimates": {
+      "joint_ve_overhead_vs_ordinary": "j1=23.4M gas for 10-var 2-constr; f6=9.0M for 10-var 8-constr. Joint overhead ~2.6x for this topology.",
+      "full_cell_eval_j2": "45.4M gas = j1 (23.4M) + binom convolution (22.0M). Binom 5 iterations × ~4.4M each.",
+      "binom_cost_per_iteration": "~4.4M gas per binom(465,k) call (98 multiply-divide steps each)",
+      "extrapolation_caution": "These are test-function gas costs including all setup. Real contract call gas would include additional overhead."
+    }
+  },
+
+  "parity_summary": {
+    "phase3_tests_total": 28,
+    "phase3_tests_pass": 28,
+    "phase3_tests_fail": 0,
+    "phase4_local_suite_total": 33,
+    "phase4_local_suite_pass": 33,
+    "phase4_local_suite_note": "Default run finished 32/33 because j3 hit the default step limit; rerun of j3 with --max-n-steps 100000000 passed.",
+    "bigint_tests": ["b1","b2","b3","b4×2","b5","b6","b7","b8"],
+    "joint_ve_tests": ["j1","j2","j3"],
+    "ordinary_ve_baseline_tests": ["f0×3","f1×2","f2×2","f3","f4","f5","f6","f7"],
+    "dict_equiv_tests": ["d1","d2","d3","d4","d5"],
+    "recurrence_tests": ["b9","b10","j2b","j4"],
+    "all_exact_match": true
+  },
+
+  "phase4_semantic_corrections": {
+    "j2b": "Not a full CELL. Starts from after-local coefficients already materialized and measures recurrence binomial coupling plus final combination.",
+    "j4": "Not a full CELL. Same as j2b for P12-step-005.",
+    "j2": "Runs joint VE, but the local convolution is materialized/hardcoded inside the test rather than executed as an algorithm.",
+    "approximate_comparisons": {
+      "2a_109": {
+        "joint_ve": 23387266,
+        "recurrence_coupling": 4976940,
+        "approx_joint_plus_recurrence": 28364206,
+        "remaining_gap": "small local convolution still not executed"
+      },
+      "p12_step_005": {
+        "joint_ve": 2071551573,
+        "recurrence_coupling": 5149160,
+        "approx_joint_plus_recurrence": 2076700733,
+        "remaining_gap": "local convolution still not executed"
+      }
+    }
+  },
+
+  "first_bottleneck": {
+    "identified": "Gas budget",
+    "measured_j2": 45366416,
+    "starknet_max_gas_execute": "approximately 10M-1000M depending on block type; j2 likely feasible but requires profiling on devnet",
+    "note": "The 45M sierra gas for j2 is a single-function snforge cost. This corresponds to VE on the *cheapest* real case. The corpus has cases with up to 103 factor entries and more complex topologies. Exact on-chain limits require devnet measurement.",
+    "next_bottleneck": "If gas is acceptable: confidential board state (no persistent encrypted state on Starknet). If gas is too high: board reduction (9x9/10 or simpler game variant)."
+  },
+
+  "incognitas_a_f_added": true,
+  "files_new_this_phase": [
+    "contracts/zkmine_2g/src/bigint.cairo",
+    "benchmarks/2g-fixture-2a109-oracle.json",
+    "benchmarks/2g-cairo-bigint-cell-20260831.json"
+  ],
+  "files_modified_this_phase": [
+    "contracts/zkmine_2g/src/ve.cairo (joint VE + join_factors fix)",
+    "contracts/zkmine_2g/src/lib.cairo (pub mod bigint)",
+    "contracts/zkmine_2g/src/tests/test_ve.cairo (Phase 3 tests b1-b8, j1, j2)"
+  ]
+}

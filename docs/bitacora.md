@@ -1849,3 +1849,327 @@ pendiente de implementación y benchmark real.
 - `scripts/conditional_sampling_treewidth_augmented_prestudy.py`
 - `benchmarks/conditional-sampling-treewidth-prestudy-20260830.jsonl`
 - `benchmarks/conditional-sampling-treewidth-augmented-20260830.jsonl`
+
+---
+
+## 2026-08-31T12:46 — Apertura 2G: Cairo CELL cost translation
+
+Tanda de apertura del experimento 2G. Inspección completa del repo Cairo existente,
+análisis de bit lengths (max 471 bits en instrumentation.max_integer_bit_length de 2F),
+confirmación de que u256 es insuficiente para corpus-scale.
+
+Implementación inicial: paquete standalone `contracts/zkmine_2g/` con VE primitives
+en Cairo (constraint_factor, join_factors, eliminate_variable, count_ordinary_component).
+12/12 tests pasan. Paridad exacta con Python verificada en todos los fixtures.
+
+Mediciones reales de sierra gas (snforge 0.62.1 --detailed-resources):
+- constraint_factor 3-var/rhs=1: ~174K–200K sierra gas
+- join 3-var + 3-var (2 overlap): ~1.24M sierra gas
+- full ordinary VE 4-var/2-constraints: ~1.46M sierra gas
+- chain 10-var/8-constraints: ~9.1M sierra gas
+- chain 16-var/14-constraints: ~17.1M sierra gas
+
+Extrapolación para corpus real 30×16/99 (23-26 vars, higher treewidth): ~30-60M sierra gas
+por evaluación de celda en el esquema actual.
+
+Primer cuello de botella observado: la función `accumulate` en join_factors hace O(n²)
+reconstrucción de arrays por cada entrada (no hay hashmap en Cairo). Para 103 nonzero entries
+esto sería ~10K operaciones de Array rebuild. Optimización clara disponible.
+
+Estado: archivos nuevos en contracts/zkmine_2g/, benchmark en benchmarks/2g-cairo-ve-fixtures-20260831.json.
+
+---
+## 2026-08-31T15:00 — Experimento 2G Phase 2: accumulator shootout
+
+### Qué se hizo
+- Auditado rangos reales del state key (corpus 2E2): mines_used llega a 30, NO acotado por scope_len
+- Dense table descartada: 39,680 slots inviable en Cairo (0.26% ocupancy)
+- Implementado Alt A: Felt252Dict<u128> accumulator en ve_dict.cairo (join_factors_dict, eliminate_variable_dict, count_ordinary_component_dict, pack_key)
+- Añadidos 5 tests de equivalencia dict/baseline (d1..d5): 17/17 tests pasan
+- Añadida sección de contingencias a INCOGNITAS.md
+
+### Resultado del shootout
+
+| Fixture | Baseline (gas) | Dict (gas) | Ratio dict/baseline |
+|---------|---------------|------------|---------------------|
+| f3 (4-var) | 1,457,904 | 3,240,418 | 2.22× |
+| f6 (10-var) | 9,116,144 | 19,380,178 | 2.13× |
+| f7 (16-var) | 17,144,044 | 36,253,378 | 2.11× |
+
+**Ganador: BASELINE** — el overhead del squash de Felt252Dict domina sobre las tablas sparse pequeñas (≤103 entries). El O(n²) con n pequeño tiene constante suficientemente baja.
+
+### Archivos nuevos/modificados Phase 2
+- contracts/zkmine_2g/src/ve_dict.cairo  (nuevo)
+- contracts/zkmine_2g/src/lib.cairo  (M — pub mod ve_dict)
+- contracts/zkmine_2g/src/tests/test_ve.cairo  (M — 5 tests dict equiv)
+- benchmarks/2g-cairo-accumulator-20260831.json  (nuevo)
+- docs/INCOGNITAS.md  (M — contingencias)
+- docs/2g-checkpoint.md  (M — rangos + plan)
+
+---
+
+## 2026-08-31T20:00 — 2G Phase 3: bigint u512 + joint VE + 2a-109 CELL evaluation
+
+### Resumen
+
+Phase 3 completada. 28/28 tests pasan. Paridad exacta con Python 2E2 oracle.
+
+### Logros
+
+1. **bigint.cairo** — u512 desde cero: add (con carry chain), mul_small (×u32), div_small (exact /u32), binom(n,k) iterativo. Justificación: binom(465,k≤99) ≤ 343 bits; productos intermedios ≤ 2^466; todo cabe en u512 (512 bits).
+
+2. **Bug crítico encontrado y corregido en VE joint** — constraint_factor inicializaba x_mine/nbrs desde la máscara live. Al eliminar el mismo variable, eliminate_variable los sumaba de nuevo: doble conteo. Fix: constraint_factor siempre x_mine=0, nbrs=0. Solo eliminate_variable acumula. join_factors simplificado (suma directa, sin filtro).
+
+3. **j1 — joint VE 2a-109**: verified exact 5 entries {(1,0,0):2,(1,0,1):1,(1,1,0):1,(2,0,0):3,(2,0,1):6}. l2_gas=23,387,266.
+
+4. **j2 — full CELL eval 2a-109**: joint VE + convolucion local + binom(465,94-98) × coeffs. 6 outcome counts verificados limb-a-limb contra Python oracle. l2_gas=45,366,416.
+
+5. **b1-b8 — bigint boundary tests**: 256-bit crossing, 344-bit binom(465,98), 461-bit range, exact limb values. Todos pasan.
+
+### Gas medido (l2_gas, sierra, snforge --detailed-resources)
+
+| Test | l2_gas |
+|------|--------|
+| b7 binom(465,98) [343 bits] | 4,435,520 |
+| b6 binom(480,99) [crosses 256] | 4,480,470 |
+| j1 joint VE component | 23,387,266 |
+| j2 full CELL eval 2a-109 | 45,366,416 |
+| f7 chain 16-var ordinary VE | 16,984,074 |
+
+### Archivos nuevos/modificados
+
+- contracts/zkmine_2g/src/bigint.cairo (nuevo)
+- contracts/zkmine_2g/src/ve.cairo (M — fix constraint_factor + join_factors + count_joint_component)
+- contracts/zkmine_2g/src/lib.cairo (M — pub mod bigint)
+- contracts/zkmine_2g/src/tests/test_ve.cairo (M — Phase 3 tests: b1-b8, j1, j2)
+- benchmarks/2g-fixture-2a109-oracle.json (nuevo)
+- benchmarks/2g-cairo-bigint-cell-20260831.json (nuevo)
+
+---
+
+## 2026-08-31T23:10 — 2G Phase 4 prep: binomial recurrence + second real case + flood sequence fixture
+
+### Resumen
+
+Se dejó preparada la siguiente tanda de 2G sin deshacer el working tree existente:
+
+- `binom_range_from_anchor(n, k_lo, k_anchor, k_hi)` agregado en Cairo usando recurrencias exactas forward/backward sobre `u512`, con división exacta asserted.
+- baseline `binom()` y `binom_range()` conservados intactos para comparación.
+- tests nuevos añadidos para:
+  - igualdad baseline vs recurrence en `C(465,94..98)` para `2a-109`
+  - igualdad baseline vs recurrence en `C(452,88..94)` para el segundo caso real
+  - paridad final `2a-109` usando recurrence
+  - joint exacto del segundo caso real `P12-step-005`
+  - outcome counts exactos del segundo caso real con recurrence
+
+### Audit coupling
+
+- `2a-109` usa exactamente `k = 94,95,96,97,98` sobre `binom(465,k)`.
+- anchor elegido para recurrence en ese caso: `k0 = 96`.
+- segundo caso real seleccionado: `P12-step-005`, `clicked_cell=54`.
+- ese caso usa exactamente `k = 88,89,90,91,92,93,94` sobre `binom(452,k)`.
+- anchor elegido: `k0 = 91`.
+
+### Segundo caso real
+
+Fixture autocontenido persistido:
+
+- `benchmarks/2g-fixture-p12-step-005-oracle.json`
+
+Criterios persistidos de selección frente a `2a-109`:
+
+- special component variables: `10 -> 20`
+- special constraint count: `2 -> 5`
+- joins: `1 -> 4`
+- peak_factor_entries: `5120 -> 9216`
+- effective_width: `6 -> 6`
+
+Joint exacto del componente special:
+
+- `11` entradas
+- `max joint coefficient = 120`
+- after-local: `29` entradas
+- `distinct k = 88..94`
+
+### Flood/cascade
+
+Secuencia representativa ya congelada y persistida:
+
+- `benchmarks/2g-flood-c04-step-035-sequence.json`
+
+Resumen:
+
+- `history_id=C04`, `click_number=35`, `clicked_cell=252`
+- `new_revealed=19`
+- `step_count=18`
+- `wave_count=2`
+- instrumentation Python/2F: `peak_factor_entries=86016`, `peak_nonzero_factor_entries=220`, `max_integer_bit_length=231`
+
+### Bloqueo local
+
+No se pudieron ejecutar en este workspace las nuevas mediciones Cairo (`baseline coupling`, `recurrence coupling`, `j2 optimizado`, `segundo CELL`, `flood sequence`) porque `scarb` y `snforge` no están disponibles en `PATH` ni aparecieron bajo `/snap` durante la búsqueda local.
+
+Se persistió checkpoint técnico:
+
+- `benchmarks/2g-binom-recurrence-audit-20260831.json`
+
+---
+
+## 2026-08-31T23:55 — 2G Phase 4: P12 joint VE cost decomposition instrumentation
+
+### Resumen
+
+Se añadió una ruta de profiling en Cairo para descomponer el coste de `count_joint_component` sobre `P12-step-005` sin alterar la semántica baseline ni la paridad congelada de `j3`.
+
+### Instrumentación nueva
+
+- `contracts/zkmine_2g/src/ve.cairo`
+  - `constraint_factor_with_profile`
+  - `join_factors_profile`
+  - `eliminate_variable_profile`
+  - `count_joint_component_profile`
+  - perfiles nuevos:
+    - `FactorProfile`
+    - `AccumulateProfile`
+    - `JoinProfile`
+    - `EliminationProfile`
+    - `VeStepProfile`
+    - `JointProfileResult`
+- métricas explicitadas por etapa:
+  - `scope_len`
+  - `dense_capacity`
+  - `entry_count`
+  - `nonzero_entry_count`
+  - `candidate_pair_comparisons`
+  - `compatible_pair_matches`
+  - `accumulate_calls`
+  - `accumulate_scanned_entries`
+  - `accumulate_copied_entries`
+  - `bigint_multiplications`
+  - `bigint_additions`
+  - `eliminated_entries_with_bit_set`
+
+### Etapas P12 fijadas
+
+Join efectivo real en `P12-step-005`:
+
+- stage 1: eliminar `54`
+- stage 2: eliminar `84`
+- stage 3: eliminar `112`
+- stage 4: eliminar `115`
+
+Las eliminaciones `113`, `116`, `144` y `174` siguen existiendo, pero se separan como cola monofactor y no se confunden con joins.
+
+### Checkpoints / oráculos
+
+- fixture técnico nuevo:
+  - `benchmarks/2g-p12-joint-stage-oracle-20260831.json`
+- tests autocontenidos nuevos en:
+  - `contracts/zkmine_2g/src/tests/test_ve.cairo`
+  - `j5_p12_stage0_constraint_factor_profiles`
+  - `j6_p12_profile_trace_join_steps`
+  - `j7_p12_stage1_join_elimination_from_checkpoint`
+  - `j8_p12_stage2_join_elimination_from_checkpoint`
+  - `j9_p12_stage3_join_elimination_from_checkpoint`
+  - `j10_p12_stage4_join_to_final_joint_from_checkpoint`
+
+### Datos locales confirmados persistidos
+
+Persistidos en artefactos/Docs como resultados locales confirmados:
+
+- `scarb build`: PASS, sin warnings tras limpieza de imports
+- suite: `33` tests
+  - corrida default: `32 PASS`, `j3` agotó el step limit default
+  - rerun `j3` con `--max-n-steps 100000000`: PASS
+- `j1 joint VE 2a-109 = 23,387,266`
+- `j2 baseline 2a-109 = 45,366,416`
+- `j2b recurrence coupling = 4,976,940`
+- `j3 joint VE P12-step-005 = 2,071,551,573`
+- `j4 P12 recurrence coupling = 5,149,160`
+
+Corrección semántica persistida:
+
+- `j2b` no es CELL completo
+- `j4` no es CELL completo
+- `j2` sí ejecuta joint VE, pero la convolución local sigue materializada en el test
+
+### Limitación de este workspace
+
+En este workspace concreto siguen sin aparecer `scarb` ni `snforge` en `PATH`, así que no pude re-ejecutar aquí esas mediciones; solo quedó preparado el código/fixture/documentación para correrlas fuera de este entorno sin perder contexto 404-safe.
+
+
+---
+
+## 2026-08-31 — 2G Phase 4: P12 stage decomposition ejecutada y clasificada
+
+### Contenido de PENDING-REVIEW al ser reemplazado
+
+Ver commit anterior (fd016ba) para el PENDING-REVIEW previo.
+Este append registra el cierre de la descomposición P12 stage0..stage4.
+
+### Bugs corregidos
+
+**Bug j6** — `p12_vars()` usaba orden sorted `[52,53,54,55,56,82,...]`. Con ese orden, cuando el VE procesa var=54 (posición 3 en la lista), f0 todavía contiene 82 en su scope: scope=[54,82,84,112,113] con 7 entries (en vez de scope=[54,84,112,113] con 6 entries del oracle). La aserción `related_entry_count_total==22` fallaba porque el valor real era 28 (7+21). Fix: cambiar `p12_vars()` al orden del oracle [52,53,82,55,56,86,142,172,173,146,175,176,54,84,112,113,115,116,144,174].
+
+**Bug j7/j10** — Ambos tests terminaban con llamada a `count_joint_component` completo (P12 entero, ~2.07B gas), contaminando el benchmark aislado. Removidas esas llamadas. j7 y j10 ahora miden sólo su stage.
+
+### Mediciones locales
+
+- `scarb build`: PASS sin warnings
+- `snforge test` (default steps): 38/39 PASS; j3 necesita `--max-n-steps`
+- `j3 --max-n-steps 100000000`: PASS, 2,071,551,573 L2 gas (baseline intacto con nuevo ordering)
+
+Stages aislados:
+- j5 stage0 = 17,237,105
+- j7 stage1 = 19,191,812
+- j8 stage2 = 19,041,266
+- j9 stage3 = 47,519,745
+- j10 stage4 = 61,206,340
+- j6 trace completo (oracle ordering, con profiling) = 213,291,792
+
+### Clasificación: CASO A
+
+
+
+---
+
+## 2026-08-31 — 2G Phase 4 cierre: j3o oracle-order unprofiled
+
+Se añadió `j3o_joint_ve_p12_oracle_order`: mismo problema que j3, orden oracle, sin profiling.
+
+- j3 sorted order: 2,071,551,573 L2 gas
+- j3o oracle order (no profiling): 195,990,572 L2 gas
+- j6 oracle order (con profiling): 213,291,792 L2 gas
+- ratio j3/j3o ≈ 10.57×
+- profiling overhead j6/j3o ≈ 1.088× (+8.8%)
+
+Paridad: j3o produce exactamente los mismos 11 joint entries que j3.
+
+
+
+---
+
+## 2026-08-31 — 2G Phase 5: verified elimination-order hint
+
+**Auditoría del oracle-order**:
+El orden oracle [52,53,82,55,56,86,...,54,84,...] es IDÉNTICO al producido por
+`build_elimination_plan` (heurística min-fill sobre grafo primal), confirmado con
+`python3 scripts/conditional_sampling_2e2_variable_elimination.py`. Usa solo
+estructura pública de constraints. No usa counts, board oculto ni oráculos.
+
+**Implementación**:
+- `count_joint_component_with_order` en `contracts/zkmine_2g/src/ve.cairo`
+- `verify_permutation` (O(n²), clara, auditable)
+- 7 tests Phase 5 (h1-h7): 45/47 PASS; h2 y j3 exceden step limit (conocido)
+
+**Mediciones**:
+- j3o (oracle, sin verificación): 195,990,572
+- h1 (oracle + verificación): 197,319,222 → overhead: 1,328,650 (0.68%)
+- j1 (2a-109, sin verificación): 23,387,266
+- h7 (2a-109 + verificación sorted): 23,768,186 → overhead: 380,920 (1.63%)
+- h2 (sorted + verificación): 2,072,564,863
+
+**Gate**: P12 oracle order con hint verificado = 197.3M << 1.1B → PASA.
+
+**2a-109 min-fill vs sorted**: min-fill order es [223,253,283,224,225,...] (distinto de sorted [223,224,225,226,...]). No medido en Cairo; se registra diferencia estructural.
+

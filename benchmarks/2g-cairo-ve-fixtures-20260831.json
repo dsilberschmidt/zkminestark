@@ -1,0 +1,137 @@
+{
+  "experiment": "2G",
+  "date": "2026-08-31",
+  "toolchain": {
+    "scarb": "2.13.1",
+    "cairo": "2.13.1",
+    "sierra": "1.7.0",
+    "snforge": "0.62.1"
+  },
+  "metric": "sierra_gas (l2_gas from snforge --detailed-resources)",
+  "note": "All tests run on standalone Cairo package zkmine_2g. No Dojo. No builtins reported beyond sierra gas.",
+  "fixtures": [
+    {
+      "id": "f0_scope_and_entry_count",
+      "desc": "constraint_factor([0,1,2], rhs=1): check scope_len=3, entries=3",
+      "operation": "constraint_factor",
+      "scope_size": 3,
+      "rhs": 1,
+      "entries_in": 0,
+      "entries_out": 3,
+      "sierra_gas": 174121,
+      "parity_ok": true,
+      "expected": "scope_len=3, 3 entries"
+    },
+    {
+      "id": "f0_entry_masks_rhs1",
+      "desc": "constraint_factor([0,1,2], rhs=1): verify mask=1,2,4 count=1 each",
+      "operation": "constraint_factor",
+      "scope_size": 3,
+      "rhs": 1,
+      "entries_in": 0,
+      "entries_out": 3,
+      "sierra_gas": 200501,
+      "parity_ok": true,
+      "expected": "masks 1,2,4 each count=1"
+    },
+    {
+      "id": "f0_entry_masks_rhs2",
+      "desc": "constraint_factor([0,1,2], rhs=2): verify masks 3,5,6 count=1 each",
+      "operation": "constraint_factor",
+      "scope_size": 3,
+      "rhs": 2,
+      "entries_in": 0,
+      "entries_out": 3,
+      "sierra_gas": 201001,
+      "parity_ok": true,
+      "expected": "masks 3,5,6 each count=1"
+    },
+    {
+      "id": "f1_join_entry_count",
+      "desc": "join([0,1,2]/1, [1,2,3]/1): scope_len=4, entries=3",
+      "operation": "join_factors",
+      "scope_size_left": 3,
+      "scope_size_right": 3,
+      "scope_size_out": 4,
+      "entries_in_left": 3,
+      "entries_in_right": 3,
+      "entries_out": 3,
+      "sierra_gas": 1216017,
+      "parity_ok": true,
+      "expected": "scope_len=4, 3 nonzero entries"
+    },
+    {
+      "id": "f1_join_entry_masks",
+      "desc": "join([0,1,2]/1, [1,2,3]/1): verify masks 2,4,9 count=1",
+      "operation": "join_factors",
+      "scope_size_out": 4,
+      "entries_out": 3,
+      "sierra_gas": 1242797,
+      "parity_ok": true,
+      "expected": "masks 2,4,9 each count=1"
+    },
+    {
+      "id": "f2_join_eliminate_scope",
+      "desc": "join([0,1]/1,[1,2,3]/1) then eliminate var1: scope_len=3, entries=3",
+      "operation": "join + eliminate_variable",
+      "scope_size_out": 3,
+      "entries_out": 3,
+      "sierra_gas": 967052,
+      "parity_ok": true,
+      "expected": "scope_len=3, 3 entries"
+    },
+    {
+      "id": "f2_join_eliminate_entries",
+      "desc": "Verify exact entries after join+eliminate: mask=0/mines=1, mask=3/mines=0, mask=5/mines=0",
+      "operation": "join + eliminate_variable",
+      "sierra_gas": 993732,
+      "parity_ok": true,
+      "expected": "mask=0 mines=1 count=1; mask=3 mines=0 count=1; mask=5 mines=0 count=1"
+    },
+    {
+      "id": "f3_ordinary_count_solution_vector",
+      "desc": "count_ordinary_component(vars=[0,1,2,3], c1=[0,1]/1, c2=[1,2,3]/1): sol=[0,1,2,0,0]",
+      "operation": "count_ordinary_component (full VE: 2 eliminates through 4 variables)",
+      "n_variables": 4,
+      "n_constraints": 2,
+      "sierra_gas": 1457904,
+      "parity_ok": true,
+      "expected": "[0, 1, 2, 0, 0]",
+      "python_verified": true
+    },
+    {
+      "id": "f4_disjoint_join_total_count",
+      "desc": "join([0,1]/1, [2,3]/1): disjoint scopes, 4 entries, total count=4",
+      "operation": "join_factors (disjoint)",
+      "scope_size_out": 4,
+      "entries_out": 4,
+      "sierra_gas": 731000,
+      "parity_ok": true,
+      "expected": "4 entries, sum of counts=4"
+    },
+    {
+      "id": "f5_full_overlap_join",
+      "desc": "join([0,1]/1, [0,1]/1): full overlap, 2 entries, each count=1",
+      "operation": "join_factors (full overlap)",
+      "scope_size_out": 2,
+      "entries_out": 2,
+      "sierra_gas": 627336,
+      "parity_ok": true,
+      "expected": "2 entries mask=1,mask=2 each count=1"
+    }
+  ],
+  "summary": {
+    "total_tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "parity_ok_all": true,
+    "sierra_gas_range": {
+      "min": 174121,
+      "max": 1457904,
+      "f0_constraint_factor_3vars": 200501,
+      "f1_join_3vars_plus_3vars": 1242797,
+      "f2_join_plus_eliminate": 993732,
+      "f3_full_ordinary_ve_4vars": 1457904
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "experiment": "2G Cairo accumulator shootout",
+  "date": "2026-08-31",
+  "toolchain": {
+    "scarb": "2.13.1",
+    "cairo": "2.13.1",
+    "snforge": "0.62.1",
+    "sierra": "1.7.0"
+  },
+  "resource_metric": "l2_gas (sierra gas); l1_gas=0 and l1_data_gas=0 for all tests",
+  "variants": {
+    "baseline": {
+      "description": "O(n²) linear-scan + full array rebuild per insertion (original ve.cairo)",
+      "accumulate_cost": "O(n) copies per insertion, O(n²) total for n entries",
+      "count_type": "u256"
+    },
+    "dict": {
+      "description": "Felt252Dict<u128> with separate key_list + is_new dict (ve_dict.cairo)",
+      "accumulate_cost": "O(1) amortized insert + O(k log k) squash at drop",
+      "count_type": "u128 (truncated; sufficient for chain fixtures, not 471-bit corpus)",
+      "limitation": "squash overhead dominates for small tables"
+    }
+  },
+  "fixtures": [
+    {
+      "id": "f3",
+      "description": "ordinary VE 4-var/2-constraints",
+      "scope": 4,
+      "constraints": 2,
+      "expected_solution": [0, 1, 2, 0, 0],
+      "baseline_gas": 1457904,
+      "dict_gas": 3240418,
+      "dict_vs_baseline_ratio": 2.22
+    },
+    {
+      "id": "f6",
+      "description": "ordinary VE chain 10-var/8-constraints",
+      "scope": 10,
+      "constraints": 8,
+      "expected_k3": 2,
+      "expected_k4": 1,
+      "baseline_gas": 9116144,
+      "dict_gas": 19380178,
+      "dict_vs_baseline_ratio": 2.13
+    },
+    {
+      "id": "f7",
+      "description": "ordinary VE chain 16-var/14-constraints",
+      "scope": 16,
+      "constraints": 14,
+      "expected_k5": 2,
+      "expected_k6": 1,
+      "baseline_gas": 17144044,
+      "dict_gas": 36253378,
+      "dict_vs_baseline_ratio": 2.11
+    }
+  ],
+  "micro_fixtures": [
+    {
+      "id": "d1",
+      "description": "join_factors_dict 3+3 vars (f1 topology)",
+      "dict_gas": 2469594,
+      "baseline_join_gas": 1216017,
+      "dict_vs_baseline_ratio": 2.03
+    },
+    {
+      "id": "d5",
+      "description": "pack_key roundtrip (micro — key packing only)",
+      "gas": 13840
+    }
+  ],
+  "all_tests": {
+    "f0_scope_and_entry_count": 174121,
+    "f0_entry_masks_rhs1": 200501,
+    "f0_entry_masks_rhs2": 201001,
+    "f1_join_entry_count": 1216017,
+    "f1_join_entry_masks": 1242797,
+    "f2_join_eliminate_scope": 967052,
+    "f2_join_eliminate_entries": 993732,
+    "f3_ordinary_count_solution_vector": 1457904,
+    "f4_disjoint_join_total_count": 731000,
+    "f5_full_overlap_join": 627336,
+    "f6_chain_10var_solution_vector": 9116144,
+    "f7_chain_16var_solution_vector": 17144044,
+    "d1_join_dict_equiv_f1": 2469594,
+    "d2_ordinary_dict_equiv_f3": 3240418,
+    "d3_chain_10var_dict_equiv": 19380178,
+    "d4_chain_16var_dict_equiv": 36253378,
+    "d5_pack_key_roundtrip": 13840
+  },
+  "findings": {
+    "winner": "baseline",
+    "winner_rationale": "Felt252Dict squash overhead (~O(k log k)) outweighs O(1) insert savings for small sparse tables (nonzero entries ≤ 103). Dict is consistently 2.1-2.2× more expensive across all fixtures.",
+    "key_insight": "For VE with small factors (max 103 nonzero entries, max 7 variables), the O(n²) linear scan has low enough constant factor that dict overhead dominates.",
+    "baseline_scale": {
+      "f3_to_f6_ratio": 6.25,
+      "f6_to_f7_ratio": 1.88,
+      "note": "Sub-quadratic growth from f3→f6→f7 suggests join count and treewidth dominate, not accumulate size"
+    },
+    "dict_scale": {
+      "f3_to_f6_ratio": 5.98,
+      "f6_to_f7_ratio": 1.87,
+      "note": "Similar growth pattern — squash cost scales similarly to linear scan for these table sizes"
+    },
+    "next_bottleneck": "Not accumulate overhead but total join count and treewidth. For real corpus cases (23-26 vars, treewidth up to 6), the factor sizes grow exponentially. Real CELL query cost: estimated 30-100M+ gas/evaluation.",
+    "dense_array_status": "Discarded before implementation: 39,680 slot initialization cost in Cairo exceeds accumulate savings for corpus-scale (103 nonzero / 39,680 slots = 0.26% occupancy)"
+  },
+  "state_key_ranges": {
+    "source": "corpus 2E2, 120 cases, all intermediate factors",
+    "scope_len": "0..7",
+    "mask": "0..127 (2^scope_len possible)",
+    "mines_used": "0..30 (NOT bounded by scope_len; accumulates ALL eliminated vars)",
+    "x_mine": "0..1",
+    "nbrs": "0..4",
+    "max_nonzero_entries_per_factor": 103,
+    "max_nonzero_state_keys_per_mask": 17
+  }
+}

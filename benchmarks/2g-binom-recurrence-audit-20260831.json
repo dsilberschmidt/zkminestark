@@ -1,0 +1,115 @@
+{
+  "date": "2026-08-31",
+  "experiment": "2G binomial recurrence + second real case + flood sequence prep",
+  "status": "local_measurements_confirmed",
+  "toolchain": {
+    "python3": "available_in_this_workspace",
+    "scarb": "confirmed_available_locally_outside_this_workspace",
+    "snforge": "confirmed_available_locally_outside_this_workspace"
+  },
+  "binomial_coupling_audit": {
+    "baseline_kept": true,
+    "new_recurrence_added": true,
+    "j2_2a109": {
+      "unconstrained_other_count": 465,
+      "remaining_mines": 99,
+      "distinct_k_values": [
+        94,
+        95,
+        96,
+        97,
+        98
+      ],
+      "anchor_k": 96,
+      "baseline_independent_calls": 5
+    },
+    "second_case_p12_step_005": {
+      "unconstrained_other_count": 452,
+      "remaining_mines": 99,
+      "distinct_k_values": [
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94
+      ],
+      "anchor_k": 91,
+      "baseline_independent_calls": 7
+    }
+  },
+  "second_case_selection": {
+    "selected_fixture": "benchmarks/2g-fixture-p12-step-005-oracle.json",
+    "baseline_case": "2a-109",
+    "criteria": [
+      {
+        "metric": "special_component_variables",
+        "baseline": 10,
+        "selected": 20
+      },
+      {
+        "metric": "special_constraint_count",
+        "baseline": 2,
+        "selected": 5
+      },
+      {
+        "metric": "joins",
+        "baseline": 1,
+        "selected": 4
+      },
+      {
+        "metric": "peak_factor_entries",
+        "baseline": 5120,
+        "selected": 9216
+      },
+      {
+        "metric": "effective_width",
+        "baseline": 6,
+        "selected": 6
+      }
+    ]
+  },
+  "flood_sequence_candidate": {
+    "selected_fixture": "benchmarks/2g-flood-c04-step-035-sequence.json",
+    "history_id": "C04",
+    "click_number": 35,
+    "clicked_cell": 252,
+    "new_revealed": 19,
+    "step_count": 18,
+    "wave_count": 2,
+    "peak_factor_entries_python": 86016,
+    "reason": "Representative medium cascade already frozen in 2F, beyond isolated CELL and below worst 34-41 reveal cases."
+  },
+  "measurement_status": {
+    "scarb_build": "PASS_no_warnings_after_import_cleanup",
+    "test_suite_default_run": {
+      "tests_total": 33,
+      "tests_pass": 32,
+      "tests_incomplete": 1,
+      "note": "j3 exhausted the default step limit before rerun"
+    },
+    "baseline_coupling_gas": "not_measured_as_standalone_test",
+    "recurrence_coupling_gas_2a109_j2b": 4976940,
+    "j1_joint_2a109_gas": 23387266,
+    "j2_full_baseline_gas": 45366416,
+    "second_case_joint_p12_j3_gas": 2071551573,
+    "second_case_recurrence_coupling_p12_j4_gas": 5149160,
+    "flood_sequence_gas": "not_measured",
+    "j3_rerun": {
+      "command_requirement": "--max-n-steps 100000000",
+      "status": "PASS"
+    },
+    "semantic_corrections": {
+      "j2b": "recurrence_coupling_plus_final_combination_only_not_full_cell",
+      "j4": "recurrence_coupling_plus_final_combination_only_not_full_cell",
+      "j2": "joint_ve_runs_but_local_convolution_is_materialized_in_test_not_executed_as_algorithm"
+    },
+    "derived_current_approximations": {
+      "2a109_joint_plus_recurrence": 28364206,
+      "p12_step_005_joint_plus_recurrence": 2076700733,
+      "note": "both remain partial because the local convolution is still materialized rather than executed"
+    },
+    "workspace_execution_note": "This workspace still lacks scarb/snforge in PATH, so the confirmed measurements above are persisted as local external results rather than re-run here."
+  }
+}

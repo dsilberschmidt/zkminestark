@@ -1,0 +1,17 @@
+[package]
+name = "zkmine_2g"
+version = "0.1.0"
+edition = "2024_07"
+
+[cairo]
+sierra-replace-ids = true
+
+[dependencies]
+starknet = "2.13.1"
+
+[dev-dependencies]
+cairo_test = "2.13.1"
+snforge_std = "0.62.1"
+
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]

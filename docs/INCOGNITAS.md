@@ -801,3 +801,41 @@ capa de ocultamiento.** Commitments, witness secreto, comité threshold o
 cualquier mecanismo de no-filtración siguen siendo una rama posible, pero
 ya no se los puede tratar como detalle de implementación: afectan el
 modelo de confianza entero.
+
+---
+
+## Contingencias si CELL exacto 30×16/99 resulta demasiado caro en Cairo
+### (2026-08-31 — posibilidades abiertas, no decisiones)
+
+El experimento 2G comenzó a medir el coste Cairo real de VE/CELL. Si los
+resultados finales muestran que el coste por click es inaceptable, las
+siguientes vías quedan abiertas para exploración. Ninguna es actualmente
+el plan preferido; se registran para no tener que redescubrirlas.
+
+**Reducir tablero manteniendo distribución exacta del tamaño elegido:**
+- 16×16/40 — tablero más pequeño con densidad comparable
+- 9×9/10 — tablero mínimo jugable
+
+**Precomputar estructura del cálculo, no resultados:**
+- geometría y adjacencias constantes
+- recipes de joins / mappings scope → merged scope
+- planes/órdenes de eliminación derivados off-chain (hints verificables on-chain)
+- factor de eliminación: el plan mínimo-fill es determinista dado el grafo → puede
+  enviarse como hint no confiable y verificarse a bajo coste
+
+**Si bigint resulta el cuello dominante:**
+- RNS/CRT exacto: representar conteos como residuos módulo primos pequeños,
+  operar en Z_p, reconstruir al final si necesario
+
+**Si recomputación intra-click resulta dominante:**
+- reuse de factores intermedios entre pasos de la misma cascada
+
+**Fallback de límite por transacción:**
+- dividir raros casos extremos en múltiples tx solo como límite de gas, no como diseño
+
+**Ramas descartadas como planes B preferidos:**
+- external ZK por click: latencia adicional inaceptable con el modelo actual
+- optimistic verification con committed-board confiado: modifica el modelo de confianza
+- cambiar la distribución del tablero: último recurso porque rompe la equivalencia
+  con uniform 30×16/99, que es la propiedad central del sampler ideal
+
