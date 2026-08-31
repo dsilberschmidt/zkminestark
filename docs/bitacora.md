@@ -1709,6 +1709,48 @@ Lectura de cierre:
 El detalle técnico, la metodología y los artefactos permanentes quedan en
 `docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md`.
 
+---
+
+## 2026-08-31 — Cierre formal de 2F
+
+Se cerró formalmente `2F` sobre el corpus reconstruible de flood-fill:
+
+- pregunta probada:
+  `CELL` vs `WAVE` vs `FULL-REGION`
+- cobertura:
+  `22` flood-fills reconstruibles x `3` políticas = `66` filas
+- exclusión única:
+  `C03` click `47`, sin transcript posterior reconstruible
+- tests previos:
+  `12 OK`
+- resultado:
+  `66/66 ok`, `0 timeout`, `0 invalid`
+
+Veredicto:
+
+- `CELL` ganó `22/22` contra `WAVE`
+- `CELL` ganó `22/22` contra `FULL-REGION`
+- `WAVE` ganó `21/22` contra `FULL-REGION`
+
+La auditoría adversarial también pasó:
+
+- recomputación independiente `PASS`
+- invariantes `PASS`
+- oracle leakage `PASS`
+- coste comparable `PASS`
+- reverse-order `PASS`
+
+Decisión:
+
+- `CELL` queda como política operativa de `2F`
+- `WAVE` queda como línea secundaria
+- `FULL-REGION` se descarta como política operativa actual
+
+Límite conservado:
+
+- este cierre vale para el modelo Python/VE auditado y no equivale todavía a
+  gas Cairo
+
 **12×12/20 historias**:
 - width range: 1–7, max 7 en 5 casos
 - Phase evolution: w/n = 0.52 (early), 0.17 (mid), 0.25 (late)

@@ -1,0 +1,102 @@
+{
+  "order": [
+    "FULL-REGION",
+    "WAVE",
+    "CELL"
+  ],
+  "pairwise": {
+    "CELL_vs_FULL-REGION": {
+      "losses": 0,
+      "median_ratio": 0.24997872303323232,
+      "ties": 0,
+      "wins": 22
+    },
+    "CELL_vs_WAVE": {
+      "losses": 0,
+      "median_ratio": 0.35128514370158653,
+      "ties": 0,
+      "wins": 22
+    },
+    "WAVE_vs_FULL-REGION": {
+      "losses": 1,
+      "median_ratio": 0.7547688213273346,
+      "ties": 0,
+      "wins": 21
+    }
+  },
+  "policies": {
+    "CELL": {
+      "bigint_additions": 1171021,
+      "bigint_multiplications": 1632549,
+      "binary_classifications": 0,
+      "dense_factor_capacity_touched": 21290882,
+      "exact_refinements": 408,
+      "invalid": 0,
+      "max_factor_scope": 8,
+      "max_integer_bit_length": 471,
+      "max_width": 7,
+      "nonzero_factor_entries_processed": 432922,
+      "ok": 22,
+      "peak_nonzero_factor_entries": 220,
+      "solve_count": 408,
+      "timeout": 0,
+      "total_rows": 22,
+      "wall_clock_ms": {
+        "max": 1850.9290158981457,
+        "mean": 320.66625253620174,
+        "p50": 149.46503200917505,
+        "p95": 1181.3608556156391,
+        "total": 7054.657555796439
+      }
+    },
+    "FULL-REGION": {
+      "bigint_additions": 2119773,
+      "bigint_multiplications": 2625543,
+      "binary_classifications": 408,
+      "dense_factor_capacity_touched": 36447150,
+      "exact_refinements": 260,
+      "invalid": 0,
+      "max_factor_scope": 8,
+      "max_integer_bit_length": 470,
+      "max_width": 7,
+      "nonzero_factor_entries_processed": 1123035,
+      "ok": 22,
+      "peak_nonzero_factor_entries": 1504,
+      "solve_count": 668,
+      "timeout": 0,
+      "total_rows": 22,
+      "wall_clock_ms": {
+        "max": 3972.3410759761464,
+        "mean": 1062.54910164518,
+        "p50": 647.548942026333,
+        "p95": 2988.3796729409364,
+        "total": 23376.080236193957
+      }
+    },
+    "WAVE": {
+      "bigint_additions": 1292299,
+      "bigint_multiplications": 1706885,
+      "binary_classifications": 408,
+      "dense_factor_capacity_touched": 30610660,
+      "exact_refinements": 260,
+      "invalid": 0,
+      "max_factor_scope": 8,
+      "max_integer_bit_length": 470,
+      "max_width": 7,
+      "nonzero_factor_entries_processed": 852752,
+      "ok": 22,
+      "peak_nonzero_factor_entries": 610,
+      "solve_count": 668,
+      "timeout": 0,
+      "total_rows": 22,
+      "wall_clock_ms": {
+        "max": 4505.45962099568,
+        "mean": 911.9612199852286,
+        "p50": 497.6150814763969,
+        "p95": 2894.1686811682293,
+        "total": 20063.146839675028
+      }
+    }
+  },
+  "rows": 66
+}

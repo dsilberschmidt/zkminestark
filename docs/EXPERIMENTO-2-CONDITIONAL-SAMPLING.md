@@ -2344,4 +2344,94 @@ intermedia bajo una semántica binaria `0/>0`.
    - si `>0` ayuda o empeora el sharing
    - si `WAVE` o `FULL-REGION` reducen o inflan el costo VE real
 
+## EXPERIMENTO 2F — Replay completo auditado de refinement horizon
+### (2026-08-31)
+
+## Pregunta experimental
+
+Con semántica 2F teacher-forced sobre flood-fills reconstruibles del corpus
+histórico, ¿conviene operar con:
+
+- `CELL`
+- `WAVE`
+- `FULL-REGION`
+
+## Semántica comparada
+
+- `CELL`: cada celda forced-safe se refina inmediatamente a clue exacto
+  `0..8`
+- `WAVE`: dentro de cada wave se clasifica `0` vs `>0`; los positivos se
+  refinan al cerrar la wave
+- `FULL-REGION`: durante toda la expansión se clasifica `0` vs `>0`; los
+  positivos se refinan al cerrar la región completa
+
+## Correcciones metodológicas previas al full replay
+
+Antes del benchmark completo se cerraron cuatro correcciones:
+
+- query binaria realmente binaria: `N_0` por solve VE y `N_positive` por resta
+- flood-fill emergente: ninguna wave usa membership futura antes de observar
+  ceros
+- validation final fuera del coste oficial de política
+- accounting auditado y comparable entre las tres variantes
+
+## Corpus y cobertura
+
+- flood-fills reconstruibles: `22`
+- políticas: `3`
+- filas esperadas y persistidas: `66`
+- exclusión única:
+  `C03` click `47`, por falta de transcript posterior reconstruible
+- tests previos obligatorios:
+  `python3 -m unittest scripts/test_conditional_sampling_2f_flood_fill_refinement.py`
+- resultado tests:
+  `12 OK`
+- resultado del replay:
+  `66/66 ok`, `0 timeout`, `0 invalid`
+
+## Resultados principales
+
+- `CELL` ganó `22/22` por wall-clock contra `WAVE`
+- `CELL` ganó `22/22` por wall-clock contra `FULL-REGION`
+- `WAVE` ganó `21/22` por wall-clock contra `FULL-REGION`
+- p50 wall-clock oficial:
+  - `CELL`: `145.70 ms`
+  - `WAVE`: `473.72 ms`
+  - `FULL-REGION`: `669.68 ms`
+
+## Señales estructurales agregadas relevantes
+
+- `CELL`: bigint_mul `1,632,549`; nonzero `432,922`; dense `21,290,882`
+- `WAVE`: bigint_mul `1,706,885`; nonzero `852,752`; dense `30,610,660`
+- `FULL-REGION`: bigint_mul `2,625,543`; nonzero `1,123,035`; dense `36,447,150`
+
+La señal de wall-clock no aparece aislada: `CELL` también toca menos
+aritmética bigint y menos trabajo estructural agregado en este modelo Python/VE.
+
+## Auditoría adversarial
+
+Se corrió una auditoría separada antes de aceptar el cierre:
+
+- recomputación independiente del raw: `PASS`
+- invariantes de las `66` filas: `PASS`
+- oracle leakage: `PASS`
+- coste comparable: `PASS`
+- replay reverse-order: `PASS`
+
+El replay inverso (`FULL-REGION`, `WAVE`, `CELL`) mantuvo:
+
+- `CELL` `22/22` contra `WAVE`
+- `CELL` `22/22` contra `FULL-REGION`
+
+## Conclusión de 2F
+
+- `CELL` queda como política operativa de `2F`
+- `WAVE` queda como línea secundaria de investigación
+- `FULL-REGION` se descarta como política operativa actual
+
+## Límite explícito
+
+Este resultado cierra `2F` para la implementación Python/VE auditada.
+No equivale todavía a coste Cairo/gas.
+
 ## Artefactos 2D

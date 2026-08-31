@@ -1,0 +1,440 @@
+{
+  "comparable_cost_audit": {
+    "aggregated_invariants": {
+      "cell_exact_equals_forced_safe_processed": true,
+      "full_binary_equals_forced_safe_processed": true,
+      "full_exact_equals_positive_refinements": true,
+      "wave_binary_equals_forced_safe_processed": true,
+      "wave_exact_equals_positive_refinements": true,
+      "wave_full_binary_equal": true,
+      "wave_full_exact_equal": true
+    },
+    "checks": {
+      "cell_exact_counts_full_solve": {
+        "evidence": [
+          "evaluate_safe_cell_exact times analyze_query_problem_ve and exact distribution construction inside one solve at 1011-1067"
+        ],
+        "pass": true
+      },
+      "exact_refinements_included": {
+        "evidence": [
+          "WAVE refine step uses evaluate_safe_cell_exact lines 1285-1294",
+          "FULL refine step uses evaluate_safe_cell_exact lines 1323-1331"
+        ],
+        "pass": true
+      },
+      "n_positive_by_subtraction_not_extra_solve": {
+        "evidence": [
+          "positive_total = current_compatible_total - zero_total at 1076 with no second solve and binary_classifications remains 1"
+        ],
+        "pass": true
+      },
+      "same_binomial_precomputable_policy_all_variants": {
+        "evidence": [
+          "module docstring states unconstrained binomials are common precomputable and not differential for all variants at lines 15-18"
+        ],
+        "pass": true
+      },
+      "setup_common_outside_differential_timing": {
+        "evidence": [
+          "policy wall-clock is sum(step wall_clock_ms) at line 1355",
+          "initial_state/current_compatible setup at 1186-1190 is outside per-step timing"
+        ],
+        "pass": true
+      },
+      "validation_outside_official_wall": {
+        "evidence": [
+          "validation starts after policy_wall_clock_ms is fixed at 1355-1365"
+        ],
+        "pass": true
+      },
+      "wave_full_binary_counts_only_one_solve_for_n0": {
+        "evidence": [
+          "evaluate_safe_cell_binary performs one zero-state solve at 1073-1076 and reports total_solves=1 at 1090-1093"
+        ],
+        "pass": true
+      }
+    },
+    "pass": true,
+    "totals": {
+      "cell_exact_total": 408,
+      "forced_safe_classifications_total": 408,
+      "full_binary_total": 408,
+      "full_exact_total": 260,
+      "full_positive_refinements": 260,
+      "wave_binary_total": 408,
+      "wave_exact_total": 260,
+      "wave_positive_refinements": 260
+    }
+  },
+  "date": "2026-08-31",
+  "independent_recompute": {
+    "by_policy": {
+      "CELL": {
+        "invalid": 0,
+        "ok": 22,
+        "rows": 22,
+        "timeout": 0,
+        "wall_max_ms": 1281.3308029435575,
+        "wall_mean_ms": 284.56066195874223,
+        "wall_p50_ms": 145.69896100147162,
+        "wall_p95_ms": 1126.1500597116533,
+        "wall_total_ms": 6260.334563092329
+      },
+      "FULL-REGION": {
+        "invalid": 0,
+        "ok": 22,
+        "rows": 22,
+        "timeout": 0,
+        "wall_max_ms": 3794.097587146098,
+        "wall_mean_ms": 1039.844829836511,
+        "wall_p50_ms": 669.6779914636863,
+        "wall_p95_ms": 2860.417245404096,
+        "wall_total_ms": 22876.586256403243
+      },
+      "WAVE": {
+        "invalid": 0,
+        "ok": 22,
+        "rows": 22,
+        "timeout": 0,
+        "wall_max_ms": 3303.428012965014,
+        "wall_mean_ms": 848.7093444802503,
+        "wall_p50_ms": 473.7229904421838,
+        "wall_p95_ms": 2828.5870430263453,
+        "wall_total_ms": 18671.605578565504
+      }
+    },
+    "pairwise": {
+      "CELL_vs_FULL-REGION": {
+        "comparable_rows": 22,
+        "losses": 0,
+        "median_ratio": 0.22504391486622397,
+        "ties": 0,
+        "wins": 22
+      },
+      "CELL_vs_WAVE": {
+        "comparable_rows": 22,
+        "losses": 0,
+        "median_ratio": 0.3196767185075603,
+        "ties": 0,
+        "wins": 22
+      },
+      "WAVE_vs_FULL-REGION": {
+        "comparable_rows": 22,
+        "losses": 1,
+        "median_ratio": 0.7466086110869623,
+        "ties": 0,
+        "wins": 21
+      }
+    },
+    "pass": true,
+    "summary_match": {
+      "pairwise_matches": {
+        "CELL_vs_FULL-REGION": {
+          "losses": true,
+          "median_ratio": true,
+          "ties": true,
+          "wins": true
+        },
+        "CELL_vs_WAVE": {
+          "losses": true,
+          "median_ratio": true,
+          "ties": true,
+          "wins": true
+        },
+        "WAVE_vs_FULL-REGION": {
+          "losses": true,
+          "median_ratio": true,
+          "ties": true,
+          "wins": true
+        }
+      },
+      "policy_matches": {
+        "CELL": {
+          "invalid": true,
+          "ok": true,
+          "rows": true,
+          "timeout": true,
+          "wall_max_ms": true,
+          "wall_mean_ms": true,
+          "wall_p50_ms": true,
+          "wall_p95_ms": true,
+          "wall_total_ms": true
+        },
+        "FULL-REGION": {
+          "invalid": true,
+          "ok": true,
+          "rows": true,
+          "timeout": true,
+          "wall_max_ms": true,
+          "wall_mean_ms": true,
+          "wall_p50_ms": true,
+          "wall_p95_ms": true,
+          "wall_total_ms": true
+        },
+        "WAVE": {
+          "invalid": true,
+          "ok": true,
+          "rows": true,
+          "timeout": true,
+          "wall_max_ms": true,
+          "wall_mean_ms": true,
+          "wall_p50_ms": true,
+          "wall_p95_ms": true,
+          "wall_total_ms": true
+        }
+      }
+    }
+  },
+  "oracle_leakage_audit": {
+    "checks": {
+      "after_transcript_not_used_to_build_constraints": {
+        "evidence": [
+          "simulate_policy_on_oracle_flood_fill starts from state_from_transcript(before_transcript) at lines 1186-1187",
+          "all solves call evaluate_safe_cell_exact/binary with current state only at lines 1225, 1240, 1285, 1323"
+        ],
+        "pass": true
+      },
+      "future_clue_consulted_only_after_outcome_counts": {
+        "evidence": [
+          "CELL reads oracle_clues[cell_index] only after exact result exists at lines 1225-1227",
+          "WAVE/FULL read oracle_clues[cell_index] only after binary result exists at lines 1240-1243, then exact refine happens later at lines 1285-1287 and 1323-1325"
+        ],
+        "pass": true
+      },
+      "oracle_does_not_alter_elimination_ordering_or_counts": {
+        "evidence": [
+          "evaluate_safe_cell_exact computes analysis before chosen_key at lines 1012-1067 and lines 1225-1227 / 1285-1287 / 1323-1325",
+          "evaluate_safe_cell_binary computes current_compatible_total and zero_total before observed_positive/chosen_key at lines 1072-1109 and lines 1240-1243"
+        ],
+        "pass": true
+      },
+      "oracle_does_not_seed_waves_before_observed_zero": {
+        "evidence": [
+          "initial wave is neighbors(clicked_cell) only at lines 1210-1214",
+          "next_wave_candidates are added only under observed zero branches at lines 1233-1238 and 1253-1260"
+        ],
+        "pass": true
+      },
+      "oracle_wave_structure_validation_only": {
+        "evidence": [
+          "oracle_wave_structure defined at 1113-1137 and called only via validation_wave_structure_2f at 1140-1141 then final validation at 1356-1365"
+        ],
+        "pass": true
+      }
+    },
+    "pass": true
+  },
+  "reverse_order_audit": {
+    "deterministic_counters_match_original": {
+      "CELL": {
+        "bigint_additions": true,
+        "bigint_multiplications": true,
+        "binary_classifications": true,
+        "dense_factor_capacity_touched": true,
+        "exact_refinements": true,
+        "max_factor_scope": true,
+        "max_integer_bit_length": true,
+        "max_width": true,
+        "nonzero_factor_entries_processed": true,
+        "peak_nonzero_factor_entries": true,
+        "solve_count": true
+      },
+      "FULL-REGION": {
+        "bigint_additions": true,
+        "bigint_multiplications": true,
+        "binary_classifications": true,
+        "dense_factor_capacity_touched": true,
+        "exact_refinements": true,
+        "max_factor_scope": true,
+        "max_integer_bit_length": true,
+        "max_width": true,
+        "nonzero_factor_entries_processed": true,
+        "peak_nonzero_factor_entries": true,
+        "solve_count": true
+      },
+      "WAVE": {
+        "bigint_additions": true,
+        "bigint_multiplications": true,
+        "binary_classifications": true,
+        "dense_factor_capacity_touched": true,
+        "exact_refinements": true,
+        "max_factor_scope": true,
+        "max_integer_bit_length": true,
+        "max_width": true,
+        "nonzero_factor_entries_processed": true,
+        "peak_nonzero_factor_entries": true,
+        "solve_count": true
+      }
+    },
+    "order": [
+      "FULL-REGION",
+      "WAVE",
+      "CELL"
+    ],
+    "pass": true,
+    "reverse_invariants": {
+      "all_ok_66": true,
+      "all_partitions_ok_66": true,
+      "final_transcript_match_66": true,
+      "path_identity_ok_66": true,
+      "rows_66": true,
+      "unique_keys_66": true,
+      "validation_wave_match_66": true
+    },
+    "reverse_metrics": {
+      "CELL": {
+        "bigint_additions": 1171021,
+        "bigint_multiplications": 1632549,
+        "binary_classifications": 0,
+        "dense_factor_capacity_touched": 21290882,
+        "exact_refinements": 408,
+        "invalid": 0,
+        "max_factor_scope": 8,
+        "max_integer_bit_length": 471,
+        "max_ms": 1850.9290158981457,
+        "max_width": 7,
+        "mean_ms": 320.66625253620174,
+        "nonzero_factor_entries_processed": 432922,
+        "ok": 22,
+        "p50_ms": 149.46503200917505,
+        "p95_ms": 1181.3608556156391,
+        "peak_nonzero_factor_entries": 220,
+        "rows": 22,
+        "solve_count": 408,
+        "timeout": 0,
+        "total_ms": 7054.657555796439
+      },
+      "FULL-REGION": {
+        "bigint_additions": 2119773,
+        "bigint_multiplications": 2625543,
+        "binary_classifications": 408,
+        "dense_factor_capacity_touched": 36447150,
+        "exact_refinements": 260,
+        "invalid": 0,
+        "max_factor_scope": 8,
+        "max_integer_bit_length": 470,
+        "max_ms": 3972.3410759761464,
+        "max_width": 7,
+        "mean_ms": 1062.54910164518,
+        "nonzero_factor_entries_processed": 1123035,
+        "ok": 22,
+        "p50_ms": 647.548942026333,
+        "p95_ms": 2988.3796729409364,
+        "peak_nonzero_factor_entries": 1504,
+        "rows": 22,
+        "solve_count": 668,
+        "timeout": 0,
+        "total_ms": 23376.080236193957
+      },
+      "WAVE": {
+        "bigint_additions": 1292299,
+        "bigint_multiplications": 1706885,
+        "binary_classifications": 408,
+        "dense_factor_capacity_touched": 30610660,
+        "exact_refinements": 260,
+        "invalid": 0,
+        "max_factor_scope": 8,
+        "max_integer_bit_length": 470,
+        "max_ms": 4505.45962099568,
+        "max_width": 7,
+        "mean_ms": 911.9612199852286,
+        "nonzero_factor_entries_processed": 852752,
+        "ok": 22,
+        "p50_ms": 497.6150814763969,
+        "p95_ms": 2894.1686811682293,
+        "peak_nonzero_factor_entries": 610,
+        "rows": 22,
+        "solve_count": 668,
+        "timeout": 0,
+        "total_ms": 20063.146839675028
+      }
+    },
+    "reverse_pairwise": {
+      "CELL_vs_FULL-REGION": {
+        "losses": 0,
+        "median_ratio": 0.24997872303323232,
+        "ties": 0,
+        "wins": 22
+      },
+      "CELL_vs_WAVE": {
+        "losses": 0,
+        "median_ratio": 0.35128514370158653,
+        "ties": 0,
+        "wins": 22
+      },
+      "WAVE_vs_FULL-REGION": {
+        "losses": 1,
+        "median_ratio": 0.7547688213273346,
+        "ties": 0,
+        "wins": 21
+      }
+    },
+    "wall_ratio_similarity": {
+      "CELL_vs_FULL-REGION": {
+        "original_median_ratio": 0.22504391486622397,
+        "reverse_median_ratio": 0.24997872303323232,
+        "same_order_of_magnitude": true
+      },
+      "CELL_vs_WAVE": {
+        "original_median_ratio": 0.3196767185075603,
+        "reverse_median_ratio": 0.35128514370158653,
+        "same_order_of_magnitude": true
+      },
+      "WAVE_vs_FULL-REGION": {
+        "original_median_ratio": 0.7466086110869623,
+        "reverse_median_ratio": 0.7547688213273346,
+        "same_order_of_magnitude": true
+      }
+    }
+  },
+  "row_invariants": {
+    "checks": {
+      "all_partitions_ok_66": true,
+      "exactly_22_cases": true,
+      "exactly_66_rows": true,
+      "final_transcript_match_66": true,
+      "no_chosen_count_impossible": true,
+      "no_internal_partition_mismatch": true,
+      "no_negative_totals": true,
+      "path_identity_ok_66": true,
+      "same_22_cases_three_policies": true,
+      "status_ok_66": true,
+      "unique_triples_66": true,
+      "validation_wave_match_66": true
+    },
+    "details": {
+      "chosen_count_issues": [],
+      "negative_total_issues": [],
+      "partition_mismatch_issues": []
+    },
+    "pass": true,
+    "step_shape_totals": {
+      "CELL": {
+        "binary_classify": 0,
+        "classify": 408,
+        "exact_classify": 408,
+        "refine": 0
+      },
+      "FULL-REGION": {
+        "binary_classify": 408,
+        "classify": 408,
+        "exact_classify": 0,
+        "refine": 260
+      },
+      "WAVE": {
+        "binary_classify": 408,
+        "classify": 408,
+        "exact_classify": 0,
+        "refine": 260
+      }
+    }
+  },
+  "source_raw": "benchmarks/conditional-sampling-2f-full-20260831.jsonl",
+  "source_summary": "benchmarks/conditional-sampling-2f-full-20260831-summary.json",
+  "tests": {
+    "command": "python3 -m unittest scripts/test_conditional_sampling_2f_flood_fill_refinement.py",
+    "pass": true,
+    "result": "12 tests OK"
+  }
+}

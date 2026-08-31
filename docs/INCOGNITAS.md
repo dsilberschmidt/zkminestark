@@ -23,18 +23,24 @@ Estado metodológico adicional sobre conditional sampling exacto:
 
 Estado metodológico adicional sobre flood-fill:
 
-- ✅ RESPONDIDA parcialmente:
-  el análisis estructural sobre el corpus histórico largo ya mostró que
-  flood-fill introduce un multiplicador fuerte de celdas reveladas por click
-  y que `CELL`, `WAVE` y `FULL-REGION` no son triviales entre sí.
+- ✅ RESPONDIDA:
+  el análisis estructural y el replay completo auditado `2F` ya cerraron la
+  comparación operativa `CELL` vs `WAVE` vs `FULL-REGION` en el modelo
+  Python/VE actual.
 - Veredicto corto:
   - con flood-fill, `new_revealed` tiene mediana `14.5`, p95 `38.9`, max `41`;
-  - `WAVE` llega a un backlog máximo de `10` positivos pendientes;
-  - `FULL-REGION` llega a `22`;
-  - ninguna de las tres políticas puede descartarse todavía.
+  - `2F` corrió `22` flood-fills reconstruibles x `3` políticas = `66` filas;
+  - `CELL` ganó `22/22` contra `WAVE`;
+  - `CELL` ganó `22/22` contra `FULL-REGION`;
+  - `WAVE` ganó `21/22` contra `FULL-REGION`;
+  - la auditoría adversarial pasó:
+    recomputación independiente, invariantes, oracle leakage, coste comparable
+    y reverse-order.
 - Sigue ABIERTA y separada:
-  implementar semántica real `0/>0` para medir VE y responder si `WAVE` o
-  `FULL-REGION` ayudan o empeoran respecto de `CELL`.
+  traducir estas señales favorables de `CELL` a coste Cairo/gas. La decisión
+  operativa de `2F` en Python/VE ya quedó cerrada; lo que falta no es elegir
+  entre `CELL/WAVE/FULL-REGION`, sino validar cómo se transporta esa ventaja
+  fuera de este modelo.
 
 1. **El secreto del tablero** — ¿cómo impedir el pre-cómputo del layout?
    Bloquea el diseño entero: sin esto no hay récords ni pozo defendibles.

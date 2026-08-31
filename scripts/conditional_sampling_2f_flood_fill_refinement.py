@@ -51,6 +51,8 @@ ALL_POLICIES = (POLICY_CELL, POLICY_WAVE, POLICY_FULL_REGION)
 OFFICIAL_TIMEOUT_S = 150.0
 SMOKE_PATH = Path(__file__).resolve().parents[1] / "benchmarks" / "conditional-sampling-2f-smoke-20260831.jsonl"
 SMOKE_SUMMARY_PATH = Path(__file__).resolve().parents[1] / "benchmarks" / "conditional-sampling-2f-smoke-20260831-summary.json"
+FULL_PATH = Path(__file__).resolve().parents[1] / "benchmarks" / "conditional-sampling-2f-full-20260831.jsonl"
+FULL_SUMMARY_PATH = Path(__file__).resolve().parents[1] / "benchmarks" / "conditional-sampling-2f-full-20260831-summary.json"
 STRUCTURE_PATH = Path(__file__).resolve().parents[1] / "benchmarks" / "flood-fill-structure-30x16-20260831.jsonl"
 HISTORIES_PATH = Path(__file__).resolve().parents[1] / "benchmarks" / "conditional-sampling-histories-30x16-20260831.jsonl"
 
@@ -1442,6 +1444,182 @@ def existing_smoke_rows(path: Path) -> dict[tuple[str, int, str], dict[str, obje
     return existing
 
 
+def existing_benchmark_rows(path: Path) -> dict[tuple[str, int, str], dict[str, object]]:
+    return existing_smoke_rows(path)
+
+
+def selected_full_cases(structure_path: Path = STRUCTURE_PATH) -> list[dict[str, object]]:
+    rows = [json.loads(line) for line in structure_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    selected: list[dict[str, object]] = []
+    for row in rows:
+        if not row.get("flood_fill"):
+            continue
+        if not row.get("after_transcript_reconstructable"):
+            continue
+        selected.append(
+            {
+                "history_id": str(row["history_id"]),
+                "click_number": int(row["click_number"]),
+                "new_revealed": int(row["new_revealed"]),
+                "wave_count": int(row["wave_count"]),
+            }
+        )
+    selected.sort(key=lambda item: (item["history_id"], item["click_number"]))
+    return selected
+
+
+def percentile(values: list[float], q: float) -> float | None:
+    if not values:
+        return None
+    if len(values) == 1:
+        return float(values[0])
+    ordered = sorted(float(value) for value in values)
+    position = (len(ordered) - 1) * q
+    lower = math.floor(position)
+    upper = math.ceil(position)
+    if lower == upper:
+        return ordered[lower]
+    weight = position - lower
+    return ordered[lower] * (1.0 - weight) + ordered[upper] * weight
+
+
+def wall_clock_summary(values: list[float]) -> dict[str, float | None]:
+    if not values:
+        return {
+            "mean": None,
+            "p50": None,
+            "p90": None,
+            "p95": None,
+            "p99": None,
+            "max": None,
+        }
+    return {
+        "mean": statistics.fmean(values),
+        "p50": percentile(values, 0.50),
+        "p90": percentile(values, 0.90),
+        "p95": percentile(values, 0.95),
+        "p99": percentile(values, 0.99),
+        "max": max(values),
+    }
+
+
+def pairwise_ratio_summary(
+    left_rows: dict[tuple[str, int], dict[str, object]],
+    right_rows: dict[tuple[str, int], dict[str, object]],
+) -> dict[str, object]:
+    comparable_keys = sorted(set(left_rows) & set(right_rows))
+    wins = 0
+    ties = 0
+    losses = 0
+    ratios: list[float] = []
+    censored = 0
+    for key in comparable_keys:
+        left = left_rows[key]
+        right = right_rows[key]
+        left_ok = left.get("status") == "ok" and left.get("wall_clock_ms") is not None
+        right_ok = right.get("status") == "ok" and right.get("wall_clock_ms") is not None
+        if not left_ok or not right_ok:
+            censored += 1
+            continue
+        left_wall = float(left["wall_clock_ms"])
+        right_wall = float(right["wall_clock_ms"])
+        if math.isclose(left_wall, right_wall, rel_tol=1e-12, abs_tol=1e-9):
+            ties += 1
+        elif left_wall < right_wall:
+            wins += 1
+        else:
+            losses += 1
+        if right_wall > 0.0:
+            ratios.append(left_wall / right_wall)
+    summary: dict[str, object] = {
+        "comparable_rows": len(comparable_keys),
+        "completed_pairs": wins + ties + losses,
+        "censored_pairs": censored,
+        "wins": wins,
+        "ties": ties,
+        "losses": losses,
+        "median_wall_clock_ratio": percentile(ratios, 0.50),
+        "p95_wall_clock_ratio": percentile(ratios, 0.95) if len(ratios) >= 2 else None,
+    }
+    return summary
+
+
+def full_summary(path: Path = FULL_PATH) -> dict[str, object]:
+    rows = list(existing_benchmark_rows(path).values())
+    by_policy: dict[str, list[dict[str, object]]] = defaultdict(list)
+    comparable_rows: dict[tuple[str, int], dict[str, dict[str, object]]] = defaultdict(dict)
+    for row in rows:
+        policy = str(row["policy"])
+        by_policy[policy].append(row)
+        comparable_rows[(str(row["history_id"]), int(row["click_number"]))][policy] = row
+
+    policies_summary: dict[str, object] = {}
+    policy_completed_maps: dict[str, dict[tuple[str, int], dict[str, object]]] = {}
+    for policy in ALL_POLICIES:
+        policy_rows = sorted(by_policy.get(policy, []), key=lambda row: (str(row["history_id"]), int(row["click_number"])))
+        ok_rows = [row for row in policy_rows if row.get("status") == "ok"]
+        timeout_rows = [row for row in policy_rows if row.get("status") == "timeout"]
+        invalid_rows = [row for row in policy_rows if row.get("status") == "invalid"]
+        completed_wall = [float(row["wall_clock_ms"]) for row in ok_rows if row.get("wall_clock_ms") is not None]
+        timeout_lower_bounds = [float(row["wall_clock_ms_lower_bound"]) for row in timeout_rows if row.get("wall_clock_ms_lower_bound") is not None]
+        instrumentation_rows = [row.get("instrumentation", {}) for row in ok_rows]
+        policy_completed_maps[policy] = {
+            (str(row["history_id"]), int(row["click_number"])): row
+            for row in policy_rows
+        }
+        policies_summary[policy] = {
+            "total_rows": len(policy_rows),
+            "ok": len(ok_rows),
+            "timeout": len(timeout_rows),
+            "invalid": len(invalid_rows),
+            "solve_count": sum(int(instr.get("total_solves", 0)) for instr in instrumentation_rows),
+            "binary_classifications": sum(int(instr.get("binary_classifications", 0)) for instr in instrumentation_rows),
+            "exact_refinements": sum(int(instr.get("exact_refinements", 0)) for instr in instrumentation_rows),
+            "bigint_additions": sum(int(instr.get("bigint_additions", 0)) for instr in instrumentation_rows),
+            "bigint_multiplications": sum(int(instr.get("bigint_multiplications", 0)) for instr in instrumentation_rows),
+            "nonzero_factor_entries_processed": sum(int(instr.get("nonzero_factor_entries_processed", 0)) for instr in instrumentation_rows),
+            "dense_factor_capacity_touched": sum(int(instr.get("dense_factor_capacity_touched", 0)) for instr in instrumentation_rows),
+            "peak_nonzero_factor_entries": max((int(instr.get("peak_nonzero_factor_entries", 0)) for instr in instrumentation_rows), default=0),
+            "max_factor_scope": max((int(instr.get("max_factor_scope_variables", 0)) for instr in instrumentation_rows), default=0),
+            "max_width": max((int(instr.get("max_induced_or_min_fill_width", 0)) for instr in instrumentation_rows), default=0),
+            "max_integer_bit_length": max((int(instr.get("max_integer_bit_length", 0)) for instr in instrumentation_rows), default=0),
+            "wall_clock_ms_completed": wall_clock_summary(completed_wall),
+            "wall_clock_ms_censored_lower_bound": wall_clock_summary(timeout_lower_bounds),
+            "total_wall_clock_ms_completed": sum(completed_wall),
+            "wins_by_wall_clock_among_comparable_completed_rows": 0,
+        }
+
+    for key, case_rows in comparable_rows.items():
+        completed = []
+        for policy in ALL_POLICIES:
+            row = case_rows.get(policy)
+            if row is None or row.get("status") != "ok" or row.get("wall_clock_ms") is None:
+                completed = []
+                break
+            completed.append((policy, float(row["wall_clock_ms"])))
+        if not completed:
+            continue
+        best_wall = min(wall for _policy, wall in completed)
+        winners = [policy for policy, wall in completed if math.isclose(wall, best_wall, rel_tol=1e-12, abs_tol=1e-9)]
+        for policy in winners:
+            policies_summary[policy]["wins_by_wall_clock_among_comparable_completed_rows"] = int(
+                policies_summary[policy]["wins_by_wall_clock_among_comparable_completed_rows"]
+            ) + 1
+
+    pairwise = {
+        "CELL_vs_WAVE": pairwise_ratio_summary(policy_completed_maps[POLICY_CELL], policy_completed_maps[POLICY_WAVE]),
+        "CELL_vs_FULL-REGION": pairwise_ratio_summary(policy_completed_maps[POLICY_CELL], policy_completed_maps[POLICY_FULL_REGION]),
+        "WAVE_vs_FULL-REGION": pairwise_ratio_summary(policy_completed_maps[POLICY_WAVE], policy_completed_maps[POLICY_FULL_REGION]),
+    }
+
+    return {
+        "rows": len(rows),
+        "expected_rows": len(selected_full_cases()) * len(ALL_POLICIES),
+        "policies": policies_summary,
+        "pairwise_wall_clock": pairwise,
+    }
+
+
 def _timeout_row(history_id: str, click_number: int, policy: str, timeout_s: float, reasons: list[str], elapsed_ms: float) -> dict[str, object]:
     return {
         "history_id": history_id,
@@ -1541,6 +1719,47 @@ def run_smoke(
     }
 
 
+def run_full(
+    benchmark_path: Path = FULL_PATH,
+    summary_path: Path = FULL_SUMMARY_PATH,
+    timeout_s: float = OFFICIAL_TIMEOUT_S,
+) -> dict[str, object]:
+    cases = selected_full_cases()
+    rows = load_history_rows(HISTORIES_PATH)
+    indexed = index_history_rows(rows)
+    existing = existing_benchmark_rows(benchmark_path)
+    benchmark_path.parent.mkdir(parents=True, exist_ok=True)
+    written = 0
+    with benchmark_path.open("a", encoding="utf-8") as handle:
+        for case in cases:
+            case_key = (case["history_id"], case["click_number"])
+            case_row = indexed[case_key]
+            next_row = indexed.get((case["history_id"], case["click_number"] + 1))
+            for policy in ALL_POLICIES:
+                row_key = (case["history_id"], case["click_number"], policy)
+                if row_key in existing:
+                    continue
+                result = _smoke_case_result(case_row, next_row, policy, timeout_s)
+                result["new_revealed"] = int(case["new_revealed"])
+                result["wave_count_oracle"] = int(case["wave_count"])
+                handle.write(json.dumps(result, sort_keys=True) + "\n")
+                handle.flush()
+                existing[row_key] = result
+                written += 1
+                summary = full_summary(benchmark_path)
+                summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    summary = full_summary(benchmark_path)
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {
+        "benchmark_path": str(benchmark_path),
+        "summary_path": str(summary_path),
+        "selected_cases": len(cases),
+        "rows_written": written,
+        "total_rows_available": len(existing),
+        "expected_total_rows": len(cases) * len(ALL_POLICIES),
+    }
+
+
 def smoke_summary(path: Path = SMOKE_PATH) -> dict[str, object]:
     rows = list(existing_smoke_rows(path).values())
     by_policy: dict[str, list[dict[str, object]]] = defaultdict(list)
@@ -1575,17 +1794,26 @@ def smoke_summary(path: Path = SMOKE_PATH) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="2F flood-fill refinement horizon")
     parser.add_argument("--run-smoke", action="store_true")
+    parser.add_argument("--run-full", action="store_true")
     parser.add_argument("--smoke-path", type=Path, default=SMOKE_PATH)
+    parser.add_argument("--full-path", type=Path, default=FULL_PATH)
     parser.add_argument("--summary-path", type=Path, default=SMOKE_SUMMARY_PATH)
     parser.add_argument("--timeout-s", type=float, default=OFFICIAL_TIMEOUT_S)
     parser.add_argument("--summary", action="store_true")
+    parser.add_argument("--full-summary", action="store_true")
     args = parser.parse_args()
 
     if args.run_smoke:
         print(json.dumps(run_smoke(benchmark_path=args.smoke_path, summary_path=args.summary_path, timeout_s=args.timeout_s), indent=2, sort_keys=True))
         return 0
+    if args.run_full:
+        print(json.dumps(run_full(benchmark_path=args.full_path, summary_path=args.summary_path, timeout_s=args.timeout_s), indent=2, sort_keys=True))
+        return 0
     if args.summary:
         print(json.dumps(smoke_summary(args.smoke_path), indent=2, sort_keys=True))
+        return 0
+    if args.full_summary:
+        print(json.dumps(full_summary(args.full_path), indent=2, sort_keys=True))
         return 0
     parser.print_help()
     return 0

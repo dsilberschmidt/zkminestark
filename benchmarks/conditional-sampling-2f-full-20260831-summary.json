@@ -1,0 +1,143 @@
+{
+  "expected_rows": 66,
+  "pairwise_wall_clock": {
+    "CELL_vs_FULL-REGION": {
+      "censored_pairs": 0,
+      "comparable_rows": 22,
+      "completed_pairs": 22,
+      "losses": 0,
+      "median_wall_clock_ratio": 0.22504391486622397,
+      "p95_wall_clock_ratio": 0.3590117742180026,
+      "ties": 0,
+      "wins": 22
+    },
+    "CELL_vs_WAVE": {
+      "censored_pairs": 0,
+      "comparable_rows": 22,
+      "completed_pairs": 22,
+      "losses": 0,
+      "median_wall_clock_ratio": 0.3196767185075603,
+      "p95_wall_clock_ratio": 0.4005191144628005,
+      "ties": 0,
+      "wins": 22
+    },
+    "WAVE_vs_FULL-REGION": {
+      "censored_pairs": 0,
+      "comparable_rows": 22,
+      "completed_pairs": 22,
+      "losses": 1,
+      "median_wall_clock_ratio": 0.7466086110869623,
+      "p95_wall_clock_ratio": 0.9979041070748825,
+      "ties": 0,
+      "wins": 21
+    }
+  },
+  "policies": {
+    "CELL": {
+      "bigint_additions": 1171021,
+      "bigint_multiplications": 1632549,
+      "binary_classifications": 0,
+      "dense_factor_capacity_touched": 21290882,
+      "exact_refinements": 408,
+      "invalid": 0,
+      "max_factor_scope": 8,
+      "max_integer_bit_length": 471,
+      "max_width": 7,
+      "nonzero_factor_entries_processed": 432922,
+      "ok": 22,
+      "peak_nonzero_factor_entries": 220,
+      "solve_count": 408,
+      "timeout": 0,
+      "total_rows": 22,
+      "total_wall_clock_ms_completed": 6260.334563092329,
+      "wall_clock_ms_censored_lower_bound": {
+        "max": null,
+        "mean": null,
+        "p50": null,
+        "p90": null,
+        "p95": null,
+        "p99": null
+      },
+      "wall_clock_ms_completed": {
+        "max": 1281.3308029435575,
+        "mean": 284.56066195874223,
+        "p50": 145.69896100147162,
+        "p90": 677.4386255332504,
+        "p95": 1126.1500597116533,
+        "p99": 1253.6230692896058
+      },
+      "wins_by_wall_clock_among_comparable_completed_rows": 22
+    },
+    "FULL-REGION": {
+      "bigint_additions": 2119773,
+      "bigint_multiplications": 2625543,
+      "binary_classifications": 408,
+      "dense_factor_capacity_touched": 36447150,
+      "exact_refinements": 260,
+      "invalid": 0,
+      "max_factor_scope": 8,
+      "max_integer_bit_length": 470,
+      "max_width": 7,
+      "nonzero_factor_entries_processed": 1123035,
+      "ok": 22,
+      "peak_nonzero_factor_entries": 1504,
+      "solve_count": 668,
+      "timeout": 0,
+      "total_rows": 22,
+      "total_wall_clock_ms_completed": 22876.586256403243,
+      "wall_clock_ms_censored_lower_bound": {
+        "max": null,
+        "mean": null,
+        "p50": null,
+        "p90": null,
+        "p95": null,
+        "p99": null
+      },
+      "wall_clock_ms_completed": {
+        "max": 3794.097587146098,
+        "mean": 1039.844829836511,
+        "p50": 669.6779914636863,
+        "p90": 2430.073839199032,
+        "p95": 2860.417245404096,
+        "p99": 3602.2556518443153
+      },
+      "wins_by_wall_clock_among_comparable_completed_rows": 0
+    },
+    "WAVE": {
+      "bigint_additions": 1292299,
+      "bigint_multiplications": 1706885,
+      "binary_classifications": 408,
+      "dense_factor_capacity_touched": 30610660,
+      "exact_refinements": 260,
+      "invalid": 0,
+      "max_factor_scope": 8,
+      "max_integer_bit_length": 470,
+      "max_width": 7,
+      "nonzero_factor_entries_processed": 852752,
+      "ok": 22,
+      "peak_nonzero_factor_entries": 610,
+      "solve_count": 668,
+      "timeout": 0,
+      "total_rows": 22,
+      "total_wall_clock_ms_completed": 18671.605578565504,
+      "wall_clock_ms_censored_lower_bound": {
+        "max": null,
+        "mean": null,
+        "p50": null,
+        "p90": null,
+        "p95": null,
+        "p99": null
+      },
+      "wall_clock_ms_completed": {
+        "max": 3303.428012965014,
+        "mean": 848.7093444802503,
+        "p50": 473.7229904421838,
+        "p90": 2029.0700402809312,
+        "p95": 2828.5870430263453,
+        "p99": 3212.3010168294422
+      },
+      "wins_by_wall_clock_among_comparable_completed_rows": 0
+    }
+  },
+  "rows": 66
+}
