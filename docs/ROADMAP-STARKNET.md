@@ -124,6 +124,11 @@ Eso apoya la afirmación del sampler ideal en un caso finito exhaustivo. La prue
 - F1-A en Sepolia con transacciones verificables
 - prototipo jugable en navegador
 - prueba exhaustiva finita del sampler ideal
+- benchmark algorítmico off-chain de conditional sampling ya cerrado hasta
+  `2E3`, con decisión arquitectónica:
+  - `2E2` queda como candidato operativo para la siguiente etapa
+  - `2E3` queda congelado como experimento negativo útil, no como rama de
+    producción
 
 ## 6. Alcance del roadmap
 
@@ -246,6 +251,19 @@ F0-bis mostró que el `vrf-server` manual acepta `get_proof(seed)` antes de una 
 ### Divergencia entre prueba y código
 
 La especificación, el algoritmo de referencia, el replay determinista y los tests distribucionales tienen que quedar alineados. M3 existe para cerrar exactamente ese riesgo.
+
+### Alcance de los experimentos algorítmicos ya cerrados
+
+La familia `2A -> 2E3` de conditional sampling off-chain ya dejó una decisión
+útil y acotada:
+
+- el primitive exacto por celda sobre transcripts dados quedó validado
+- el salto de régimen aparece al pasar a `2E2` (Variable Elimination)
+- `2E3` no mejora el frente absoluto de `2E2` bajo accounting honesto
+
+Eso significa que, si la siguiente etapa necesita un contador exacto
+operativo para integraciones o traducción conceptual a Cairo, la rama a
+mirar es `2E2`, no `2E3`.
 
 ### Reutilización real de VCLS
 

@@ -1614,6 +1614,65 @@ Lectura de cierre:
 - 2E2 queda validado como checkpoint exacto y estructuralmente manejable
 - siguiente paso correcto: **2E3 history-aware VE**
 
+---
+
+## 2026-08-31 — Cierre formal de EXPERIMENTO 2E3: history-aware variable elimination
+
+Se cerró formalmente `2E3` sobre el benchmark histórico largo ya fijado para
+`30×16/99`, sin abrir experimentos nuevos.
+
+Secuencia experimental cerrada:
+
+- corpus histórico común:
+  `16` histories (`P01..P12 + C01..C04`)
+- cobertura:
+  `259` puntos históricos
+- replay principal completado:
+  `2B3 / 2E2 / 2E3`
+- replay longitudinal completado:
+  `2A / 2B / 2B2 / 2B3 / 2D1 / 2E2 / 2E3`
+- regla oficial de timeout:
+  `150 s` por algoritmo/punto
+- interpretación correcta:
+  todo timeout se trata como observación censurada `>150 s`, nunca como
+  runtime exacto de `150 s`
+
+Time-outs observados en el longitudinal:
+
+- `2A = 9`
+- `2B = 5`
+- `2B2 = 8`
+- `2B3 = 2`
+- `2D1 = 1`
+- `2E2 = 0`
+- `2E3 = 0`
+
+Validación de exactitud:
+
+- `2E2` y `2E3` coinciden exactamente entre sí en `259/259` puntos
+- validación independiente contra `2B3` disponible en `257/259` puntos,
+  porque `2B3` timeouta en dos
+- en todos los puntos donde la referencia exacta quedó disponible,
+  cada variante que terminó con `status="ok"` coincidió con esa referencia
+
+Resultados principales:
+
+- el salto de régimen fuerte aparece al pasar a **Variable Elimination**
+- `2E2` aplasta la cola de coste de `2A -> 2D1` y elimina los timeouts en
+  el corpus histórico largo
+- `2E3` demuestra reuse incremental exacto real
+- pero el overhead de transición/bookkeeping no compensa frente a `2E2`
+
+Decisión de cierre:
+
+- `2E2` queda como candidato operativo para la siguiente etapa
+- `2E3` queda congelado como experimento negativo útil y expediente técnico
+  auditado, no como rama de producción
+
+La nota detallada del experimento y la tabla longitudinal quedan en
+`docs/EXPERIMENTO-2-CONDITIONAL-SAMPLING.md`. El expediente detallado de esta
+etapa queda preservado en `docs/PENDING-REVIEW-2E3.md`.
+
 **12×12/20 historias**:
 - width range: 1–7, max 7 en 5 casos
 - Phase evolution: w/n = 0.52 (early), 0.17 (mid), 0.25 (late)

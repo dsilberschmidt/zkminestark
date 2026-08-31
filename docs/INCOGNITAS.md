@@ -6,6 +6,21 @@ This document is maintained in Spanish. If automatic translation presents any di
 Criterio de ranking: poder de bloqueo — qué impide avanzar todo lo demás
 si queda sin resolver.
 
+Estado metodológico adicional sobre conditional sampling exacto:
+
+- ✅ RESPONDIDA: `2E2` y `2E3` ya quedaron auditados sobre el corpus
+  histórico largo `30×16/99` (`16` histories, `259` puntos).
+- Veredicto corto:
+  - el salto de régimen real aparece al pasar a Variable Elimination;
+  - `2E3` sí demuestra reuse incremental exacto;
+  - ese reuse no compensa el overhead frente a `2E2`;
+  - por lo tanto `2E2` queda como candidato operativo y `2E3` se congela
+    como experimento negativo útil.
+- Sigue ABIERTA y separada:
+  demostrar end-to-end el flood-fill completo generado únicamente por
+  sampling secuencial, sin hidden-board oracle, como validación de sistema
+  completo y no solo del primitive exacto por celda sobre transcripts dados.
+
 1. **El secreto del tablero** — ¿cómo impedir el pre-cómputo del layout?
    Bloquea el diseño entero: sin esto no hay récords ni pozo defendibles.
    ✅ RESPONDIDA ABAJO.

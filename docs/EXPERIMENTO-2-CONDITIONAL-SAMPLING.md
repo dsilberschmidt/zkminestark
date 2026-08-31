@@ -1927,4 +1927,251 @@ Python como estimación de Cairo. Lo que sí queda validado para la hoja de ruta
 - deja cerrada la siguiente ruta experimental:
   `2E2 snapshot VE -> 2E3 history-aware VE -> historias 30×16/99 -> Cairo`
 
+## EXPERIMENTO 2E3 — History-Aware Variable Elimination
+### (2026-08-31)
+
+## Objetivo
+
+Medir cuánto trabajo de `2E2` puede reutilizarse exactamente entre
+transcripts consecutivos `T_i -> T_{i+1}` sin cambiar la distribución exacta
+de `N_mine, N_0..N_8`.
+
+Preguntas concretas:
+
+- cuánta reutilización real aparece entre clicks de una misma historia
+- cuánto cuesta esa reutilización en wall-clock honesto
+- si `2E3` puede desplazar a `2E2` como baseline operativo
+
+## Arquitectura congelada
+
+Código nuevo:
+
+- `scripts/conditional_sampling_2e3_history_aware_ve.py`
+- `scripts/test_conditional_sampling_2e3_history_aware_ve.py`
+
+Estado persistente:
+
+- `GlobalMessageCache` content-addressed
+- `TranscriptState` por transcript
+- `OrdinaryComponentState` por componente ordinario
+
+Reuse implementado:
+
+- whole-component hit por firma idéntica
+- sub-DAG reuse por mensajes ordinarios cacheados
+- overlay special query-aware que recomputa solo el cono dependiente de la
+  query y reusa el resto
+
+Benchmark histórico oficial:
+
+- corpus:
+  `benchmarks/conditional-sampling-histories-30x16-20260831.jsonl`
+- replay principal:
+  `benchmarks/conditional-sampling-2e3-histories-30x16-20260831.jsonl`
+- replay longitudinal:
+  `benchmarks/conditional-sampling-2e3-histories-30x16-longitudinal-20260831.jsonl`
+
+## Corpus y protocolo
+
+Corpus histórico largo fijado:
+
+- tablero objetivo:
+  `30×16/99`
+- histories:
+  `16`
+- puntos históricos:
+  `259`
+- composición:
+  `P01..P12` public-only + `C01..C04` controlled
+
+Regla oficial de timeout:
+
+- `150 s` por algoritmo/punto
+- un timeout se registra como observación censurada `>150 s`
+- nunca se interpreta como un runtime exacto de `150 s`
+
+## Validación de exactitud
+
+Replay principal:
+
+- `2E2` y `2E3` coinciden exactamente entre sí en `259/259` puntos
+- validación independiente contra `2B3` disponible en `257/259` puntos
+- motivo de los `2` faltantes:
+  `2B3` timeouta en `C03` click `47` y `C04` click `44`
+- en los `257` puntos con referencia exacta disponible:
+  - `2E2`: `257/257` exacto
+  - `2E3`: `257/257` exacto
+  - igualdad también en `sum_counts`, `compatible_total_before_click` y
+    `partition_ok`
+
+Replay longitudinal:
+
+- variantes corridas:
+  `2A`, `2B`, `2B2`, `2B3`, `2D1`, `2E2`, `2E3`
+- toda variante que terminó con `status="ok"` coincidió con la referencia
+  exacta disponible en ese punto
+- los timeouts son observaciones censuradas, no validaciones de exactitud
+
+## Auditoría del accounting
+
+El total oficial de `2E3` sí incluye todo el trabajo real medido:
+
+- `startup_ms`
+- `transition_ms`
+- `maintenance_ms`
+- `evaluation_ms`
+
+Lectura correcta del desglose actual:
+
+- `startup_ms` y `transition_ms` absorben todo `build_transcript_state(...)`
+- `evaluation_ms` mide `evaluate_with_state(...)`
+- `maintenance_ms` hoy existe como campo pero vale siempre `0.0`
+- no hay trabajo oculto fuera de `total_ms`
+- sí hay una limitación de granularidad:
+  el mantenimiento real de cache/dependencias hoy queda absorbido dentro de
+  `startup_ms` o `transition_ms`
+
+## Resultado principal 2E2 vs 2E3
+
+Distribución puntual:
+
+| variante | p50 | p90 | p95 | p99 | max |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2E2 | 15.201 ms | 53.172 ms | 63.654 ms | 88.465 ms | 121.180 ms |
+| 2E3 | 21.071 ms | 77.255 ms | 106.833 ms | 140.779 ms | 189.087 ms |
+
+Suma total en el corpus principal:
+
+- `2E2 = 5930.675 ms`
+- `2E3 = 8730.097 ms`
+- ratio `2E3 / 2E2 = 1.472x`
+
+Wins / ties / losses punto a punto:
+
+- `2E3`: `9 / 0 / 250` frente a `2E2`
+
+Por fase:
+
+| fase | puntos | total 2E2 | total 2E3 | mediana 2E2 | mediana 2E3 | wins 2E3 | losses 2E3 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| early | 236 | 4444.241 ms | 6255.205 ms | 13.739 ms | 19.264 ms | 9 | 227 |
+| mid | 23 | 1486.432 ms | 2474.892 ms | 61.425 ms | 107.664 ms | 0 | 23 |
+
+Coste total por history (`2E3 / 2E2`):
+
+| history | 2E2 total | 2E3 total | ratio |
+| --- | ---: | ---: | ---: |
+| C01 | 880.434 ms | 1420.899 ms | 1.614x |
+| C02 | 1110.542 ms | 1711.705 ms | 1.541x |
+| C03 | 1948.787 ms | 2827.239 ms | 1.451x |
+| C04 | 1387.118 ms | 2020.516 ms | 1.457x |
+| P01 | 21.279 ms | 22.690 ms | 1.066x |
+| P02 | 56.454 ms | 68.335 ms | 1.210x |
+| P03 | 75.324 ms | 95.936 ms | 1.274x |
+| P04 | 19.966 ms | 22.296 ms | 1.117x |
+| P05 | 18.653 ms | 20.831 ms | 1.117x |
+| P06 | 33.360 ms | 39.993 ms | 1.199x |
+| P07 | 79.731 ms | 97.015 ms | 1.217x |
+| P08 | 43.933 ms | 50.429 ms | 1.148x |
+| P09 | 56.847 ms | 69.196 ms | 1.217x |
+| P10 | 92.917 ms | 142.818 ms | 1.537x |
+| P11 | 20.957 ms | 22.710 ms | 1.084x |
+| P12 | 84.372 ms | 97.487 ms | 1.155x |
+
+Desglose `2E3`:
+
+- `transition_ms` suma `5745.425 ms` (`51.2%` del total en media)
+- `evaluation_ms` suma `2977.359 ms` (`48.4%` del total en media)
+- `maintenance_ms` queda en `0.0 ms` por instrumentación actual
+
+Reuse medido:
+
+- filas con `whole_component_hits > 0`: `109/259`
+- filas con `subdag_hits > 0`: `213/259`
+- `messages_reused`: `4419`
+- `messages_recomputed`: `3391`
+- `messages_invalidated`: `3388`
+- `factor_entries_reused`: `36712`
+- `factor_entries_recomputed`: `66835`
+- `factor_entries_invalidated`: `36160`
+
+Fracción de reuse reconstruida correctamente desde el raw:
+
+- media `0.318`
+- mediana `0.300`
+- `p90 0.727`
+- `p95 0.763`
+- `max 0.874`
+
+Observación clave:
+
+- no aparece una banda de reuse donde `2E3` pase a ganar de forma
+  sistemática a `2E2`
+- el overhead de transición/bookkeeping domina el beneficio del reuse
+
+Cache peak observado:
+
+- `cache_peak_entries`: max `12761`
+- `cache_peak_messages`: max `1146`
+
+Hard points representativos:
+
+| punto | fase | 2B3 | 2E2 | 2E3 |
+| --- | --- | ---: | ---: | ---: |
+| `C02` click `33` | early | 24907.877 ms | 24.549 ms | 43.045 ms |
+| `C03` click `39` | mid | 25966.616 ms | 77.513 ms | 147.691 ms |
+| `C03` click `45` | mid | 21562.016 ms | 121.180 ms | 189.087 ms |
+| `C04` click `43` | mid | 79580.295 ms | 48.937 ms | 76.308 ms |
+
+## Tabla longitudinal 2A -> 2E3
+
+| variante | ok | timeout | p50 exacto | p90 exacto | p95 exacto | p99 exacto | max exacto | suma exacta completados | cota inferior total con censura |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2A | 250 | 9 | 104.716 ms | 32698.981 ms | 76413.912 ms | 135918.419 ms | 142338.093 ms | 2532522.858 ms | >= 3882522.858 ms |
+| 2B | 254 | 5 | 83.823 ms | 23767.144 ms | 40936.635 ms | 119388.636 ms | 142718.790 ms | 1891603.113 ms | >= 2641603.113 ms |
+| 2B2 | 251 | 8 | 85.070 ms | 30779.030 ms | 67036.563 ms | 115870.111 ms | 139569.738 ms | 2228369.546 ms | >= 3428369.546 ms |
+| 2B3 | 257 | 2 | 29.254 ms | 9185.927 ms | 15190.460 ms | 26661.672 ms | 64877.941 ms | 609381.699 ms | >= 909381.699 ms |
+| 2D1 | 258 | 1 | 21.012 ms | 4873.474 ms | 8665.804 ms | 14497.686 ms | 55286.400 ms | 374178.611 ms | >= 524178.611 ms |
+| 2E2 | 259 | 0 | 15.489 ms | 40.686 ms | 54.247 ms | 79.127 ms | 98.668 ms | 5230.885 ms | 5230.885 ms |
+| 2E3 | 259 | 0 | 20.894 ms | 59.150 ms | 83.164 ms | 96.219 ms | 129.024 ms | 7393.482 ms | 7393.482 ms |
+
+Lectura principal del longitudinal:
+
+- el salto de régimen aparece al pasar a Variable Elimination
+- `2E2` es el primer punto de la serie que controla de verdad la cola y
+  elimina los timeouts en este corpus
+- `2E3` conserva esa mejora de cola respecto de `2A -> 2D1`, pero no
+  mejora el frente absoluto de `2E2`
+
+## Correcciones de instrumentación detectadas al cierre
+
+Se corrigieron dos problemas de instrumentación después de auditar el raw ya
+corrido:
+
+1. `transition_class`:
+   separar `identical` de `component_identical`
+2. `reuse_fraction`:
+   normalización correcta a `[0,1]`
+
+Importante:
+
+- estas correcciones no modifican `counts`
+- no modifican `wall_clock_ms`
+- no invalidan los raws ya corridos
+- sólo corrigen la interpretación de etiquetas y una métrica derivada
+
+## Conclusión
+
+Hechos medidos:
+
+- `2E3` demuestra reuse incremental exacto real
+- `2E3` no timeouta en el corpus histórico largo
+- `2E3` sigue perdiendo contra `2E2` en coste total honesto
+
+Decisión de cierre:
+
+- `2E2` queda como candidato operativo para la siguiente etapa
+- `2E3` queda congelado como experimento negativo útil
+- `docs/PENDING-REVIEW-2E3.md` se conserva como expediente detallado de la etapa
+
 ## Artefactos 2D
