@@ -1,0 +1,9 @@
+[sncast.katana_dev]
+url = "http://localhost:5050/"
+account = "katana_dev"
+accounts-file = "/path/to/starknet_accounts.json"
+
+[sncast.sepolia_dev]
+url = "https://api.cartridge.gg/x/starknet/sepolia"
+account = "sepolia_dev"
+accounts-file = "/path/to/starknet_accounts.json"
