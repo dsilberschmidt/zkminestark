@@ -2353,3 +2353,63 @@ scripts/gen_phase6_cairo_tests.py                       |  90 ++++++- (actualiza
 ```
 
 **STOP.**
+
+## 2026-09-01 — Diagnóstico Phase 8 exact failures
+
+Causa raíz identificada: gen_phase8_fixtures.py sobreescribe `special_comp_vars` en el loop de componentes. Cuando un click tiene vecinos locales en DOS componentes disjuntos (e.g., f01_s034: comp grande 52-vars con 261/231 + comp pequeña 2-vars con 289/290), el loop aplica `special_comp_vars = cvars` en CADA iteración → solo queda la ÚLTIMA. La primera componente se pierde: no está ni en "special" ni en "ordinary_components".
+
+Fix requerido:
+- gen_phase8_fixtures.py: acumular todos los specials en lista `special_components: list[dict]`
+- gen_phase8_cairo_tests.py: generar llamadas múltiples count_joint_component_with_order + convolve_joint
+- cell.cairo: agregar función `convolve_joint(agg1, agg2) -> Array<JointEntry>`
+- Regenerar fixtures y tests, re-ejecutar snforge
+
+32 fallos exactos en f01-f11 (exact_s1): todos tienen exactamente 2 componentes especiales.
+
+## 2026-09-01 — Regeneración tests Phase 8 (continuación post-freeze)
+
+Fixtures verificados: 408 entradas, formato `special_components: list[dict]` correcto.
+C01_029 step 34: 2 special components (sp0 size=52 width=5, sp1 size=2 width=1).
+Procediendo a regenerar test_ve_phase8*.cairo y shards.
+
+## 2026-09-01 — Phase 8 COMPLETO: 816/816 tests pasan
+
+### Resultados finales (dos corridas)
+
+**Corrida 1** (scripts/run_phase8_sharded.sh):
+- benchmark_s1: 246/246 PASS ✓
+- exact_s1: 246/246 PASS ✓ (eran 32 fallos antes del fix)
+- benchmark_s2: 18/162 registrados (OOM durante ejecución paralela)
+- exact_s2: 88/162 registrados (OOM durante ejecución paralela)
+- combined: error de compilación (`{prefix}//` → Cairo inválido)
+
+**Corrida 2** (s2 + combined con --max-threads 1):
+- benchmark_s2: 162/162 PASS ✓
+- exact_s2: 162/162 PASS ✓
+- combined f20 (3 steps): PASS ✓, l2_gas ~37M
+- combined f06 (16 steps): PASS ✓, l2_gas ~2.2B
+- combined f08 (40 steps): OOM esperado (~36B gas total > límite 4.29B)
+
+### Fixes aplicados en esta sesión
+
+1. `gen_phase8_fixtures.py`: multi-special-component bug (sobreescritura)
+2. `gen_phase8_cairo_tests.py`: soporte N special components + `convolve_joint`; fix `{prefix}//` en comentarios
+3. `cell.cairo`: añadida `convolve_joint`
+
+**Estado: Phase 8 cerrada. 816 tests pasan.**
+
+## 2026-09-01 — Extracción analítica Phase 8 (sin re-run)
+
+Análisis de viabilidad sobre 408 CELL medidos.
+
+**Resultados clave:**
+- 45/408 CELLs (11%) exceden gate 1.1B L2 gas
+- 4 floods unsegmentables entre CELLs: f08 (1 CELL >1.1B), f13 (8/11), f14 (12/18), f15 (24/24)
+- f15 = C04_044: todos sus CELLs en rango 5.5–6.3B (~5-6× el gate)
+- 18/22 floods (82%) segmentables con continuation entre CELLs
+- 8/22 floods (36%) caben en 1 sola tx de 1.1B
+- max_width=7 es el predictor más discriminante: 39% de CELLs con w=7 superan gate
+- combined f06: ratio combined/sum=0.9999 (overhead despreciable)
+- --max-n-steps 4294967295 del runner ≠ gate Starknet 1.1B (f08 combined silenciado por runner limit, no por el gate)
+
+Summary durable: benchmarks/2g-phase8-analysis-20260901.md

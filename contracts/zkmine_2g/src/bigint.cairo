@@ -229,3 +229,44 @@ pub fn binom_range_from_anchor(n: u32, k_lo: u32, k_anchor: u32, k_hi: u32) -> A
 pub fn u512_mul_small_add(acc: u512, a: u512, v: u32) -> u512 {
     u512_add(acc, u512_mul_small(a, v))
 }
+
+// ─── u512 × u256 multiplication ──────────────────────────────────────────────
+
+/// a × v where a is u512 and v is u256. Panics on overflow beyond 512 bits.
+/// Used in extract_outcomes when ae.count (u256) exceeds u32 range.
+/// For the 30×16/99 corpus: binom ≤ 2^199, ae.count ≤ 2^183 → product ≤ 2^382 < 2^512.
+pub fn u512_mul_u256(a: u512, v: u256) -> u512 {
+    let vlo: u128 = v.low;
+    let vhi: u128 = v.high;
+
+    let p0l: u256 = WideMul::wide_mul(a.limb0, vlo);
+    let p0h: u256 = WideMul::wide_mul(a.limb0, vhi);
+    let p1l: u256 = WideMul::wide_mul(a.limb1, vlo);
+    let p1h: u256 = WideMul::wide_mul(a.limb1, vhi);
+    let p2l: u256 = WideMul::wide_mul(a.limb2, vlo);
+    let p2h: u256 = WideMul::wide_mul(a.limb2, vhi);
+    let p3l: u256 = WideMul::wide_mul(a.limb3, vlo);
+    assert(a.limb3 == 0 || vhi == 0, 'u512_mul_u256 overflow');
+
+    let s0 = p0l.low;
+
+    let (s1a, c1a) = u128_add_with_carry(p0l.high, p0h.low);
+    let (s1, c1b) = u128_add_with_carry(s1a, p1l.low);
+    let c1 = c1a + c1b;
+
+    let (s2a, c2a) = u128_add_with_carry(p0h.high, p1l.high);
+    let (s2b, c2b) = u128_add_with_carry(s2a, p1h.low);
+    let (s2c, c2c) = u128_add_with_carry(s2b, p2l.low);
+    let (s2, c2d) = u128_add_with_carry(s2c, c1);
+    let c2 = c2a + c2b + c2c + c2d;
+
+    let (s3a, c3a) = u128_add_with_carry(p1h.high, p2l.high);
+    let (s3b, c3b) = u128_add_with_carry(s3a, p2h.low);
+    let (s3c, c3c) = u128_add_with_carry(s3b, p3l.low);
+    let (s3, c3d) = u128_add_with_carry(s3c, c2);
+    let c3 = c3a + c3b + c3c + c3d;
+
+    assert(c3 == 0 && p2h.high == 0 && p3l.high == 0, 'u512_mul_u256 overflow');
+
+    u512 { limb0: s0, limb1: s1, limb2: s2, limb3: s3 }
+}

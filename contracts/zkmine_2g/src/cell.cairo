@@ -13,11 +13,11 @@
 ///      — filters by global mine constraint
 ///      — classifies into mine / clue-0..8 buckets
 ///
-/// Count sizes: after steps 1-4 all counts fit in u32 (max 810 in corpus).
-/// Step 5 multiplies by C(~420, ~60-99) ≈ 2^343 → needs u512.
+/// Count sizes: ae.count (u256) after steps 1-4 can exceed u32 for complex floods.
+/// Step 5 multiplies ae.count (u256) × C(unc_other, k) (u512) via u512_mul_u256 → u512.
 
 use zkmine_2g::ve::JointEntry;
-use zkmine_2g::bigint::{binom, u512_add, u512_mul_small, u512_zero, u512_from_u32};
+use zkmine_2g::bigint::{binom, u512_add, u512_mul_small, u512_mul_u256, u512_zero, u512_from_u32};
 use core::integer::u512;
 
 // ─── accumulate_joint ────────────────────────────────────────────────────────
@@ -43,6 +43,35 @@ fn accumulate_joint(result: Array<JointEntry>, e: JointEntry) -> Array<JointEntr
     if !found {
         out.append(e);
     }
+    out
+}
+
+// ─── convolve_joint ──────────────────────────────────────────────────────────
+
+/// Convolve two joint aggregates (for steps with multiple special components).
+/// For each pair (ae1, ae2): new entry (mines1+mines2, x_mine1+x_mine2, nbrs1+nbrs2, count1×count2).
+/// Since x_var appears in at most one component, x_mine1+x_mine2 ≤ 1 in practice.
+pub fn convolve_joint(agg1: @Array<JointEntry>, agg2: @Array<JointEntry>) -> Array<JointEntry> {
+    let mut out: Array<JointEntry> = array![];
+    let mut i: usize = 0;
+    loop {
+        if i >= agg1.len() { break; }
+        let ae1 = *agg1.at(i);
+        let mut j: usize = 0;
+        loop {
+            if j >= agg2.len() { break; }
+            let ae2 = *agg2.at(j);
+            let new_e = JointEntry {
+                mines: ae1.mines + ae2.mines,
+                x_mine: ae1.x_mine + ae2.x_mine,
+                nbrs: ae1.nbrs + ae2.nbrs,
+                count: ae1.count * ae2.count,
+            };
+            out = accumulate_joint(out, new_e);
+            j += 1;
+        };
+        i += 1;
+    };
     out
 }
 
@@ -206,9 +235,7 @@ pub fn extract_outcomes(
         if k > unconstrained_other_count { ai += 1; continue; }
 
         let bk = binom(unconstrained_other_count, k);
-        // ae.count fits in u32 (verified: max 810 in corpus, all fits_u32=True)
-        let aw_u32: u32 = ae.count.try_into().expect('count exceeds u32');
-        let contrib = u512_mul_small(bk, aw_u32);
+        let contrib = u512_mul_u256(bk, ae.count);
 
         if ae.x_mine == 1 {
             // mine outcome at index 0
