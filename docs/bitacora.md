@@ -5,6 +5,53 @@ al momento de ser reemplazado, con encabezado de fecha/hora.
 
 ---
 
+## 2026-09-01T14:10 — Frontier VCLS/CELL replicación completa (snapshot anterior)
+
+# Frontier Cairo VCLS/CELL — Replicación completa (2026-09-01)
+
+**Tarea:** Determinar el mayor tablero cuadrado pre-grant GREEN con pipeline VCLS/CELL exacto, sin intra-CELL continuation.
+
+---
+
+### Metodología
+
+- **Corpus:** 500 seeds × 3 estrategias (start, corner, end) por corpus
+- **Minas:** formula `floor(5·N·N/32 + 0.5)`
+- **Candidatos adversariales:** todo ord_iw≥7, top sum_ord_size, top max_width, combinaciones
+- **Criterio predeclarado (invariante):**
+  - GREEN: 100% exacto Python↔Cairo, cero candidatos ≥900M
+  - YELLOW: 100% exacto, cero >1.1B, al menos uno ≥900M
+  - RED: cualquier candidato >1.1B O fallo de exactitud
+- **Replicación:** segundo corpus independiente (seeds 500–999) para validar resultados GREEN
+
+### Tabla de resultados
+
+| Tablero | Minas | CELL states | Candidatos | Max gas | Exactos | Veredicto |
+|:--------|------:|------------:|-----------:|--------:|--------:|:---------|
+| 16×16/40 | 40 | — | 59 | 1.591B | 59/59 | **RED** |
+| 15×15/35 | 35 | 165,832 | 203 | 2.409B | 203/203 | **RED** |
+| 12×12/23 | 23 | 102,838 | 126 | 1.668B | 126/126 | **RED** |
+| 11×11/19 | 19 | 86,537 | 134 | 3.133B | 134/134 | **RED** |
+| 10×10/16 | 16 | 69,306 | 117 | 1.547B | 117/117 | **RED** |
+| 9×9/13 C1 | 13 | 54,912 | 120 | 0.340B | 120/120 | GREEN (solo) |
+| 9×9/13 C2 | 13 | 55,386 | 126 | 2.133B | 126/126 | **RED** |
+| **9×9/13 combinado** | — | **110,298** | **246** | **2.133B** | **246/246** | **RED** |
+| 8×8/10 C1 | 10 | 43,642 | 104 | 0.261B | 104/104 | GREEN |
+| 8×8/10 C2 | 10 | 44,234 | 111 | 0.198B | 111/111 | GREEN |
+| **8×8/10 combinado** | — | **87,876** | **215** | **0.261B** | **215/215** | **GREEN ✓** |
+
+### Preset GREEN más grande verificado
+
+> **8×8/10** — 8 filas × 8 columnas, 10 minas
+> Validado con 1000 seeds × 3 estrategias = 3000 partidas
+> 215 candidatos adversariales Cairo ejecutados
+> max gas = 261M L2 Sierra (29% del gate 900M)
+> Exactitud Python↔Cairo: 215/215 (100%)
+
+---
+
+---
+
 ## 2026-08-19 — sozo init: resultado y plan de limpieza
 
 ### Lo que creó sozo init contracts/zkmine_f1
@@ -2413,3 +2460,653 @@ Análisis de viabilidad sobre 408 CELL medidos.
 - --max-n-steps 4294967295 del runner ≠ gate Starknet 1.1B (f08 combined silenciado por runner limit, no por el gate)
 
 Summary durable: benchmarks/2g-phase8-analysis-20260901.md
+
+## 2026-09-01 — Auditoría documental Phase 8
+
+**Punto 1 — PENDING-REVIEW**: hallado drift de naming: extracción analítica escrita en `docs/pending_review.md` (gitignoreado, lowercase) en lugar de `docs/PENDING-REVIEW.md` (versionado). Corregido: PENDING-REVIEW.md reemplazado con informe de auditoría + extracción completa.
+
+**Punto 2 — Artefacto gas**: faltaba JSONL/CSV con 408 filas individuales. Creado `benchmarks/2g-phase8-cell-gas-20260901.jsonl` desde logs+fixtures sin re-run. Verificado: n=408, >1.1B=45, floods=22, floods_con_over=4. Consistente con analysis.md.
+
+**Punto 3 — Bitacora**: todos los items requeridos estaban presentes (líneas 2359, 2362-2364, 2384, 2375, 2399, 2403-2415).
+
+Estado final: 2 artefactos nuevos, 1 archivo corregido. No commits. No re-run.
+
+## 2026-09-01 — Intermediate 16×16/40 estudio estructural pre-Cairo
+
+**Objetivo**: decidir si el preset Intermediate tiene riesgo de cola comparable a Expert Phase 8 ANTES de diseñar la ronda Cairo.
+
+**Corpus generado**:
+- Script: `scripts/gen_intermediate_structural_corpus.py` (404-safe, resumable, sin oracle)
+- 500 seeds × 3 estrategias (0=center-first, 1=NW-corner, 2=SE-corner) = 1500 (seed,strategy) combos
+- 187,098 CELL estructurales en `benchmarks/intermediate-16x16-40-cells-20260901.jsonl`
+- 1,500 game records en `benchmarks/intermediate-16x16-40-meta-20260901.jsonl`
+- Media: 124.7 cells/partida, 7.3 floods/partida, 0.40s/partida
+- Script de análisis: `scripts/analyze_intermediate_corpus.py`
+- Salidas: `benchmarks/intermediate-16x16-40-analysis-20260901.md` + `-candidates-20260901.jsonl`
+
+**Hallazgos estructurales clave**:
+- max_width=8 encontrado: 9 CELLs (3 boards distintos: seeds 38, 349, 374) — SUPERA Expert máximo (7)
+  - Todos con n_ord=0 (mitiga parcialmente: sin convolution ordinaria)
+  - Peor caso: seed=374, step=9, max_width=8, total_vars=70, unc_other=90
+- max_width=7 + n_ord>0: 217 CELLs — patrón exacto de Expert UNSEG
+  - Pero unc_other bajo en los peores: n_ord=6 con unc_other=0 (barato por extract_outcomes)
+- Combinación crítica: width=7 + n_ord=0 + unc_other>200: seed=126 f00 step=1-3 (unc_other=219)
+- total_vars: max=87 (Expert max=189, Expert p50=52) — mucho más pequeño
+- unc_other: max constrained=248 (Expert min=113) — solapamiento leve pero en CELLs con max_width=0
+- n_ordinary: max=11 (Expert max=8) — supera Expert, pero con componentes muy pequeñas
+
+**Veredicto automatizado**: HIGH STRUCTURAL RISK
+- Score=7 (≥5): width≥8 (+4), width=7+n_ord>0 (+1), unc_other≥200 con constraints (+2)
+- Matiz: la combinación triple (alto width + n_ord>0 + unc_other>100) NO coincide en ningún CELL individual
+- Conclusión operativa: Cairo testing de los 59 candidatos es ESENCIAL antes de diseñar ronda Intermediate
+
+**Comparación Expert Phase 8**:
+- Expert UNSEG rate: 4/22 floods (18%), todos con max_width=7 + n_ord>0 + unc_other≥100 simultáneo
+- Intermediate: las tres condiciones nunca coinciden simultáneamente (n_ord=0 para width≥8, unc_other≈0 para n_ord>0)
+- Gas real desconocido: estimación cualitativa 0.5B–3B para peor caso, pero no verificable sin Cairo run
+
+**Artefactos**:
+- `benchmarks/intermediate-16x16-40-cells-20260901.jsonl` — corpus completo (187K rows, reproducible)
+- `benchmarks/intermediate-16x16-40-meta-20260901.jsonl` — game records
+- `benchmarks/intermediate-16x16-40-analysis-20260901.md` — informe completo
+- `benchmarks/intermediate-16x16-40-candidates-20260901.jsonl` — 59 candidatos Cairo
+- `scripts/gen_intermediate_structural_corpus.py` — generador
+- `scripts/analyze_intermediate_corpus.py` — análisis
+
+**NO se ejecutó ronda Cairo. NO se editó el grant. NO se hizo commit. NO se hizo push.**
+
+---
+
+## 2026-09-01 11:22 — Intermediate 16×16/40 Cairo CELL benchmark (59 candidatos)
+
+**Objetivo:** Ejecutar pipeline Cairo exacto VCLS/CELL sobre los 59 candidatos seleccionados del corpus Intermediate 16×16/40, medir L2 Sierra gas, verificar exactitud Python↔Cairo, emitir veredicto GREEN/YELLOW/RED.
+
+**Criterio predeclarado:**
+- GREEN: 59/59 exact; ningún caso ≥ 900 M
+- YELLOW: 59/59 exact; ningún >1.1B; al menos uno ≥ 900 M
+- RED: cualquier >1.1B o fallo exactitud
+
+**Resultado:**
+- 59/59 benchmark PASS, 59/59 exact PASS
+- 59/59 exactos Python↔Cairo (todas las assertions pasaron)
+- 3 casos > 1.1B gate: f33/f34/f36, todos del flood s00082g0f03 (seed=82 strat=0 flood3)
+- Max gas: 1,591,439,034 L2 Sierra (f33, seed=82, step=3, max_width=0, vars=86, sum_ord_size=86)
+- Width=8 cases (el riesgo estructural identificado): rango 168M–425M, todos bajo 750M
+- Predictor real: total_vars/sum_ord_size (r≈+0.51), NO max_width (r=−0.075)
+
+**Veredicto: RED** — 3 casos > 1.1B, mismo flood, patrón ordinary-dominated con VE width interno=6
+
+**Archivos creados:**
+- `benchmarks/intermediate-16x16-40-fixtures-20260901.jsonl` (59 fixtures completos)
+- `benchmarks/intermediate-16x16-40-gas-20260901.jsonl` (raw gas por candidato)
+- `benchmarks/intermediate-16x16-40-gas-analysis-20260901.md` (análisis completo)
+- `benchmarks/intermediate-snforge-bench-20260901.log`
+- `benchmarks/intermediate-snforge-exact-20260901.log`
+- `contracts/zkmine_2g/src/tests/test_ve_intermediate.cairo`
+- `contracts/zkmine_2g/src/tests/test_ve_intermediate_exact.cairo`
+- `scripts/gen_intermediate_fixtures.py`
+- `scripts/gen_intermediate_cairo_tests.py`
+- `scripts/run_intermediate_sharded.sh`
+
+**NO se editó el grant. NO se hizo commit. NO se hizo push.**
+
+---
+
+## 2026-09-01 — Búsqueda frontera GREEN: 15×15/35 RED, próximo 12×12/23
+
+### Objetivo
+
+Determinar el mayor tablero cuadrado pre-grant GREEN con pipeline exacto VCLS/CELL actual.
+Punto de partida: 16×16/40 ya medido como RED. Descender hasta encontrar GREEN.
+
+### Metodología
+
+Infraestructura nueva parametrizada:
+- `scripts/gen_square_corpus.py` — corpus estructural NxN/M (500 seeds × 3 estrategias)
+- `scripts/analyze_square_corpus.py` — análisis + selección adversarial de candidatos
+- `scripts/gen_square_fixtures.py` — fixtures completos Cairo
+- `scripts/gen_square_cairo_tests.py` — tests Cairo bench + exact
+- `scripts/parse_square_gas.py` — parseo de logs snforge
+- `scripts/run_square_sharded.sh` — runner sharded (3 shards para 15×15)
+
+Adición vs 16×16: nuevo feature `max_ord_internal_width` (máx min_fill_width de componentes ordinarios).
+
+### 15×15/35 — RESULTADO: RED
+
+**Corpus Python:**
+- 1500 (seed,strategy) combos, 500 seeds, 3 estrategias
+- 9576 floods únicos
+- 165,832 CELL states totales
+- max sum_ord_size = 74 (debajo del umbral RED 16×16 de 81)
+- max_ord_internal_width = 8 (nuevo feature, arriba del umbral RED de 6)
+- n CELLs sum_ord_size≥60 = 577
+
+**Candidatos Cairo:** 203 (selección adversarial: todo iw≥7, top sum_ord_size, combinaciones)
+
+**Cairo (203/203):**
+- Bench: 203/203 PASS
+- Exact: 203/203 PASS (corrección metodológica: asserts usaban "" en vez de '')
+- max gas = 2,409,793,364 L2 Sierra (2.41B, 2.19× el gate)
+- 4 casos > 1.1B:
+  - f011: s00324g0f02 s6 → 2.41B (iw=6 sos=68 vars=68)
+  - f005: s00125g0f04 s3 → 1.87B (iw=7 sos=62 vars=62)
+  - f008: s00125g0f04 s4 → 1.87B (iw=7 sos=61 vars=62)
+  - f015: s00125g0f04 s8 → 1.78B (iw=7 sos=59 vars=59)
+
+**Hallazgo metodológico:** max_ord_internal_width NO predice fiablemente el gas.
+Caso iw=8, sos=59 (seed=379) → solo 0.24B. Caso iw=6, sos=68 (seed=324) → 2.41B.
+El predictor real es la estructura interna del grafo de restricciones, no solo el ancho mínimo.
+
+**VERDICT: RED** — criterio activado: 4 candidatos > 1.1B.
+
+### Cambio de estrategia (instrucción del usuario)
+
+En vez de 14→13→..., próxima búsqueda será binaria:
+- Próximo: **12×12/23**
+- Si 12×12 GREEN → probar 14×14/31
+  - Si 14×14 GREEN → terminar (14 es el mayor GREEN)
+  - Si 14×14 RED/YELLOW → probar 13×13
+- Si 12×12 RED/YELLOW → probar 10×10/16 y localizar zona GREEN primero
+
+### Artifacts 15×15/35
+
+- benchmarks/square-15x15-35-cells-20260901.jsonl (165832 rows)
+- benchmarks/square-15x15-35-meta-20260901.jsonl (1500 records)
+- benchmarks/square-15x15-35-analysis-20260901.md
+- benchmarks/square-15x15-35-candidates-20260901.jsonl (203)
+- benchmarks/square-15x15-35-fixtures-20260901.jsonl (203)
+- benchmarks/square-15x15-35-gas-20260901.jsonl (203)
+- benchmarks/square-15x15-35-gas-analysis-20260901.md
+- benchmarks/square-snforge-bench-sq15x15-20260901.log
+- benchmarks/square-snforge-exact-sq15x15-20260901.log
+- contracts/zkmine_2g/src/tests/test_ve_sq15x15.cairo (generado, no en tests.cairo)
+- contracts/zkmine_2g/src/tests/test_ve_sq15x15_s{1,2,3}.cairo
+- contracts/zkmine_2g/src/tests/test_ve_sq15x15_exact_s{1,2,3}.cairo
+
+**NO se editó el grant. NO se hizo commit. NO se hizo push.**
+
+---
+
+## 2026-09-01T12:30 — 12×12/23 COMPLETO: VERDICT RED
+
+### Búsqueda de frontera GREEN: 12×12/23
+
+**Contexto:** 12×12/23 es el siguiente en la búsqueda binaria tras 15×15/35 (RED) y 16×16/40 (RED).
+mines = floor(5×144/32 + 0.5) = 23.
+
+**Corpus Python:**
+- 1500 (seed,strategy) combos, 500 seeds, 3 estrategias
+- 6681 floods únicos
+- 102,838 CELL states totales
+- max sum_ord_size = 54 (debajo del umbral RED 16×16 de 81)
+- max_ord_internal_width = 7 (presente pero sin sos≥60)
+- n CELLs sum_ord_size≥60 = 0
+
+**Candidatos Cairo:** 126 (selección adversarial: todo iw≥7, top sum_ord_size, top max_width)
+
+**Cairo (126/126):**
+- Bench: 126/126 PASS
+- Exact: 126/126 PASS (100% exactitud Python ↔ Cairo)
+- max gas = 1,668,243,042 L2 Sierra (1.67B, 1.52× el gate)
+- 4 casos > 1.1B (todos seed=103, s00103g0f03):
+  - f27: s00103g0f03 s1 → 1.668B (max_w=3, sum_ord=34, ord_iw=7, vars=40)
+  - f29: s00103g0f03 s2 → 1.666B (max_w=2, sum_ord=34, ord_iw=7, vars=39)
+  - f30: s00103g0f03 s3 → 1.665B (max_w=1, sum_ord=34, ord_iw=7, vars=38)
+  - f28: s00103g0f03 s4 → 1.665B (max_w=0, sum_ord=37, ord_iw=7, vars=37)
+
+**Hallazgo:** Mecanismo RED distinto a 15×15.
+- 15×15 RED: ordinary component con sos alto (iw=6/7, sos=59-68 → 1.78-2.41B)
+- 12×12 RED: ordinary component con ord_iw=7 y sos=34-37 → 1.67B (estructura interna específica)
+- Correlación gas ↔ max_ord_iw: r=+0.431 (predictor más fuerte en 12×12)
+- sos=34-37 es MENOR que sos=41 (seed=39, solo 341M) — la estructura del grafo importa más que el sos
+
+**VERDICT: RED** — criterio activado: 4 candidatos > 1.1B.
+
+### Cambio de búsqueda
+
+12×12 RED → según protocolo: probar 10×10/16 para localizar zona GREEN.
+
+### Artifacts 12×12/23
+
+- benchmarks/square-12x12-23-cells-20260901.jsonl (102838 rows)
+- benchmarks/square-12x12-23-meta-20260901.jsonl (1500 records)
+- benchmarks/square-12x12-23-analysis-20260901.md
+- benchmarks/square-12x12-23-candidates-20260901.jsonl (126)
+- benchmarks/square-12x12-23-fixtures-20260901.jsonl (126)
+- benchmarks/square-12x12-23-gas-20260901.jsonl (126)
+- benchmarks/square-12x12-23-gas-analysis-20260901.md
+- benchmarks/square-snforge-bench-sq12x12-20260901.log
+- benchmarks/square-snforge-exact-sq12x12-20260901.log
+- contracts/zkmine_2g/src/tests/test_ve_sq12x12.cairo (391KB)
+- contracts/zkmine_2g/src/tests/test_ve_sq12x12_exact.cairo (525KB)
+
+**NO se editó el grant. NO se hizo commit. NO se hizo push.**
+
+---
+
+## 2026-09-01T12:45 — 10×10/16 COMPLETO: VERDICT RED
+
+### Búsqueda de frontera GREEN: 10×10/16
+
+**Contexto:** 10×10/16 es el siguiente tras 12×12/23 (RED).
+mines = floor(5×100/32 + 0.5) = 16.
+
+**Corpus Python:**
+- 1500 (seed,strategy) combos, 69,306 CELL states
+- max sum_ord_size = 43, max_ord_internal_width = 7
+- width=7+n_ord>0: solo 14 casos (vs 85 en 12×12)
+
+**Candidatos Cairo:** 117
+
+**Cairo (117/117):**
+- Bench: 117/117 PASS
+- Exact: 117/117 PASS (100% exactitud)
+- max gas = 1,547,157,633 L2 Sierra (1.55B)
+- 3 casos > 1.1B (todos ord_iw=7):
+  - f22: s00028g0f02 s2 → 1.547B (sos=34, vars=34)
+  - f24: s00028g0f02 s1 → 1.547B (sos=30, vars=34)
+  - f14: s00018g0f01 s4 → 1.239B (sos=39, vars=39)
+
+**Hallazgo crítico:** El patrón RED es invariante al tamaño del tablero.
+El mecanismo es ord_iw=7 con estructuras de grafo específicas, independiente de sos absoluto.
+Incluso 10×10 con max_sos=43 produce casos 1.55B.
+
+**VERDICT: RED** — 3 candidatos > 1.1B.
+
+Próximo: 8×8/10 (continúa búsqueda zona GREEN).
+
+---
+
+## 2026-09-01T12:48 — 8×8/10 COMPLETO: VERDICT GREEN
+
+### Búsqueda de frontera GREEN: 8×8/10
+
+**Contexto:** Tras RED en 16×16, 15×15, 12×12, 10×10, se prueba 8×8.
+mines = floor(5×64/32 + 0.5) = 10.
+
+**Corpus Python:**
+- 1500 combos, 43,642 CELL states
+- max sum_ord_size = 33, max_ord_internal_width = 7 (sos=20-30)
+- width=7+n_ord>0 = 0 casos (distinto de 10×10 donde eran 14)
+
+**Candidatos Cairo:** 104
+
+**Cairo (104/104):**
+- Bench: 104/104 PASS
+- Exact: 104/104 PASS (100% exactitud)
+- max gas = 260,762,011 L2 Sierra (~261M, bien por debajo de 900M)
+- 0 casos > 900M, 0 casos > 1.1B
+
+**VERDICT: GREEN** ✓ — primer tamaño GREEN medido.
+
+**Implicación:** frontera entre 8×8 (GREEN) y 10×10 (RED). Queda verificar 9×9/13.
+
+**Artifacts 8×8/10:**
+- benchmarks/square-8x8-10-cells-20260901.jsonl (43642 rows)
+- benchmarks/square-8x8-10-meta-20260901.jsonl
+- benchmarks/square-8x8-10-analysis-20260901.md
+- benchmarks/square-8x8-10-candidates-20260901.jsonl (104)
+- benchmarks/square-8x8-10-fixtures-20260901.jsonl (104)
+- benchmarks/square-8x8-10-gas-20260901.jsonl (104)
+- benchmarks/square-8x8-10-gas-analysis-20260901.md
+- benchmarks/square-snforge-bench-sq8x8-20260901.log
+- benchmarks/square-snforge-exact-sq8x8-20260901.log
+
+---
+
+## 2026-09-01T12:52 — 9×9/13 COMPLETO: VERDICT GREEN
+
+### Búsqueda de frontera GREEN: 9×9/13
+
+**Contexto:** Verificación de frontera entre 8×8 (GREEN) y 10×10 (RED).
+mines = floor(5×81/32 + 0.5) = 13.
+
+**Corpus Python:** 1500 combos, 54,912 CELL states.
+max_ord_iw=7 (seed=91, sos=34 — mismo perfil que 10×10 RED seed=28).
+width=7+n_ord>0 = 18 casos (¡MÁS que 10×10 que tenía 14!).
+
+**Candidatos Cairo:** 120.
+
+**Cairo (120/120):**
+- Bench + Exact: 120/120 PASS (100% exactitud)
+- max gas = 340,164,866 L2 Sierra (~340M)
+- 0 casos > 900M, 0 casos > 1.1B
+
+**VERDICT: GREEN** ✓
+
+**Observación crítica:** 9×9 tiene MÁS casos "width=7+n_ord>0" (18) que 10×10 (14), pero es GREEN.
+Esto confirma que los predictores estructurales son indicativos pero no determinísticos.
+El gas real depende de la estructura específica del grafo de restricciones, no solo del ancho de eliminación.
+
+**Frontera identificada:** 9×9 GREEN, 10×10 RED.
+Queda verificar 11×11 (entre 10×10 RED y 12×12 RED) para descartar islas GREEN.
+
+---
+
+## 2026-09-01T13:10 — Replicación independiente: 9×9 RED, 8×8 GREEN confirmado
+
+### Instrucción del usuario: replicación con corpus disjunto
+
+El usuario requirió validación con un segundo corpus independiente usando seeds 500-999
+(disjunto del primer corpus 0-499). Se añadió `--run-tag rep2` a los 5 scripts del pipeline.
+
+### 9×9/13 — Corpus 2 (seeds 500-999)
+
+**Resultado: RED** — invalidación del resultado del primer corpus.
+
+- 55,386 CELL states adicionales (total combinado: 110,298)
+- max_ord_iw=7 (seed=535, sos=29) y max_ord_iw=6 (seed=542, sos=34)
+- 126 candidatos Cairo adversariales
+- 126/126 PASS exactos Python ↔ Cairo
+- max gas = 2,132,911,663 L2 Sierra (2.13B)
+- **3 casos > 1.1B**: s00542g0f01 pasos 2,3,4 → 2.133B (ord_iw=6, sos=34)
+
+**Hallazgo crítico:** El caso RED en corpus 2 tiene ord_iw=6 (NO 7), sos=34.
+El gas explosivo con ord_iw=6 confirma que incluso width=6 puede ser muy caro
+con estructuras de grafo específicas.
+
+**Conclusión 9×9:** Con los dos corpora combinados (1000 seeds), 9×9/13 es RED.
+El primer corpus era insuficiente para detectar la vulnerabilidad.
+
+### 8×8/10 — Corpus 2 (seeds 500-999)
+
+**Resultado: GREEN** — replicación exitosa.
+
+- 44,234 CELL states adicionales (total combinado: 87,876)
+- max_ord_iw=7 (seed=965, sos=24; seed=710, sos=23)
+- 111 candidatos Cairo adversariales
+- 111/111 PASS exactos Python ↔ Cairo
+- max gas = 198,161,253 L2 Sierra (~198M)
+- **0 casos ≥ 900M**, 0 casos > 1.1B
+
+**Conclusión 8×8:** Con los dos corpora combinados (1000 seeds), 8×8/10 es GREEN.
+max gas combinado = 261M (corpus 1) vs 198M (corpus 2).
+
+### Frontera GREEN/RED actualizada
+
+| Tablero | Minas | Corpus 1 | Corpus 2 | Veredicto combinado |
+|:--------|------:|:---------|:---------|:--------------------|
+| 16×16 | 40 | RED (1.59B) | — | RED |
+| 15×15 | 35 | RED (2.41B) | — | RED |
+| 12×12 | 23 | RED (1.67B) | — | RED |
+| 11×11 | 19 | RED (3.13B) | — | RED |
+| 10×10 | 16 | RED (1.55B) | — | RED |
+| 9×9 | 13 | GREEN (340M) | RED (2.13B) | **RED** |
+| 8×8 | 10 | GREEN (261M) | GREEN (198M) | **GREEN** ✓ |
+
+**Preset GREEN más grande verificado: 8×8/10** (validado con 1000 seeds × 3 estrategias)
+
+### Limitaciones
+
+Este es soporte empírico, no garantía matemática sobre todos los estados alcanzables.
+La cobertura es 1000 seeds × 3 estrategias = 3000 partidas por tamaño.
+Casos con distribuciones extremas fuera del espacio muestreado podrían comportarse diferente.
+
+---
+
+## 2026-09-01T18:00 — Continuation VE onchain: calldata bridge demostrado en Katana
+
+**Sesión**: post-crash/OOM. Reconstrucción total desde disco. Objetivo: auditar estado de continuation VE y demostrar persistence/calldata bridge on-chain.
+
+### Contexto
+
+El caso benchmark es `s00028g0f02 step=2` (10×10/16 RED, ord0: 27 vars, 22 constraints, max_ord_iw=7).
+Split óptimo vi=9 (variable=11). Checkpoint: 19 factores, 182 entries nonzero, 1,201 felts serializados.
+
+### Qué se hizo (nuevo en esta sesión)
+
+1. **Serde en estructuras VE**: agregado `#[derive(Serde)]` a `FactorEntry`, `Factor`, `Constraint` en `ve.cairo`.
+2. **Test 6 (serde round-trip)**: `cont_f22_serde_roundtrip_chunk2` → PASS, l2_gas=748,923,599. Overhead Serde: +2.86M gas (0.38%).
+3. **Contrato VeResume**: standalone en `~/.claude/jobs/354105ca/tmp/zkmine_cont/src/ve_resume.cairo`. Entrypoints: `chunk1(vars, constraints, end_idx) -> Array<Factor>` y `chunk2(vars, checkpoint, start_idx) -> Array<u256>`.
+4. **Demo Katana end-to-end**:
+   - Katana iniciado (dev mode, seed=0)
+   - Contrato declarado: class hash `0x74870340290b5181ce06ed498fdbb4a80a0ee749dd2bc3faa14d9ad41b395ab`
+   - TX chunk1 invoke: SUCCEEDED, l2_gas=**804,745,770**
+   - TX chunk2 invoke (1,230 felts calldata): SUCCEEDED, l2_gas=**757,136,984**
+   - Resultado: ways[10]=1, ways[11]=2 ✓ (idéntico a Python y Cairo monolítico)
+
+### Gas resumido
+
+| TX | snforge | Katana invoke | Overhead ABI |
+|:---|--------:|--------------:|-------------:|
+| chunk1 | 796,326,725 | 804,745,770 | ~8.4M |
+| chunk2 | 746,060,139 | 757,136,984 | ~8.2M |
+| Serde chunk2 | 748,923,599 | — | — |
+
+Overhead ABI dispatch (~8M) es consistente entre ambas txs.
+
+### Veredicto
+
+- Continuation computacional: DEMOSTRADA ✓
+- Calldata bridge (Tx1→checkpoint→Tx2): DEMOSTRADO en Katana ✓
+- Viabilidad producción: gas por tx < 1B nominal; confirmación definitiva requiere medición en Sepolia
+- No storage writes: el checkpoint viaja como calldata, no requiere storage on-chain
+
+### Archivos modificados en el repo
+
+```
+M contracts/zkmine_2g/src/ve.cairo        (Serde en 3 structs)
+M contracts/zkmine_2g/src/tests/test_ve_continuation_10x10.cairo  (Test 6)
+M contracts/zkmine_2g/src/tests/mod.cairo
+M docs/PENDING-REVIEW.md
+M docs/RUNNING-STATUS.md
+M docs/bitacora.md
+```
+
+(Sin commit, sin push — en espera de decisión sobre integración en repo principal.)
+
+---
+
+## 2026-09-01T20:00 — Continuation VE autenticada: Katana + Sepolia confirmados
+
+**Sesión**: última tanda técnica pre-grant. Objetivo: handoff autenticado con Poseidon commitment + verificación en Sepolia.
+
+### Arquitectura implementada
+
+Contrato `VeAuth` (standalone en `~/.claude/jobs/354105ca/tmp/zkmine_cont/src/ve_auth.cairo`):
+- `chunk1_commit(game_id, vars, constraints, end_idx) → felt252`: ejecuta VE chunk1, calcula `poseidon_hash_span` sobre la serialización Serde de los 19 factores (1201 felts), almacena (commitment, phase=1) en storage. Retorna commitment (1 felt).
+- `chunk2_verify(game_id, vars, checkpoint, start_idx) → Array<u256>`: recibe checkpoint por calldata (1201 felts), recalcula hash, verifica contra storage, consume el slot (commitment=0, phase=2), ejecuta VE chunk2. Retorna ways.
+- Storage mínimo: 2 slots por game_id. El checkpoint NO se persiste.
+- Eventos: `CommitmentStored{game_id, commitment}` en chunk1, `ChunkCompleted{game_id}` en chunk2.
+
+### snforge — 4 tests PASS (contrato VeAuth)
+
+| Test | l2_gas | Estado |
+|:-----|-------:|:------:|
+| auth_a: flujo correcto (ways[10]=1, ways[11]=2) | 1,557,047,566 | **PASS** ✓ |
+| auth_b: checkpoint tampered → 'commitment mismatch' | 804,688,367 | **PASS** ✓ |
+| auth_c: double chunk1 → 'chunk1 already submitted' | 805,191,476 | **PASS** ✓ |
+| auth_d: chunk2 sin chunk1 → 'no pending chunk1' | 533,270 | **PASS** ✓ |
+
+### Katana — TXs autenticados
+
+| Operación | l2_gas | l1_gas | Estado |
+|:----------|-------:|-------:|:------:|
+| chunk1_commit TX | 808,077,951 | 5,748 | SUCCEEDED ✓ |
+| chunk2_verify TX (correcto) | 760,475,735 | 4,646 | SUCCEEDED ✓ |
+| chunk2_verify (checkpoint tampered) | — | — | REVERTIDO `commitment mismatch` ✓ |
+| chunk2_verify (replay phase=2) | — | — | REVERTIDO `no pending chunk1` ✓ |
+| chunk2_verify (sin chunk1 previo) | — | — | REVERTIDO `no pending chunk1` ✓ |
+
+Commitment almacenado/emitido/hash_view — tres fuentes idénticas: `0x2fb8c8905437bc13724bc4ca355a4a566e4e9522ec146ccaaaa3b9f98cf422f` ✓
+
+### Sepolia — TXs reales en Starknet testnet
+
+Contrato: `0x049ba05c16fa5dcb357d1cc7de94d2dd31c91468f9633d75542767a8fe3a1c5e`
+Class hash: `0x6c1e4582186427ad5821c710aa28c184fd8a9c98995c988ddf70caa50d0cdf8`
+
+| TX | Hash | l2_gas | l1_data_gas | Fee | Estado |
+|:---|:-----|-------:|------------:|----:|:------:|
+| chunk1_commit | 0x03b5ed...819e49 | **784,788,320** | 384 | 26.18 STRK | SUCCEEDED ✓ |
+| chunk2_verify | 0x04d582...616bd | **749,396,480** | 320 | 25.00 STRK | SUCCEEDED ✓ |
+
+Commitment Sepolia = `0x2fb8c...422f` ✓ (idéntico a Katana y Python)
+ways[10]=1, ways[11]=2 ✓ (verificados desde return data del evento)
+
+### Hallazgo: límite return data en cuenta Ready
+
+La cuenta Sepolia (clase `0x36078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f`, type: Ready) rechazó un return de 1204 felts (max data length: 300). En la misma cuenta, chunk2_verify con 1231 felts de input calldata fue aceptado. El límite de 300 observado no impidió ese input. No se determinó si existe un límite máximo de input calldata ni cuál sería.
+
+chunk1_commit original retornaba `(Array<Factor>, felt252)` = 1204 felts → rechazado. Fix: retorna solo `felt252` (commitment, 1 felt). El checkpoint es computado off-chain de forma determinista por el profiler Python y verificado contra el commitment almacenado.
+
+### Overhead auth vs bridge simple (Katana)
+
+chunk1: +3.3M l2_gas (+0.41%) | chunk2: +3.4M l2_gas (+0.44%) | l1: +4.1KB / +3.0KB DA
+
+### Archivos creados en esta sesión (standalone, fuera del repo principal)
+
+```
+~/.claude/jobs/354105ca/tmp/zkmine_cont/src/ve_auth.cairo   (nuevo contrato)
+~/.claude/jobs/354105ca/tmp/zkmine_cont/src/test_ve_auth.cairo  (tests A/B/C/D)
+snfoundry.toml actualizado con profile sepolia_dev
+```
+
+Repositorio principal (sin commit):
+```
+M contracts/zkmine_2g/src/ve.cairo
+M contracts/zkmine_2g/src/tests/test_ve_continuation_10x10.cairo
+M contracts/zkmine_2g/src/tests/mod.cairo
+M docs/
+```
+
+**NO se editó el grant. NO se hizo commit. NO se hizo push.**
+
+---
+
+## 2026-09-01 — Cierre durable: hashes completos + corrección + persistencia en repo
+
+### Hashes completos sin abreviación
+
+**Katana:**
+- Contrato: `0x05863245a9d2632d004aecb29b6824643b1debf2871cf013ce0db4196b983801`
+- chunk1_commit TX: `0x0283752c37420faad975e142f6d0385b50ae64f57964915c4224288218c7d3eb`
+- chunk2_verify TX: `0x06e928611cb7fa267b9e92a9a5a7c306652c7cebd647999a67b4e713c4cc1551`
+- Commitment: `0x2fb8c8905437bc13724bc4ca355a4a566e4e9522ec146ccaaaa3b9f98cf422f`
+
+**Sepolia v1** (chunk1 retornaba tuple — rechazado por límite return data cuenta Ready):
+- Class hash: `0x5af04c5518922794b38dc12e91f9c9b39995a673c50a3dbfb6673ba87440980`
+- Declare TX: `0x44c4e35e093e4d9a25d2c40b9ba8da71d1722bb5185b93425c2c18b64e293f3`
+- Deploy TX: `0x0442632c62f501fb52cbb7baf5c46024918064c6d7074c04b7c647516f53562b`
+- Contrato: `0x023d60c97f168ed7ea74f8cd025d37d5008a11ef288670907937c88d163e4df7`
+
+**Sepolia v2** (chunk1 retorna felt252 — PASS):
+- Class hash: `0x6c1e4582186427ad5821c710aa28c184fd8a9c98995c988ddf70caa50d0cdf8`
+- Declare TX: `0x2962c22a3e05afa5c7f54776a932bd4421cc83b22730c3293f0833d490b194b`
+- Deploy TX: `0x04c655b1812d042a5f69433424daaaa1db6618ede313076681341a6c577ca698`
+- Contrato: `0x049ba05c16fa5dcb357d1cc7de94d2dd31c91468f9633d75542767a8fe3a1c5e`
+- chunk1_commit TX: `0x03b5ed127b37bc7dbbd69c4ff1deeac11ab624320d47da6740410aa1a1819e49`
+- chunk2_verify TX: `0x04d582b91192acce98fb98b234ece14aad50df3e1fd3f021251795ee59e616bd`
+- Commitment: `0x2fb8c8905437bc13724bc4ca355a4a566e4e9522ec146ccaaaa3b9f98cf422f`
+
+### Corrección: cuenta Ready vs OZ estándar
+
+El comportamiento documentado fue observado estrictamente en la cuenta tipo Ready (`0x36078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f`). No se probó con cuenta OZ estándar; no se puede afirmar que una cuenta OZ aceptaría o rechazaría el return grande. El fix (retornar solo commitment, 1 felt) evitó el problema observado con esta cuenta Ready.
+
+Observado con la cuenta Ready usada en Sepolia:
+- 1231 felts input calldata (chunk2_verify): aceptados; el límite de 300 observado no impidió este input
+- 1 felt return (commitment): ACEPTADO
+- 1204 felts return (tuple original): RECHAZADO (error: max data length 300)
+- Límite máximo de input calldata: no determinado
+
+### Persistencia en repo
+
+Código persisted en `experiments/cont_auth/` (prototipo, no integrado al gameplay):
+- `src/ve_auth.cairo`, `src/ve_resume.cairo`, `src/test_ve_auth.cairo`
+- `src/lib.cairo`, `Scarb.toml`, `snfoundry.toml`
+
+**NO se hizo commit. NO se hizo push.**
+
+---
+
+## 2026-09-01 — Housekeeping pre-commit: auditoría y preparación
+
+### Acciones ejecutadas
+
+**Revert `contracts/zkmine_2g/src/tests/mod.cairo`**:
+El cambio añadía `mod test_ve_continuation_10x10;` a `tests/mod.cairo`. Auditado y confirmado
+como no-op: `contracts/zkmine_2g/src/tests.cairo` existe y toma precedencia sobre
+`tests/mod.cairo` en el sistema de módulos Cairo/Scarb. El archivo `mod.cairo` es código muerto.
+Se revirtió con `git checkout -- contracts/zkmine_2g/src/tests/mod.cairo`.
+
+**Corrección en PENDING-REVIEW.md**:
+Las filas de Katana TX-B/TX-C/TX-D (TXs revertidas) tenían etiquetas "TX-B" etc. como
+placeholders. Reemplazadas por "hash no capturado — TX revertida" para reflejar que esos
+hashes no fueron registrados, sin fabricar datos.
+
+**Actualización docs/404-safe.md**:
+Incorporada la convención durable de los tres documentos operativos: RUNNING-STATUS (fotografía
+viva reemplazable, versionada solo al cierre), PENDING-REVIEW (cierre final de tanda, afirmaciones
+verificadas), bitacora (historia append-only permanente).
+Decisión: RUNNING-STATUS se incluye en el commit de cierre como snapshot final.
+
+**Auditoría experiments/cont_auth/**:
+Verificado. Contiene exactamente 6 archivos: Scarb.toml, snfoundry.toml, src/lib.cairo,
+src/ve_auth.cairo, src/ve_resume.cairo, src/test_ve_auth.cairo. Sin target/, caches, claves
+ni artifacts temporales.
+
+### Clasificación de archivos untracked
+
+**Evidencia durable necesaria → Commit A** (campaña falsación/gas):
+- `benchmarks/*-analysis-*.md` (9 archivos)
+- `benchmarks/*-candidates-*.jsonl` (9 archivos)
+- `benchmarks/*-cells-*.jsonl` (9 archivos)
+- `benchmarks/*-fixtures-*.jsonl` (9 archivos)
+- `benchmarks/*-gas-*.jsonl` (9 archivos)
+- `benchmarks/*-gas-analysis-*.md` (9 archivos)
+- `benchmarks/*-meta-*.jsonl` (9 archivos)
+- `benchmarks/2g-phase8-cell-gas-20260901.jsonl`
+- `contracts/zkmine_2g/src/tests/test_ve_sq*.cairo` (22 archivos)
+- `contracts/zkmine_2g/src/tests/test_ve_intermediate*.cairo` (2 archivos)
+- `scripts/gen_*`, `analyze_*`, `parse_*`, `run_*` (11 scripts)
+
+**Código reproducible necesario → Commit B** (authenticated VE continuation):
+- `experiments/cont_auth/` (6 archivos)
+- `scripts/profile_ve_f22.py`
+- `contracts/zkmine_2g/src/tests/test_ve_continuation_10x10.cairo`
+- `docs/RUNNING-STATUS.md` (snapshot final cerrado)
+- `contracts/zkmine_2g/src/ve.cairo` (tracked modified — Serde derives)
+- `docs/PENDING-REVIEW.md` (tracked modified)
+- `docs/bitacora.md` (tracked modified)
+
+**Logs/fixtures redundantes → NO commitear** (datos ya extraídos en JSONL):
+- `benchmarks/*-snforge-bench-*.log` (10 archivos)
+- `benchmarks/*-snforge-exact-*.log` (10 archivos)
+
+Nota: `docs/404-safe.md` faltaba en la lista de commit B — corregido en addendum siguiente.
+
+**NO se hizo commit. NO se hizo push.**
+
+---
+
+## 2026-09-01 — Addendum correcciones documentales pre-commit
+
+### Correcciones aplicadas
+
+**PENDING-REVIEW.md git status corregido**:
+La sección "Git status" tenía estado viejo (incluía mod.cairo como M, faltaba 404-safe.md).
+Actualizada para reflejar el estado real después del revert de mod.cairo.
+
+**Verdicts de la campaña de tamaños (corrección factual)**:
+El mensaje de commit A propuesto en sesión anterior decía erróneamente "8×8 y 9×9 GREEN" y
+"10×10–12×12 YELLOW". Los resultados correctos son:
+
+- 8×8/10m: dos corpus sin contraejemplo, max 261M combinado. Soporte empírico, NO prueba
+  universal. Un corpus adicional podría aún encontrar un caso mayor.
+- 9×9/13m: corpus 1 parecía limpio (max 340M). Corpus 2 encontró RED (2.133B). Veredicto
+  combinado: RED. Este es el caso central que demuestra que ausencia de contraejemplo en un
+  corpus no implica seguridad universal.
+- 10×10/16m: RED, max 1.547B.
+- 11×11/19m: RED, max 3.133B.
+- 12×12/23m: RED, max 1.668B.
+- 15×15/35m: RED, max 2.410B.
+- 16×16/40m: RED, max 1.591B.
+
+**Cuenta OZ no testeada**: lo demostrado es estrictamente sobre la cuenta Ready usada en Sepolia.
+No extrapolar a OZ. Ya corregido en PENDING-REVIEW en sesión anterior.
+
+**docs/404-safe.md agregado a commit B**: faltaba en la lista del housekeeping anterior.
+
+### Commit B — lista actualizada
+Igual que antes más: `docs/404-safe.md` (tracked modified — convención de documentos operativos).
+
+**NO se hizo commit. NO se hizo push.**

@@ -18,7 +18,7 @@ pub const NO_X_VAR: u32 = 0xffff;
 
 // ─── Entry and Factor ────────────────────────────────────────────────────────
 
-#[derive(Drop, Copy, Clone)]
+#[derive(Drop, Copy, Clone, Serde)]
 pub struct FactorEntry {
     pub mask: u32,
     pub mines: u32,
@@ -27,7 +27,7 @@ pub struct FactorEntry {
     pub count: u256,
 }
 
-#[derive(Drop)]
+#[derive(Drop, Serde)]
 pub struct Factor {
     pub scope_len: u32,
     pub variables: Array<u32>,
@@ -35,7 +35,7 @@ pub struct Factor {
 }
 
 /// Constraint: scope variables (sorted) and required mine sum.
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Serde)]
 pub struct Constraint {
     pub variables: Array<u32>,
     pub rhs: u32,
@@ -890,6 +890,148 @@ pub fn count_ordinary_component(
         if ei >= final_f.entries.len() {
             break;
         }
+        let e = *final_f.entries.at(ei);
+        let idx: usize = e.mines.try_into().unwrap();
+        let prev = *result.at(idx);
+        result = array_set_u256(result, idx, prev + e.count);
+        ei += 1;
+    };
+    result
+}
+
+// ─── Continuation: intra-component split ─────────────────────────────────────
+
+/// Run ordinary VE on variables[0..end_idx), returning the intermediate factor set.
+/// The returned Array<Factor> is the complete checkpoint needed to resume.
+/// Invariant: process variables in order; end_idx ≤ variables.len().
+pub fn count_ordinary_component_start(
+    variables: @Array<u32>,
+    constraints: @Array<Constraint>,
+    end_idx: usize,
+) -> Array<Factor> {
+    let x_var = NO_X_VAR;
+    let empty_nbrs: Array<u32> = array![];
+
+    let mut factors: Array<Factor> = array![];
+    let mut ci: usize = 0;
+    loop {
+        if ci >= constraints.len() { break; }
+        let c = constraints.at(ci);
+        factors.append(constraint_factor(c.variables, *c.rhs, x_var, @empty_nbrs));
+        ci += 1;
+    };
+
+    let mut vi: usize = 0;
+    loop {
+        if vi >= end_idx { break; }
+        let var = *variables.at(vi);
+        let n = factors.len();
+        let mut contains: Array<bool> = array![];
+        let mut fi: usize = 0;
+        loop {
+            if fi >= n { break; }
+            contains.append(u32_in_array(factors.at(fi).variables, var));
+            fi += 1;
+        };
+        let mut related: Array<Factor> = array![];
+        let mut remaining: Array<Factor> = array![];
+        fi = 0;
+        loop {
+            if factors.len() == 0 { break; }
+            let f = factors.pop_front().unwrap();
+            if *contains.at(fi) { related.append(f); } else { remaining.append(f); }
+            fi += 1;
+        };
+        if related.len() == 0 {
+            factors = remaining;
+            vi += 1;
+            continue;
+        }
+        let mut joined = related.pop_front().unwrap();
+        loop {
+            if related.len() == 0 { break; }
+            let next = related.pop_front().unwrap();
+            joined = join_factors(@joined, @next, x_var, @empty_nbrs);
+        };
+        let reduced = eliminate_variable(@joined, var, x_var, @empty_nbrs);
+        remaining.append(reduced);
+        factors = remaining;
+        vi += 1;
+    };
+
+    factors
+}
+
+/// Resume ordinary VE from a checkpoint factor set, processing variables[start_idx..len).
+/// The checkpoint factors must be the exact output of count_ordinary_component_start
+/// (or an equivalent computation). Returns the mine-count vector (same format as
+/// count_ordinary_component).
+pub fn count_ordinary_component_resume(
+    variables: @Array<u32>,
+    mut factors: Array<Factor>,
+    start_idx: usize,
+) -> Array<u256> {
+    let x_var = NO_X_VAR;
+    let empty_nbrs: Array<u32> = array![];
+
+    let mut vi: usize = start_idx;
+    loop {
+        if vi >= variables.len() { break; }
+        let var = *variables.at(vi);
+        let n = factors.len();
+        let mut contains: Array<bool> = array![];
+        let mut fi: usize = 0;
+        loop {
+            if fi >= n { break; }
+            contains.append(u32_in_array(factors.at(fi).variables, var));
+            fi += 1;
+        };
+        let mut related: Array<Factor> = array![];
+        let mut remaining: Array<Factor> = array![];
+        fi = 0;
+        loop {
+            if factors.len() == 0 { break; }
+            let f = factors.pop_front().unwrap();
+            if *contains.at(fi) { related.append(f); } else { remaining.append(f); }
+            fi += 1;
+        };
+        if related.len() == 0 {
+            factors = remaining;
+            vi += 1;
+            continue;
+        }
+        let mut joined = related.pop_front().unwrap();
+        loop {
+            if related.len() == 0 { break; }
+            let next = related.pop_front().unwrap();
+            joined = join_factors(@joined, @next, x_var, @empty_nbrs);
+        };
+        let reduced = eliminate_variable(@joined, var, x_var, @empty_nbrs);
+        remaining.append(reduced);
+        factors = remaining;
+        vi += 1;
+    };
+
+    let n_vars = variables.len();
+    let mut result: Array<u256> = array![];
+    let mut k: usize = 0;
+    loop {
+        if k > n_vars { break; }
+        result.append(0);
+        k += 1;
+    };
+
+    if factors.len() == 0 { return result; }
+    let mut final_f = factors.pop_front().unwrap();
+    loop {
+        if factors.len() == 0 { break; }
+        let next = factors.pop_front().unwrap();
+        final_f = join_factors(@final_f, @next, x_var, @empty_nbrs);
+    };
+
+    let mut ei: usize = 0;
+    loop {
+        if ei >= final_f.entries.len() { break; }
         let e = *final_f.entries.at(ei);
         let idx: usize = e.mines.try_into().unwrap();
         let prev = *result.at(idx);

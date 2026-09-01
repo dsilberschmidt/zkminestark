@@ -1,0 +1,28 @@
+# EXPERIMENTO / PROTOTIPO — no integrado al contrato de gameplay.
+# Reproduce el VeAuth (calldata bridge + Poseidon commitment) que obtuvo
+# PASS en Katana y Sepolia el 2026-09-01. Ver docs/PENDING-REVIEW.md.
+#
+# Para correr los tests:
+#   cd experiments/cont_auth
+#   snforge test --max-n-steps 4000000000 --max-threads 1
+
+[package]
+name = "zkmine_cont"
+version = "0.1.0"
+edition = "2024_07"
+
+[cairo]
+sierra-replace-ids = true
+
+[dependencies]
+starknet = "2.13.1"
+zkmine_2g = { path = "../../contracts/zkmine_2g" }
+
+[dev-dependencies]
+cairo_test = "2.13.1"
+snforge_std = "0.62.1"
+
+[[target.starknet-contract]]
+
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]
