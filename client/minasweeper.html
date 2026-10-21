@@ -189,6 +189,29 @@ button{
   padding:0;
 }
 
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.open-rest{
+  border:1px solid var(--border);
+  background:#ffffff;
+  color:var(--text);
+  border-radius:999px;
+  min-height:32px;
+  padding:4px 10px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.open-rest:hover{background:#fdfdfd;}
+.open-rest:focus-visible{
+  outline:2px solid #3584e4;
+  outline-offset:2px;
+}
+
 .restart{
   border:1px solid var(--border);
   background:#ffffff;
@@ -287,6 +310,22 @@ button{
   left:calc(50% - var(--cell-size) * 0.02);
   top:calc(50% - var(--cell-size) * 0.32);
 }
+
+.cell.wrong-flag .wrong-flag-icon::before,
+.cell.wrong-flag .wrong-flag-icon::after{
+  content:"";
+  position:absolute;
+  width:calc(var(--cell-size) * 0.82);
+  height:calc(var(--cell-size) * 0.11);
+  background:#cc0000;
+  left:calc(50% - var(--cell-size) * 0.41);
+  top:calc(50% - var(--cell-size) * 0.055);
+  border-radius:999px;
+  z-index:2;
+}
+
+.cell.wrong-flag .wrong-flag-icon::before{transform:rotate(45deg);}
+.cell.wrong-flag .wrong-flag-icon::after{transform:rotate(-45deg);}
 
 .cell.reject{
   animation:reject 220ms ease-out;
@@ -406,8 +445,14 @@ button{
 
 <div class="screen app hidden" id="gameScreen">
   <div class="topbar">
-    <div class="stat record"><span class="label">R</span><span class="value" id="recordValue">-</span></div>
-    <button class="restart" id="restartBtn" type="button" aria-label="Reiniciar">↻</button>
+    <div class="stats">
+      <div class="stat record"><span class="label">R clicks</span><span class="value" id="recordClicksValue">-</span></div>
+      <div class="stat record"><span class="label">R ratio</span><span class="value" id="recordRatioValue">-</span></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="open-rest hidden" id="openRestBtn" type="button">Abrir el resto</button>
+      <button class="restart" id="restartBtn" type="button" aria-label="Reiniciar">↻</button>
+    </div>
   </div>
 
   <div class="game">
@@ -419,6 +464,7 @@ button{
       <div class="stats">
         <div class="stat mines"><span class="value" id="minesValue">00/99</span></div>
         <div class="stat clicks"><span class="value" id="clicksValue">0</span></div>
+        <div class="stat clicks hidden" id="threeBVStat"><span class="value" id="threeBVValue"></span></div>
       </div>
     </div>
   </div>
@@ -433,12 +479,13 @@ const PRESETS = {
   linux: { key:"linux", label:"30x16", width:30, height:16, mines:99 }
 };
 // La versión forma parte de la clave: los récords solo son comparables entre
-// sí bajo el mismo alfabeto de acciones. v2 = conteo unificado (chord como
-// conjunto explícito, cascada que ignora banderas). Los récords v1 quedan
-// huérfanos, no se borran. Cualquier cambio futuro en qué cuenta como acción
-// obliga a subir esta versión.
-const RECORD_RULES_VERSION = "v2";
+// sí bajo el mismo alfabeto de acciones. v3 agrega el botón final como acción
+// de 1 click y el récord por ratio. Los récords anteriores quedan huérfanos,
+// no se borran. Cualquier cambio futuro en qué cuenta como acción obliga a
+// subir esta versión.
+const RECORD_RULES_VERSION = "v3";
 const RECORD_KEY_PREFIX = "minesweeper-best-clicks:" + RECORD_RULES_VERSION + ":";
+const RATIO_RECORD_KEY_PREFIX = "minesweeper-best-ratio:" + RECORD_RULES_VERSION + ":";
 
 // Criterio de conteo de acciones. Punto único de decisión.
 // "committed": se cobra toda acción válida enviada, revele o no (equivale a click = tx).
@@ -468,7 +515,9 @@ let state = "menu";
 let firstMove = true;
 let longPressTimer = null;
 let suppressClick = false;
-let bestRecord = null;
+let bestClicksRecord = null;
+let bestRatioRecord = null;
+let threeBV = null;
 
 const $ = (id) => document.getElementById(id);
 const menuScreen = $("menuScreen");
@@ -476,14 +525,22 @@ const gameScreen = $("gameScreen");
 const boardEl = $("board");
 const minesEl = $("minesValue");
 const clicksEl = $("clicksValue");
-const recordEl = $("recordValue");
+const recordClicksEl = $("recordClicksValue");
+const recordRatioEl = $("recordRatioValue");
+const threeBVStatEl = $("threeBVStat");
+const threeBVEl = $("threeBVValue");
+const openRestBtn = $("openRestBtn");
 
 function activeRecordKey(){
   return RECORD_KEY_PREFIX + selectedPreset.key;
 }
 
+function activeRatioRecordKey(){
+  return RATIO_RECORD_KEY_PREFIX + selectedPreset.key;
+}
+
 // localStorage puede no estar disponible (iframe con sandbox, modo privado
-// estricto, file:// en algunos navegadores). Sin esto, saveRecord lanza
+// estricto, file:// en algunos navegadores). Sin esto, guardar un récord lanza
 // excepción dentro de endWon y la partida ganada se rompe a mitad.
 const memoryStore = Object.create(null);
 let storageAvailable = null;
@@ -517,15 +574,26 @@ function storeSet(key, value){
   }
 }
 
-function loadRecord(){
+function loadClicksRecord(){
   const raw = storeGet(activeRecordKey());
   const value = Number(raw);
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 
-function saveRecord(value){
-  bestRecord = value;
+function loadRatioRecord(){
+  const raw = storeGet(activeRatioRecordKey());
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function saveClicksRecord(value){
+  bestClicksRecord = value;
   storeSet(activeRecordKey(), String(value));
+}
+
+function saveRatioRecord(value){
+  bestRatioRecord = Number(value.toFixed(4));
+  storeSet(activeRatioRecordKey(), bestRatioRecord.toFixed(4));
 }
 
 function applyPreset(preset){
@@ -534,7 +602,8 @@ function applyPreset(preset){
   height = preset.height;
   mineCount = preset.mines;
   cellCount = width * height;
-  bestRecord = loadRecord();
+  bestClicksRecord = loadClicksRecord();
+  bestRatioRecord = loadRatioRecord();
   document.documentElement.style.setProperty("--board-w", String(width));
 }
 
@@ -561,7 +630,8 @@ function createEmptyBoard(){
     adj:0,
     open:false,
     flag:false,
-    question:false
+    question:false,
+    wrongFlag:false
   }));
 }
 
@@ -611,6 +681,7 @@ function paint(i){
 
   if(cell.flag) el.classList.add("flag");
   if(cell.question) el.classList.add("question");
+  if(cell.wrongFlag) el.classList.add("wrong-flag");
 
   if(cell.open){
     el.classList.add("open");
@@ -626,18 +697,30 @@ function paint(i){
       el.setAttribute("aria-label", "Celda abierta vacía");
     }
   }else if(cell.flag){
-    el.setAttribute("aria-label", "Bandera");
+    el.setAttribute("aria-label", cell.wrongFlag ? "Bandera incorrecta" : "Bandera");
   }else if(cell.question){
     el.setAttribute("aria-label", "Incógnita");
   }else{
     el.setAttribute("aria-label", "Celda oculta");
+  }
+
+  if(cell.wrongFlag){
+    const icon = document.createElement("span");
+    icon.className = "wrong-flag-icon";
+    icon.setAttribute("aria-hidden", "true");
+    el.appendChild(icon);
   }
 }
 
 function updateHUD(){
   minesEl.textContent = String(flags).padStart(2, "0") + "/" + String(mineCount);
   clicksEl.textContent = String(clicks);
-  recordEl.textContent = bestRecord == null ? "-" : String(bestRecord);
+  recordClicksEl.textContent = bestClicksRecord == null ? "-" : String(bestClicksRecord);
+  recordRatioEl.textContent = bestRatioRecord == null ? "-" : bestRatioRecord.toFixed(2);
+  const showThreeBV = state === "won" && threeBV != null;
+  threeBVStatEl.classList.toggle("hidden", !showThreeBV);
+  if(showThreeBV) threeBVEl.textContent = "3BV " + threeBV + " · ratio " + (clicks / threeBV).toFixed(2);
+  openRestBtn.classList.toggle("hidden", state !== "playing" || flags !== mineCount);
 }
 
 const RESTART_GLYPH = { playing:"↻", won:"✓", lost:"✕" };
@@ -698,12 +781,46 @@ function floodReveal(startIndex){
 
 function revealAllMines(hitIndex){
   for(let i = 0; i < cellCount; i++){
-    if(cells[i].mine){
-      cells[i].open = true;
+    const cell = cells[i];
+    if(cell.mine && !cell.flag){
+      cell.question = false;
+      cell.open = true;
+      paint(i);
+    }else if(!cell.mine && cell.flag){
+      cell.wrongFlag = true;
       paint(i);
     }
   }
   boardEl.children[hitIndex].classList.add("boom");
+}
+
+function compute3BV(){
+  const zeroVisited = new Set();
+  let openings = 0;
+  let isolated = 0;
+
+  for(let i = 0; i < cellCount; i++){
+    if(cells[i].mine || cells[i].adj !== 0 || zeroVisited.has(i)) continue;
+    openings++;
+    const stack = [i];
+    zeroVisited.add(i);
+    while(stack.length){
+      const index = stack.pop();
+      for(const next of neighbors(index)){
+        if(!cells[next].mine && cells[next].adj === 0 && !zeroVisited.has(next)){
+          zeroVisited.add(next);
+          stack.push(next);
+        }
+      }
+    }
+  }
+
+  for(let i = 0; i < cellCount; i++){
+    if(cells[i].mine || cells[i].adj < 1) continue;
+    if(!neighbors(i).some((next) => !cells[next].mine && cells[next].adj === 0)) isolated++;
+  }
+
+  return openings + isolated;
 }
 
 // Al ganar, el juego termina de anotar por el jugador: las banderas son
@@ -723,14 +840,16 @@ function flagAllMines(){
 function endLost(hitIndex){
   state = "lost";
   revealAllMines(hitIndex);
+  updateHUD();
   paintRestart();
 }
 
 function endWon(){
   state = "won";
-  if(bestRecord == null || clicks < bestRecord){
-    saveRecord(clicks);
-  }
+  threeBV = compute3BV();
+  const ratio = clicks / threeBV;
+  if(bestClicksRecord == null || clicks < bestClicksRecord) saveClicksRecord(clicks);
+  if(bestRatioRecord == null || ratio < bestRatioRecord) saveRatioRecord(ratio);
   flagAllMines();
   updateHUD();
   paintRestart();
@@ -880,6 +999,7 @@ function resetGame(){
   revealedCount = 0;
   state = "ready";
   firstMove = true;
+  threeBV = null;
   clearTimeout(longPressTimer);
   suppressClick = false;
   createEmptyBoard();
@@ -935,6 +1055,30 @@ document.querySelectorAll("[data-preset]").forEach((button) => {
 });
 
 $("restartBtn").addEventListener("click", resetGame);
+openRestBtn.addEventListener("click", () => {
+  if(state !== "playing" || flags !== mineCount) return;
+
+  const closed = [];
+  for(let i = 0; i < cellCount; i++){
+    if(!cells[i].open && !cells[i].flag) closed.push(i);
+  }
+
+  commitClick();
+  const mineIndex = closed.find((index) => cells[index].mine);
+  if(mineIndex !== undefined){
+    cells[mineIndex].question = false;
+    cells[mineIndex].open = true;
+    paint(mineIndex);
+    endLost(mineIndex);
+    return;
+  }
+
+  let revealed = 0;
+  for(const index of closed) revealed += floodReveal(index);
+  revealedCount += revealed;
+  updateHUD();
+  checkWin();
+});
 window.addEventListener("resize", updateBoardScale);
 
 applyPreset(PRESETS.linux);
