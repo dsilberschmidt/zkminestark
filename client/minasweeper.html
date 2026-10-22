@@ -717,9 +717,13 @@ function updateHUD(){
   clicksEl.textContent = String(clicks);
   recordClicksEl.textContent = bestClicksRecord == null ? "-" : String(bestClicksRecord);
   recordRatioEl.textContent = bestRatioRecord == null ? "-" : bestRatioRecord.toFixed(2);
-  const showThreeBV = state === "won" && threeBV != null;
+  const showThreeBV = (state === "playing" || state === "won") && threeBV != null;
   threeBVStatEl.classList.toggle("hidden", !showThreeBV);
-  if(showThreeBV) threeBVEl.textContent = "3BV " + threeBV + " · ratio " + (clicks / threeBV).toFixed(2);
+  if(showThreeBV){
+    const solved = solved3BV();
+    const ratio = solved === 0 ? "-" : (clicks / solved).toFixed(2);
+    threeBVEl.textContent = "3BV " + solved + "/" + threeBV + " · ratio " + ratio;
+  }
   openRestBtn.classList.toggle("hidden", state !== "playing" || flags !== mineCount);
 }
 
@@ -823,6 +827,37 @@ function compute3BV(){
   return openings + isolated;
 }
 
+function solved3BV(){
+  const zeroVisited = new Set();
+  let openings = 0;
+  let isolated = 0;
+
+  for(let i = 0; i < cellCount; i++){
+    if(cells[i].mine || cells[i].adj !== 0 || zeroVisited.has(i)) continue;
+    const stack = [i];
+    let solved = false;
+    zeroVisited.add(i);
+    while(stack.length){
+      const index = stack.pop();
+      if(cells[index].open) solved = true;
+      for(const next of neighbors(index)){
+        if(!cells[next].mine && cells[next].adj === 0 && !zeroVisited.has(next)){
+          zeroVisited.add(next);
+          stack.push(next);
+        }
+      }
+    }
+    if(solved) openings++;
+  }
+
+  for(let i = 0; i < cellCount; i++){
+    if(cells[i].mine || cells[i].adj < 1 || !cells[i].open) continue;
+    if(!neighbors(i).some((next) => !cells[next].mine && cells[next].adj === 0)) isolated++;
+  }
+
+  return openings + isolated;
+}
+
 // Al ganar, el juego termina de anotar por el jugador: las banderas son
 // anotación local y gratuita, así que marcar las minas restantes no altera
 // el score ni el estado del juego.
@@ -846,7 +881,6 @@ function endLost(hitIndex){
 
 function endWon(){
   state = "won";
-  threeBV = compute3BV();
   const ratio = clicks / threeBV;
   if(bestClicksRecord == null || clicks < bestClicksRecord) saveClicksRecord(clicks);
   if(bestRatioRecord == null || ratio < bestRatioRecord) saveRatioRecord(ratio);
@@ -863,6 +897,7 @@ function ensureFirstMove(index){
   if(!firstMove) return;
   firstMove = false;
   placeMines(index);
+  threeBV = compute3BV();
 }
 
 // Punto único de contabilización. Ninguna otra función toca `clicks`.
