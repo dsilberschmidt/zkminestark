@@ -722,7 +722,7 @@ function updateHUD(){
   if(showThreeBV){
     const solved = solved3BV();
     const ratio = solved === 0 ? "-" : (clicks / solved).toFixed(2);
-    threeBVEl.textContent = "3BV " + solved + "/" + threeBV + " · ratio " + ratio;
+    threeBVEl.textContent = solved + "/" + threeBV + " · " + ratio;
   }
   openRestBtn.classList.toggle("hidden", state !== "playing" || flags !== mineCount);
 }
