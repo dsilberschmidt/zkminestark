@@ -14,6 +14,7 @@
   --border:#d7d5d1;
   --cell-size:24px;
   --cell-gap:4px;
+  --status-w:96px;
   --n1:#ddfac3;
   --n2:#ecedbf;
   --n3:#eddab4;
@@ -133,6 +134,8 @@ button{
 }
 
 .status{
+  width:var(--status-w);
+  flex:0 0 var(--status-w);
   font-size:14px;
   line-height:1.2;
   display:flex;
@@ -164,6 +167,7 @@ button{
 .stat .value{
   min-width:3ch;
   text-align:right;
+  font-variant-numeric:tabular-nums;
 }
 
 .mines,
@@ -172,7 +176,8 @@ button{
   border:1px solid var(--border);
   border-radius:8px;
   padding:6px 10px;
-  min-width:84px;
+  min-width:0;
+  width:100%;
 }
 
 .mines .value,
@@ -410,7 +415,11 @@ button{
     align-items:stretch;
     gap:12px;
   }
-  .status{font-size:13px;}
+  .status{
+    width:auto;
+    flex:none;
+    font-size:13px;
+  }
   .stats{gap:12px;}
   .board-wrap{
     width:100%;
@@ -749,7 +758,12 @@ function paintRestart(){
 function updateBoardScale(){
   const appStyles = getComputedStyle(document.documentElement);
   const gap = parseFloat(appStyles.getPropertyValue("--cell-gap")) || 4;
-  const viewportWidth = window.innerWidth - 120;
+  const gameEl = document.querySelector(".game");
+  const gameStyles = getComputedStyle(gameEl);
+  const mobile = window.matchMedia("(max-width:720px)").matches;
+  const statusAndGap = mobile ? 0
+    : document.querySelector(".status").getBoundingClientRect().width + (parseFloat(gameStyles.gap) || 0);
+  const viewportWidth = gameEl.getBoundingClientRect().width - statusAndGap;
   const viewportHeight = window.innerHeight - 88;
   const cellByWidth = Math.floor((viewportWidth - gap * (width + 1)) / width);
   const cellByHeight = Math.floor((viewportHeight - gap * (height + 1)) / height);
