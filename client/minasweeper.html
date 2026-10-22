@@ -465,6 +465,7 @@ button{
         <div class="stat mines"><span class="value" id="minesValue">00/99</span></div>
         <div class="stat clicks"><span class="value" id="clicksValue">0</span></div>
         <div class="stat clicks hidden" id="threeBVStat"><span class="value" id="threeBVValue"></span></div>
+        <div class="stat clicks hidden" id="ratioStat"><span class="value" id="ratioValue"></span></div>
       </div>
     </div>
   </div>
@@ -529,6 +530,8 @@ const recordClicksEl = $("recordClicksValue");
 const recordRatioEl = $("recordRatioValue");
 const threeBVStatEl = $("threeBVStat");
 const threeBVEl = $("threeBVValue");
+const ratioStatEl = $("ratioStat");
+const ratioValueEl = $("ratioValue");
 const openRestBtn = $("openRestBtn");
 
 function activeRecordKey(){
@@ -719,10 +722,12 @@ function updateHUD(){
   recordRatioEl.textContent = bestRatioRecord == null ? "-" : bestRatioRecord.toFixed(2);
   const showThreeBV = (state === "playing" || state === "won") && threeBV != null;
   threeBVStatEl.classList.toggle("hidden", !showThreeBV);
+  ratioStatEl.classList.toggle("hidden", !showThreeBV);
   if(showThreeBV){
     const solved = solved3BV();
     const ratio = solved === 0 ? "-" : (clicks / solved).toFixed(2);
-    threeBVEl.textContent = solved + "/" + threeBV + " · " + ratio;
+    threeBVEl.textContent = solved + "/" + threeBV;
+    ratioValueEl.textContent = ratio;
   }
   openRestBtn.classList.toggle("hidden", state !== "playing" || flags !== mineCount);
 }
